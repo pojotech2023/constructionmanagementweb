@@ -1,0 +1,94 @@
+login api using mobile no
+
+1)user id
+2) mobile
+
+after login response
+
+user id
+site id
+mobile no
+
+
+
+2) 2nd api 
+
+login 
+
+
+pass site id  api
+
+view check list 
+
+
+3rd Api
+---------
+Add ticket
+user_id 
+site_id
+
+
+1st Api customer login
+----------------------
+
+url: http://127.0.0.1:8000/api/login-customer
+method: post
+
+{
+    "mobile_no": "9500901231"
+}
+
+2nd Api get checklist using site id
+------------------------------------
+http://127.0.0.1:8000/api/checklists/2
+method:get
+
+
+
+3rd Api create ticket
+--------------------
+url: http://127.0.0.1:8000/api/ticket-submit
+post: method
+
+{
+    "site_id": 2,
+    "customer_id": 2,
+    "ticket": "AC not working properly in room"
+}
+
+4th api client message store
+-----------------------------
+method : post
+url: http://127.0.0.1:8000/api/tickets/3/messages-store
+
+{
+  "message": "Hello, I need more info about the issue."
+}
+
+5th Api for Ticket list using site_id
+---------------------------------
+method:get
+url: http://127.0.0.1:8000/api/get-tickets-by-site/2
+
+
+6th api  ticket message using ticket_id
+----------------------------------------
+method:get
+http://127.0.0.1:8000/api/ticket/2/messages
+
+7th api supervisor message store
+----------------------------------
+url: http://127.0.0.1:8000/api/tickets/1/messages-store-supervisor
+method:post
+
+{
+  "message": "ok i will check."
+}
+
+8th Api for drawing images view using site_id
+
+method: get
+url: http://127.0.0.1:8000/api/drawings/by-site/8
+
+
+

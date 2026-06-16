@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Quotation;
+use App\Models\QuotationDetail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Http;
+
+class QuotationController extends Controller
+{
+    public function getForm()
+    {
+        return view('admin.menus.quotation.quotation_add');
+    }
+
+
+    public function store(Request $request)
+{
+    $validate = Validator::make($request->all(), [
+        'name' => 'required',
+        'subject' => 'required',
+        'date' => 'required|date',
+        'mobile_no' => 'required',
+        'location' => 'required',
+        'contractor' => 'required',
+        'particular' => 'required|array',
+        'rate' => 'required|array',
+        'sqFt' => 'required|array',
+        'unit' => 'required|array',
+    ]);
+
+    if ($validate->fails()) {
+        return response()->json(['errors' => $validate->errors()], 422);
+    }
+
+    try {
+        // Create quotation
+        $quotation = Quotation::create([
+            'name' => $request->name,
+            'subject' => $request->subject,
+            'date' => $request->date,
+            'mobile_no' => $request->mobile_no,
+            'location' => $request->location,
+            'contractor' => $request->contractor,
+            'created_by'  => auth('admin')->id(),
+        ]);
+
+        $totalAmount = 0;
+
+        // Create quotation details
+        foreach ($request->particular as $index => $part) {
+            $rate = $request->rate[$index];
+            $sqFt = $request->sqFt[$index];
+            $unit = $request->unit[$index];
+            $total = $rate * $sqFt;
+            $totalAmount += $total;
+
+            QuotationDetail::create([
+                'quotation_id' => $quotation->id,
+                'particular' => $part,
+                'rate' => $rate,
+                'sqFt' => $sqFt,  // ✅ Use 'sqFt' - matches database column
+                'unit' => $unit,
+                'total_cost' => $total,
+                'created_by'  => auth('admin')->id(),
+            ]);
+        }
+
+        // Update total amount
+        $quotation->update(['total_amount' => $totalAmount]);
+
+        // ✅ IMPORTANT: Load the relationship before generating PDF
+        $quotation->load('details');
+
+        // Generate PDF
+        $pdf = Pdf::loadView('admin.helper.pdf_quotation', ['data' => $quotation]);
+
+        // Save PDF
+        $pdfPath = 'quotations/quotation_' . $quotation->id . '.pdf';
+        Storage::disk('public')->put($pdfPath, $pdf->output());
+
+        // WhatsApp message
+        $pdfUrl = asset('storage/' . $pdfPath);
+        $message = urlencode("Hi {$quotation->name}, your quotation is ready. Download here: $pdfUrl");
+        $whatsappLink = "https://wa.me/91{$quotation->mobile_no}?text=$message";
+
+        return response()->json([
+            'status' => 'success',
+            'whatsapp_url' => $whatsappLink,
+            'pdf_url' => $pdfUrl,
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Quotation Error: ' . $e->getMessage());
+        \Log::error($e->getTraceAsString());
+        
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+}

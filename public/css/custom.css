@@ -1,0 +1,112 @@
+.footer-row2 .navbar-brand img{
+    height:170px !important
+}
+
+.text-justify{
+    text-align: justify;
+}
+.main-header{
+    background-color: #fff;
+}
+.nav-bg-b .custom-nav .nav-list li a.menu-links{
+    color:#050748
+}
+
+.ptb-30{
+    padding : 30px 0;
+}
+
+.ptb-60{
+    padding : 60px 0;
+}
+
+/* popup material sub image */
+
+.popup-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Popup Box */
+.popup-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: auto;
+    max-width: 90%;
+}
+
+/* Image */
+.popup-image {
+    width: 400px;
+    height: 400px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+/* Video */
+.popup-video {
+    width: 400px;
+    height: 400px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Close Button */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
+    font-size: 30px;
+    font-weight: bold;
+    color: #000;
+}
+
+/* Arrows */
+.left-arrow, .right-arrow {
+    font-size: 40px;
+    cursor: pointer;
+    user-select: none;
+    color: black;
+}
+.left-arrow:hover, .right-arrow:hover {
+    color: gray;
+}
+
+/* floating action button whatsapp */
+.fab-whatsapp {
+    position: fixed;
+    bottom: 100px;
+    right: 10px;
+    background-color: #25d366;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .fab-whatsapp img {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .fab-whatsapp:hover {
+    background-color: #128c7e;
+    /* Darker green on hover */
+  }

@@ -1,0 +1,592 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Site;
+use App\Models\Subcontractor;
+use App\Models\SubcontractorPayDetail;
+use App\Models\SubcontractorPayment;
+use App\Models\SubcontractorService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+
+class SubcontractorController extends Controller
+{
+     //Subcontractor Management
+
+     //List
+     public function index()
+    {
+        $subcontractors = Subcontractor::orderBy('id', 'desc')->get();
+        return view('admin.menus.subcontractor.subcontractor_management', compact('subcontractors'));
+    }
+
+    //add
+    public function store(Request $request)
+    {
+        //dd($request->all());
+        $validate = Validator::make($request->all(), [
+            'name'          => 'required|string',
+            'subcontractors' => 'required|string',
+            'mobile_no'     => 'required|numeric|digits:10',
+            'email'         => 'required|email|unique:subcontractors,email',
+            'address'       => 'required|string',
+            'gst'           => 'required'
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+       $subcontractor = Subcontractor::create([
+            'name' => $request->name,
+            'subcontractors' => $request->subcontractors,
+            'mobile_no' => $request->mobile_no,
+            'email' => $request->email,
+            'address' => $request->address,
+            'gst' => $request->gst,
+            'created_by'  => auth('admin')->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Subcontractor created successfully!');
+    }
+    
+    //update
+    public function update(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'name'      => 'required|string|max:255',
+            'subcontractors' => 'required|string',
+            'mobile_no' => 'required|numeric|digits:10',
+            'email'         => 'required|email',
+            'address'  => 'required|string',
+            'gst'           => 'required'
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+       $subcontractor = Subcontractor::findOrFail($request->subcontractor_id);
+
+       $subcontractor->update([
+            'name'      => $request->name,
+            'subcontractors' => $request->subcontractors,
+            'mobile_no' => $request->mobile_no,
+            'email'  => $request->email,
+            'address'  => $request->address,
+            'gst' => $request->gst,
+            'updated_by'  => auth('admin')->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Subcontractor updated successfully!');
+    }
+
+    //delete
+    public function delete($id)
+    {
+       $subcontractor = Subcontractor::findOrFail($id);
+       $subcontractor->delete();
+        return back()->with('success', 'Subcontractor Deleted Successfully!');
+    }
+
+    //search
+    public function search(Request $request)
+    {
+       $subcontractors = Subcontractor::where('name', 'LIKE', $request->name . '%')
+            ->select('id', 'name', 'mobile_no', 'address')
+            ->get();
+
+        return response()->json($subcontractors);
+    }
+
+
+    //subcontractor detail
+    public function getSubcontractor($siteId)
+    {
+        $site = Site::with('subcontractorService')->findOrFail($siteId);
+
+        $subcontractors = $site->subcontractorService->groupBy(function ($item) {
+            return strtolower($item->subcontractor_type);
+        })->mapWithKeys(function ($group, $type) {
+            return [
+                $type =>  [
+                    'totalAmounts' => $group->sum(function ($item) {
+                        return is_numeric($item->amount) ? $item->amount : 0;
+                    })
+                ]
+            ];
+        });
+        return view('admin.menus.subcontractor.subcontractor_detail', compact('site', 'subcontractors'));
+    }
+
+    public function pettyCashPaymentDetail($siteId)
+    {
+        $site = Site::findOrFail($siteId);
+        $pettyCashEmail = 'pettycash.site.' . $site->id . '@local.invalid';
+
+        $subcontractor = Subcontractor::firstOrCreate(
+            ['email' => $pettyCashEmail],
+            [
+                'name' => 'Petty Cash - ' . $site->site_name,
+                'subcontractors' => 'Petty Cash',
+                'mobile_no' => '0000000000',
+                'address' => $site->address ?? $site->site_name,
+                'gst' => 'N/A',
+                'created_by' => auth('admin')->id(),
+            ]
+        );
+
+        $services = SubcontractorService::where('subcontractor_id', $subcontractor->id)->get();
+        $totalAmount = $services->sum('amount');
+        $subcontractorId = $subcontractor->id;
+        $paydetail = SubcontractorPayDetail::where('subcontractor_id', $subcontractorId)->first();
+        $histories = SubcontractorPayment::where('subcontractor_id', $subcontractorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+        $paidAmount = $histories->sum('payment');
+        $title = 'Petty Cash Payment Detail';
+        $backRoute = route('subcontractor.detail', ['siteId' => $site->id]);
+
+        return view('admin.menus.subcontractor.subcontractor_paydetail', compact(
+            'totalAmount',
+            'subcontractorId',
+            'paydetail',
+            'histories',
+            'paidAmount',
+            'title',
+            'backRoute'
+        ));
+    }
+
+    //subcontractor inner detail
+    public function getSubcontractorDetails($siteId, $subcontractorType)
+    {
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $subcontractors = SubcontractorService::with('subcontractor')
+            ->where('site_id', $siteId)
+            ->where('subcontractor_type', $subcontractorType)
+            ->whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
+            ->get();
+
+        $site = Site::find($siteId);
+        $siteName = $site ? $site->site_name : 'Unknown Site';
+
+        $totalAmount = SubcontractorService::where('site_id', $siteId)
+            ->where('subcontractor_type', $subcontractorType)
+            ->whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
+            ->sum('amount');
+
+        return view('admin.menus.subcontractor.subcontractor_inner_detail', compact(
+            'subcontractors',
+            'siteId',
+            'siteName',
+            'totalAmount',
+            'subcontractorType'
+        ));
+    }
+
+    // Export all subcontractor services for a site
+    public function exportSite(Request $request, $siteId)
+    {
+        $month = $request->query('month') ?: now()->format('Y-m');
+        $week = (int) $request->query('week');
+
+        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+        $startDate = $startOfMonth->copy();
+        $endDate = $endOfMonth->copy();
+
+        if ($week >= 1 && $week <= 4) {
+            $daysInMonth = $startOfMonth->daysInMonth;
+            $weekLength = ceil($daysInMonth / 4);
+            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+            $endDate = $startDate->copy()->addDays($weekLength - 1);
+            if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+        }
+
+        $records = SubcontractorService::with('subcontractor')
+            ->where('site_id', $siteId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get();
+
+        $filename = 'subcontractor_site_' . $siteId . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $columns = ['Date', 'Type', 'Subcontractor', 'Amount', 'Counts'];
+
+        $callback = function () use ($records, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($records as $r) {
+                fputcsv($file, [
+                    $r->date,
+                    $r->subcontractor_type,
+                    optional($r->subcontractor)->name,
+                    $r->amount,
+                    $r->no_counts,
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // Export subcontractor services filtered by type
+    public function exportType(Request $request, $siteId, $subcontractorType)
+    {
+        $month = $request->query('month') ?: now()->format('Y-m');
+        $week = (int) $request->query('week');
+
+        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+        $startDate = $startOfMonth->copy();
+        $endDate = $endOfMonth->copy();
+
+        if ($week >= 1 && $week <= 4) {
+            $daysInMonth = $startOfMonth->daysInMonth;
+            $weekLength = ceil($daysInMonth / 4);
+            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+            $endDate = $startDate->copy()->addDays($weekLength - 1);
+            if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+        }
+
+        $records = SubcontractorService::with('subcontractor')
+            ->where('site_id', $siteId)
+            ->where('subcontractor_type', $subcontractorType)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get()
+            ->map(function ($subcontractor) {
+                $subcontractor->date = $subcontractor->date ? Carbon::parse($subcontractor->date)->format('d-m-Y') : null;
+                $subcontractor->created_at = $subcontractor->created_at ? $subcontractor->created_at->format('d-m-Y') : null;
+                $subcontractor->updated_at = $subcontractor->updated_at ? $subcontractor->updated_at->format('d-m-Y') : null;
+
+                return $subcontractor;
+            });
+
+        $filename = 'subcontractor_' . Str::slug($subcontractorType) . '_' . $siteId . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $columns = ['Date', 'Subcontractor', 'Amount', 'Counts'];
+
+        $callback = function () use ($records, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($records as $r) {
+                fputcsv($file, [
+                    $r->date,
+                    optional($r->subcontractor)->name,
+                    $r->amount,
+                    $r->no_counts,
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // subcontractor inner detail
+    public function getSubcontractorData(Request $request, $siteId)
+    {
+        $monthYear = $request->input('monthYear'); // format: YYYY-MM
+        $week = (int) $request->input('week'); // 1, 2, 3, 4
+        $subcontractorType = $request->input('subcontractor_type');
+
+        $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
+        $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+
+        // Default to full month
+        $startDate = $startOfMonth->copy();
+        $endDate = $endOfMonth->copy();
+
+        // If specific week selected (1 to 4)
+        if ($week >= 1 && $week <= 4) {
+            $daysInMonth = $startOfMonth->daysInMonth;
+            $weekLength = ceil($daysInMonth / 4); // usually 7 or 8 days
+
+            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+            $endDate = $startDate->copy()->addDays($weekLength - 1);
+
+            // Limit to end of month
+            if ($endDate->gt($endOfMonth)) {
+                $endDate = $endOfMonth;
+            }
+        }
+
+        $subcontractors = SubcontractorService::with('subcontractor')
+            ->where('site_id', $siteId)
+            ->where('subcontractor_type', $subcontractorType)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get();
+
+        $totalAmount = $subcontractors->sum('amount');
+
+        return response()->json([
+            'subcontractors' => $subcontractors,
+            'totalAmount' => $totalAmount,
+        ]);
+    }
+
+    //subcontractor get service form
+    public function getServiceForm($siteId, $subcontractorType)
+    {
+        return view('admin.menus.subcontractor.add_service', compact('siteId', 'subcontractorType'));
+    }
+
+    // subcontractor add service form
+    public function subcontractorService(Request $request)
+    {
+        //dd($request->all());
+        $validate = Validator::make($request->all(), [
+            'site_id'  => 'required|exists:sites,id',
+            'subcontractor_id' => 'required|exists:subcontractors,id',
+            'subcontractor_name'         => 'required',
+            'subcontractor_mobile'       => 'required',
+            'subcontractor_address' => 'required',
+            'subcontractor_type' => 'required|string',
+             'no_counts' => 'required|string',
+            'date' => 'required',
+            'amount' => 'required|numeric',
+            'remarks' => 'nullable|string'
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+        $subcontractor_service = SubcontractorService::create([
+            'site_id' => $request->site_id,
+            'subcontractor_id' => $request->subcontractor_id,
+            'subcontractor_type' => $request->subcontractor_type,
+            'date' => $request->date,
+            'amount' => $request->amount,
+            'no_counts'=>$request->no_counts,
+            'remarks' => $request->remarks,
+            'created_by'  => auth('admin')->id(),
+        ]);
+
+        $paydetail = SubcontractorPayDetail::where('subcontractor_id', $request->subcontractor_id)->first();
+        if ($paydetail) {
+            $newTotalAmount =   $paydetail->total_amount + $request->amount;
+            $newBalanaceAmount =   $paydetail->balance_amount + $request->amount;
+
+            $paydetail->update([
+                'total_amount' => $newTotalAmount,
+                'balance_amount' => $newBalanaceAmount
+            ]);
+        } else {
+            SubcontractorPayDetail::create([
+                'subcontractor_id' => $request->subcontractor_id,
+                'total_amount' => $request->amount,
+                'balance_amount'  => $request->amount,
+                'created_by'  => auth('admin')->id(),
+            ]);
+        }
+
+        $site = Site::where('id', $request->site_id)->first();
+        $oldExpense = $site->expense;
+
+        $site->update([
+            'expense' => $oldExpense + $request->amount
+        ]);
+
+        $site = Site::find($request->site_id);
+
+       // $message = "* SS BULIDERS*\n"
+         //   . "Site Name: {$site->site_name} - SubContractor Service\n"
+          //  . "SubContractor Name: {$request->subcontractor_name}\n"
+          //  . "SubContractor Address: {$request->subcontractor_address}\n"
+          //  . "Mobile Number: {$request->subcontractor_mobile}\n"
+          //  . "SubContractor Type: {$request->subcontractor_type}\n"
+          //  . "Date: " . Carbon::parse($request->date)->format('d-m-Y') . "\n"
+          //  . "Amount: ₹{$request->amount}\n";
+
+        //$whatsappUrl = "https://wa.me/{$request->subcontractor_mobile}?text=" . urlencode($message);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'SubContractor service added successfully.',
+           // 'whatsapp_url' => $whatsappUrl
+        ]);
+    }
+
+    // Update subcontractor service
+    public function updateService(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'date' => 'required|date',
+            'amount' => 'required|numeric'
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+        $service = SubcontractorService::findOrFail($id);
+        $service->update([
+            'date' => $request->date,
+            'amount' => $request->amount,
+        ]);
+
+        return redirect()->back()->with('success', 'Subcontractor service updated successfully.');
+    }
+
+    // Delete subcontractor service
+    public function deleteService($id)
+    {
+        $service = SubcontractorService::findOrFail($id);
+        $service->delete();
+        return redirect()->back()->with('success', 'Subcontractor service deleted successfully.');
+    }
+
+     public function dashboard()
+    {
+        $subcontractors = Subcontractor::with(['subcontractorPayDetail'])->withSum('subcontractorPayment', 'payment')->get();
+
+        return view('admin.menus.subcontractor.subcontractor_dashboard', compact('subcontractors'));
+    }
+
+    public function getPayDetailsForm($subcontractorId)
+    {
+        $services = SubcontractorService::where('subcontractor_id', $subcontractorId)->get();
+        $totalAmount = $services->sum('amount');
+
+        $paydetail = SubcontractorPayDetail::where('subcontractor_id', $subcontractorId)->first();
+        $histories = SubcontractorPayment::where('subcontractor_id', $subcontractorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+        $paidAmount = $histories->sum('payment');
+
+        return view('admin.menus.subcontractor.subcontractor_paydetail', compact(
+            'totalAmount',
+            'subcontractorId',
+            'paydetail',
+            'histories',
+            'paidAmount'
+        ));
+    }
+
+    public function subcontractorpayUpdate(Request $request)
+    {
+        //dd($request->all());
+        $validate = Validator::make($request->all(), [
+            'subcontractor_id'    => 'required|exists:subcontractors,id',
+            'opening_balance' => 'nullable',
+            'total_amount' => 'required',
+            'balance_amount'  => 'required',
+            'paid_amount'  => 'nullable'
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+        $payDetail = SubcontractorPayDetail::where('subcontractor_id', $request->subcontractor_id)->first();
+
+        if ($payDetail) {
+
+            $newOpeningBalance = $payDetail->opening_balance + $request->opening_balance;
+            $newBalanceAmount = $payDetail->balance_amount + $request->opening_balance;
+
+            $payDetail->update([
+                'subcontractor_id' => $request->subcontractor_id,
+                'opening_balance'    => $newOpeningBalance,
+                'total_amount' => $request->total_amount,
+                'balance_amount'  => $newBalanceAmount,
+                'paid_amount'  => $request->paid_amount,
+                'updated_by'  => auth('admin')->id(),
+            ]);
+        } else {
+            SubcontractorPayDetail::create([
+                'subcontractor_id'         => $request->subcontractor_id,
+                'opening_balance'    => $request->opening_balance,
+                'total_amount'   => $request->total_amount,
+                'balance_amount'      => $request->opening_balance + $request->total_amount,
+                'paid_amount' => $request->paid_amount,
+                'created_by'  => auth('admin')->id(),
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'SubContractor pay details updated successfully!');
+    }
+
+    public function addPayment(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'subcontractor_id' => 'required|exists:subcontractors,id',
+            'payment' => 'required|numeric',
+            'date' => 'required|date',
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string'
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validate->errors()
+            ], 422);
+        }
+
+        $payment = SubcontractorPayment::create([
+            'subcontractor_id' => $request->subcontractor_id,
+            'payment' => $request->payment,
+            'date' => $request->date,
+            'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
+            'created_by'  => auth('admin')->id(),
+        ]);
+
+        $payDetail = SubcontractorPayDetail::where('subcontractor_id', $request->subcontractor_id)->first();
+
+        if ($payDetail) {
+            $payDetail->update([
+                'balance_amount' => $payDetail->balance_amount - $request->payment,
+                'paid_amount' => $payDetail->paid_amount + $request->payment,
+            ]);
+        }
+
+        // Get Subcontractor Info
+        $subcontractor = Subcontractor::find($request->subcontractor_id);
+
+       // $message = "Hi {$subcontractor->name},\nYour payment of ₹{$request->payment} on {$request->date} via {$request->payment_mode} has been recorded. Thank you!";
+       // $whatsappUrl = "https://wa.me/{$subcontractor->mobile_no}?text=" . urlencode($message);
+
+        return response()->json([
+            'status' => 'success',
+          //  'whatsapp_url' => $whatsappUrl
+        ]);
+    }
+
+
+    public function paymentHistory($subcontractorId)
+    {
+        $histories = SubcontractorPayment::with('subcontractor')
+            ->where('subcontractor_id', $subcontractorId)
+            ->get();
+
+        $paidAmount = $histories->sum('payment');
+
+        return view('admin.menus.subcontractor.payment_history', compact('histories', 'subcontractorId', 'paidAmount'));
+    }
+
+    
+}

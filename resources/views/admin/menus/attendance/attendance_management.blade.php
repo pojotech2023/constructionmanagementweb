@@ -1,0 +1,441 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container">
+    <div class="page-inner">
+
+        <!-- Page Header -->
+        <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+            <div>
+                <h3 class="fw-bold mb-1">Attendance Details</h3>
+                <ul class="breadcrumbs mb-0">
+                    <li class="nav-home">
+                        <a href="{{ route('admin.dashboard') }}"><i class="icon-home"></i></a>
+                    </li>
+                    <li class="separator"><i class="icon-arrow-right"></i></li>
+                    <li class="nav-item"><a href="{{ route('sitemanagement.list') }}">Site</a></li>
+                    <li class="separator"><i class="icon-arrow-right"></i></li>
+                    <li class="nav-item"><a href="#">Attendance Details</a></li>
+                </ul>
+            </div>
+
+            
+        </div>
+
+        <div class="card">
+
+            <!-- Card Header -->
+            <div class="card-header">
+                <h6 class="card-title fw-bold mb-3">
+                    Site Name: {{ $siteName }}
+                </h6>
+
+                <!-- Month Picker -->
+                <div class="row g-2 align-items-end pb-3 border-bottom">
+                    <div class="col-12 col-md-3">
+                        <input type="month" id="monthPicker" class="form-control"
+                               value="{{ $month }}">
+                    </div>
+
+                    <!-- Week Buttons -->
+                    <div class="col-12">
+                        <div class="row justify-content-center align-items-center" id="weekFilterRow">
+                            <div class="col-auto mb-2">
+                                <span class="badge badge-secondary week-reset-btn {{ empty($week) ? 'active' : '' }}">
+                                    Full Month
+                                </span>
+                            </div>
+                            @foreach ($availableWeeks as $weekNumber)
+                                <div class="col-auto mb-2">
+                                    <span class="badge badge-black week-btn {{ (string) $week === (string) $weekNumber ? 'active' : '' }}"
+                                          data-week="{{ $weekNumber }}">
+                                        Week {{ $weekNumber }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Week Days -->
+                <div class="row g-2 justify-content-center py-3 border-bottom" id="weekBoxRow">
+                    @if (!empty($weekDays))
+                        @foreach ($weekDays as $day)
+                            <div class="col-auto">
+                                <div class="day-box border rounded text-center
+                                    {{ request('date') === $day['value'] ? 'selected-day' : 'bg-success' }}"
+                                    data-date="{{ $day['value'] }}">
+                                    <div>{{ \Carbon\Carbon::parse($day['value'])->format('D') }}</div>
+                                    <div>{{ \Carbon\Carbon::parse($day['value'])->format('d') }}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+
+                <!-- TOTAL WORKERS + ACTION BUTTONS -->
+                <div class="row align-items-center mt-3 g-2">
+                    <div class="col-12 col-md-4">
+                        <h4 class="card-title mb-0">Total Workers</h4>
+                    </div>
+
+                    <div class="col-12 col-md-8">
+                        <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                            @php
+                                $exportUrl = route('attendance.export', ['siteId' => $siteId]);
+                                $query = request()->getQueryString();
+                                if (!empty($query)) $exportUrl .= '?' . $query;
+                            @endphp
+
+                            <a href="{{ $exportUrl }}" class="btn btn-outline-secondary">
+                                Export
+                            </a>
+
+                            <a href="{{ route('wages.form', ['siteId' => $siteId]) }}" class="btn btn-info">
+                                Add Wages
+                            </a>
+
+                            {{-- Add Attendance button removed per request --}}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show m-3">
+                    {{ session('success') }}
+                    <button class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            <!-- BODY -->
+            <div class="card-body">
+                @if ($attendances->isEmpty())
+                    <p class="text-center">No Attendance list.</p>
+                @else
+
+                {{-- MONTH VIEW TABLE --}}
+                @if (!empty($month) && empty($date))
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                @foreach ($allCategories as $cat)
+                                    <th>{{ ucfirst($cat) }}</th>
+                                @endforeach
+                                <th>Total (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($groupedByDate as $day)
+                                <tr>
+                                    <td>{{ $day['date'] }}</td>
+                                    @foreach ($allCategories as $cat)
+                                        <td>{{ $day[$cat] ?? '--' }}</td>
+                                    @endforeach
+                                    <td>
+                                        ₹{{ $day['total'] }}
+                                        <a href="{{ route('edit.attendance.wages', [
+                                            'site_id' => $siteId,
+                                            'date' => $day['date']
+                                        ]) }}" class="btn btn-sm btn-warning ms-2">Edit</a>
+
+                                        <button type="button" class="btn btn-sm btn-danger ms-2 deleteDateBtn" data-siteid="{{ $siteId }}" data-date="{{ $day['date'] }}" data-bs-toggle="modal" data-bs-target="#deleteDateModal">Delete</button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- DAILY VIEW --}}
+                @else
+                <div class="row">
+                    @foreach ($attendances as $attendance)
+                        @php
+                            $attendanceDate = \Carbon\Carbon::parse($attendance->date);
+                            $category = $attendance->category;
+
+                            $amount = optional(
+                                $wages->where('category', $category)
+                                      ->where('date', '<=', $attendanceDate->toDateString())
+                                      ->sortByDesc('date')
+                                      ->first()
+                            )->amount ?? 0;
+
+                            $total = $attendance->count * $amount;
+                        @endphp
+
+                        <div class="col-sm-6 col-md-4 mb-3">
+                            <div class="card border border-info h-100">
+                                <div class="card-body">
+                                    <h4>{{ $attendance->count }}</h4>
+                                    <p class="mb-1">
+                                        {{ ucfirst($category) }} × ₹{{ $amount }}
+                                    </p>
+                                    <strong>₹{{ $total }}</strong>
+                                    <div class="mt-3 d-flex gap-2">
+                                        <a href="{{ route('edit.attendance.wages', ['site_id' => $siteId, 'date' => $attendance->date]) }}" class="btn btn-sm btn-warning">Edit</a>
+                                        <button type="button" class="btn btn-sm btn-danger deleteAttendanceBtn" data-id="{{ $attendance->id }}" data-date="{{ $attendance->date }}" data-bs-toggle="modal" data-bs-target="#deleteAttendanceModal">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                @endif
+
+                <!-- TOTAL WAGES -->
+                <div class="row justify-content-center mt-4">
+                    <div class="col-md-6">
+                        <div class="card border border-primary text-center">
+                            <div class="card-body">
+                                <h5>Total Wages</h5>
+                                <h3 class="fw-bold">₹{{ $totalWages ?? 0 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Spinner -->
+    <div class="d-flex justify-content-center mt-3">
+        <div class="spinner-border text-primary d-none" role="status" id="loadingSpinner">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Delete Attendance Modal -->
+    <div class="modal fade" id="deleteAttendanceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="deleteAttendanceForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this attendance record for <span id="deleteAttendanceDate"></span>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Date Modal (month view) -->
+    <div class="modal fade" id="deleteDateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="deleteDateForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete all attendance records for <strong id="deleteDateText"></strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.deleteDateBtn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var siteId = this.getAttribute('data-siteid');
+                    var date = this.getAttribute('data-date');
+                    var form = document.getElementById('deleteDateForm');
+                    form.action = '/admin/attendance-delete-date/' + siteId + '/' + date;
+                    document.getElementById('deleteDateText').textContent = date;
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.deleteAttendanceBtn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = this.getAttribute('data-id');
+                    var date = this.getAttribute('data-date');
+                    var form = document.getElementById('deleteAttendanceForm');
+                    form.action = '/admin/attendance-delete/' + id;
+                    document.getElementById('deleteAttendanceDate').textContent = date;
+                });
+            });
+        });
+    </script>
+
+    <!-- JS script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthPicker = document.getElementById('monthPicker');
+            const weekButtons = document.querySelectorAll('.week-btn');
+            const weekResetButton = document.querySelector('.week-reset-btn');
+            const weekFilterRow = document.getElementById('weekFilterRow');
+            const weekBoxRow = document.getElementById('weekBoxRow');
+            const attendanceBaseUrl = @json(route('attendance', ['siteId' => $siteId]));
+
+            let currentSelectedMonth = monthPicker.value;
+
+            // Month change => Load entire month data
+            monthPicker.addEventListener('change', function() {
+                currentSelectedMonth = this.value;
+                if (currentSelectedMonth) {
+                    window.location.href = `${attendanceBaseUrl}?month=${currentSelectedMonth}`;
+                }
+            });
+
+            // Week button click => Load week data for currentSelectedMonth
+            weekButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const wasActive = this.classList.contains('active');
+                    weekButtons.forEach(b => b.classList.remove('active'));
+                    const selectedWeek = this.getAttribute('data-week');
+
+                    if (wasActive) {
+                        window.location.href = `${attendanceBaseUrl}?month=${currentSelectedMonth}`;
+                        return;
+                    }
+
+                    this.classList.add('active');
+
+                    if (currentSelectedMonth && selectedWeek) {
+                        window.location.href =
+                            `${attendanceBaseUrl}?month=${currentSelectedMonth}&week=${selectedWeek}`;
+                    }
+                });
+            });
+
+            if (weekResetButton) {
+                weekResetButton.addEventListener('click', function() {
+                    if (currentSelectedMonth) {
+                        window.location.href = `${attendanceBaseUrl}?month=${currentSelectedMonth}`;
+                    }
+                });
+            }
+
+            if (weekFilterRow) {
+                weekFilterRow.addEventListener('click', function(event) {
+                    const hasSelectedWeek = !!getQueryParam('week');
+                    const clickedWeekControl = event.target.closest('.week-btn, .week-reset-btn');
+
+                    if (!hasSelectedWeek || clickedWeekControl) {
+                        return;
+                    }
+
+                    if (currentSelectedMonth) {
+                        window.location.href = `${attendanceBaseUrl}?month=${currentSelectedMonth}`;
+                    }
+                });
+            }
+
+            // Day box click => Load specific date view
+            weekBoxRow.addEventListener('click', function(event) {
+                const target = event.target.closest('.day-box');
+                if (target) {
+                    const selectedDateStr = target.getAttribute('data-date');
+                    const selectedMonth = getQueryParam('month');
+                    const selectedWeek = getQueryParam('week');
+
+                    if (selectedDateStr) {
+                        let url = `${attendanceBaseUrl}?date=${selectedDateStr}`;
+                        if (selectedMonth) url += `&month=${selectedMonth}`;
+                        if (selectedWeek) url += `&week=${selectedWeek}`;
+                        window.location.href = url;
+                    }
+                }
+            });
+
+        });
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Highlight selected week and day on page load
+        const selectedWeek = getQueryParam('week');
+        const selectedDate = getQueryParam('date');
+
+        // Highlight the selected week button
+        if (selectedWeek) {
+            document.querySelectorAll('.week-btn').forEach(btn => {
+                if (btn.getAttribute('data-week') === selectedWeek) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Highlight the selected day box
+        if (selectedDate) {
+            document.querySelectorAll('.day-box').forEach(box => {
+                if (box.getAttribute('data-date') === selectedDate) {
+                    box.classList.add('selected-day');
+                }
+            });
+        }
+    </script>
+
+    <!-- CSS -->
+    <style>
+          .week-btn {
+    cursor: pointer;
+}
+
+.week-btn.active {
+    background: #007bff;
+    color: #fff;
+}
+
+.week-reset-btn {
+    cursor: pointer;
+}
+
+.week-reset-btn.active {
+    background: #198754;
+    color: #fff;
+}
+
+.day-box {
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.day-box:hover {
+    background: #28a745;
+    color: #fff;
+}
+
+.selected-day {
+    background: #007bff !important;
+    color: #fff !important;
+}
+    </style>
+@endsection
