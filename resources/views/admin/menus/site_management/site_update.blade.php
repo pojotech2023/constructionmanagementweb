@@ -205,8 +205,7 @@
         <div class="col-md-4">
             <select class="form-select form-control" name="status" id="status">
     <option value="">Select Status</option>
-    <option value="quoted" {{ $site->status == 'quoted' ? 'selected' : '' }}>quoted</option>
-    <option value="Ongoing" {{ $site->status == 'Ongoing' ? 'selected' : '' }}>Ongoing</option>
+    <option value="Ongoing" {{ in_array($site->status, ['Ongoing', 'quoted', 'Quoted', 'New', null], true) ? 'selected' : '' }}>Ongoing</option>
     <option value="Completed" {{ $site->status == 'Completed' ? 'selected' : '' }}>Completed</option>
 </select>
         </div>

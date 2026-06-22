@@ -25,19 +25,27 @@
                                                 <h4 class="card-title">{{ $subcontractor->name }}</h4>
                                                 @php
                                                 $paidAmount = $subcontractor->subcontractor_payment_sum_payment ?? 0;
-                                                $pendingAmount = $subcontractor->subcontractorPayDetail->balance_amount ?? 0;
-                                                $totalAmount = $paidAmount + $pendingAmount;
+                                                $totalAmount = $subcontractor->subcontractor_service_sum_amount ?? 0;
+                                                $pendingAmount = $totalAmount - $paidAmount;
                                             @endphp
                                             
-                                            <p class="card-category">
-                                                <strong>Total Amount:</strong> ₹<strong class="text-primary">{{ number_format($totalAmount, 2) }}</strong>
-                                            </p>
-                                            <p class="card-category">
-                                                <strong>Paid Amount:</strong> ₹<strong class="text-primary">{{ number_format($paidAmount, 2) }}</strong>
-                                            </p>
-                                            <p class="card-category">
-                                                <strong>Pending Amount:</strong> ₹<strong class="text-primary">{{ number_format($pendingAmount, 2) }}</strong>
-                                            </p>
+                                            <div class="amount-lines">
+                                                <div class="amount-line">
+                                                    <span>Total Amount</span>
+                                                    <span>:</span>
+                                                    <strong class="text-primary">₹{{ number_format($totalAmount, 2) }}</strong>
+                                                </div>
+                                                <div class="amount-line">
+                                                    <span>Paid Amount</span>
+                                                    <span>:</span>
+                                                    <strong class="text-primary">₹{{ number_format($paidAmount, 2) }}</strong>
+                                                </div>
+                                                <div class="amount-line">
+                                                    <span>Balance Amount</span>
+                                                    <span>:</span>
+                                                    <strong class="text-primary">₹{{ number_format($pendingAmount, 2) }}</strong>
+                                                </div>
+                                            </div>
                                             </div>
                                         </div>                                        
                                     </div>
@@ -48,4 +56,19 @@
                 @endforeach
             </div>
         </div>
+        <style>
+            .amount-lines {
+                display: grid;
+                row-gap: 4px;
+            }
+
+            .amount-line {
+                display: grid;
+                grid-template-columns: 118px 12px auto;
+                align-items: baseline;
+                color: #8a8f99;
+                font-size: 14px;
+                line-height: 1.35;
+            }
+        </style>
     @endsection

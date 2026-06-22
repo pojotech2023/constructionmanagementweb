@@ -1,26 +1,121 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $showPayment = request()->query('show_payment') === '1';
+    @endphp
     <div class="container">
-        <div class="px-3"> {{-- Added padding on both left and right --}}
-            <div class="row align-items-center mb-4 mt-3">
-                <div class="col-lg-6">
-                    <h3 class="pb-2">Vendor Payment Detail</h3>
+        <div class="page-inner">
+            <div class="page-header mb-3">
+                <div>
+                    <ul class="breadcrumbs mb-2">
+                        <li class="nav-home">
+                            <a href="{{ route('admin.dashboard') }}">
+                                <i class="icon-home"></i>
+                            </a>
+                        </li>
+                        <li class="separator"><i class="icon-arrow-right"></i></li>
+                        <li class="nav-item">
+                            <a href="{{ route('vendor.dashboard') }}">Vendor Dashboard</a>
+                        </li>
+                        <li class="separator"><i class="icon-arrow-right"></i></li>
+                        <li class="nav-item">
+                            <a href="#">{{ $vendor->site_utilities ?: 'Site Utilities' }}</a>
+                        </li>
+                        <li class="separator"><i class="icon-arrow-right"></i></li>
+                        <li class="nav-item">
+                            <a href="{{ route('vendor.payDetailForm', ['vendorId' => $vendorId]) }}">{{ $vendor->name }}</a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="col-lg-6 text-end">
-                    <button class="btn btn-success me-2 mb-2" id="addButton" data-bs-toggle="modal" data-bs-target="#addModal">
-                        <i class="fa fa-plus"></i> Add Payment
-                    </button>
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <div>
+                    <a href="{{ route('vendor.payDetailForm', ['vendorId' => $vendorId]) }}?show_payment=1" class="btn btn-success me-2 mb-2">
+                        <i class="fa fa-credit-card"></i> Payment
+                    </a>
                     <a href="{{ route('payment.history', ['vendorId' => $vendorId]) }}" class="btn btn-primary mb-2">
                         <i class="fa fa-history"></i> Payment History
                     </a>
                 </div>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-lg-11">
-                <div class="card shadow-lg p-4 ms-4">
+            @unless ($showPayment)
+                <div class="card vendor-history-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                            <h4 class="card-title mb-0">Material Order Details</h4>
+                        </div>
+
+                        @if ($orders->isEmpty())
+                            <p class="text-center mt-3 mb-0">No material orders found for this vendor.</p>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-striped table-borderless align-middle mb-0 vendor-detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th>S.NO</th>
+                                            <th>DATE</th>
+                                            <th>SITE NAME</th>
+                                            <th>QUANTITY</th>
+                                            <th>AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($orders as $order)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>{{ $order->date ? \Carbon\Carbon::parse($order->date)->format('d-m-Y') : '-' }}</td>
+                                                <td>{{ optional($order->site)->site_name ?? '-' }}</td>
+                                                <td>{{ $order->quantity }}</td>
+                                                <td>{{ number_format((float) $order->price, 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                @unless ($orders->isEmpty())
+                    <div class="card vendor-history-card mt-4">
+                        <div class="card-body d-flex justify-content-center">
+                            <table class="table mt-3 vendor-total-table">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <h5 class="fw-bold text-info">TOTAL UNITS</h5>
+                                        </td>
+                                        <td>
+                                            <h5 class="fw-bold text-info">{{ $totalUnits }}</h5>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <h5 class="fw-bold text-info">TOTAL AMOUNT</h5>
+                                        </td>
+                                        <td>
+                                            <h5 class="fw-bold text-info">{{ number_format((float) $totalAmount, 2) }}</h5>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endunless
+            @endunless
+
+            @if ($showPayment)
+                <div class="card vendor-history-card" id="paymentDetails">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                            <h4 class="card-title mb-0">Vendor Payment Detail</h4>
+                            <button class="btn btn-success" id="addButton" data-bs-toggle="modal" data-bs-target="#addModal">
+                                <i class="fa fa-plus"></i> Add Payment
+                            </button>
+                        </div>
 
                     <!-- Blade alert for success -->
                     @if (session('success'))
@@ -32,36 +127,19 @@
                     @endif
 
                     <form id="vendorPayDetailForm" action="{{ route('paydetail.update') }}" method="POST"
-                        class="container">
+                        class="w-100">
 
                         @csrf
 
                         <input type="hidden" name="vendor_id" id="vendor_id" value="{{ $vendorId }}">
 
-                        <div class="row align-items-center">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="opening_balance" class="fw-bold">Opening Balance</label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 position-relative">
-                                <div class="form-group">
-                                    <input type="text" id="opening_balance" name="opening_balance" class="form-control"
-                                        value="{{ $paydetail->opening_balance ?? '' }}"  oninput="this.value = this.value.replace(/[^0-9.]/g, '');">                                                                                                             
-                                </div>
-                                @error('opening_balance')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row align-items-center mt-5">
+                        <div class="row align-items-center mt-4">
                             <div class="col-lg-2">
                                 <div class="form-group">
                                     <label for="total_units" class="fw-bold">Total Units</label>
                                 </div>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-10">
                                 <div class="form-group">
                                     <input type="text" id="total_units" name="total_units" class="form-control"
                                         value="{{ $totalUnits }}" readonly>
@@ -75,10 +153,10 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="total_unit_price" class="fw-bold">Total Unit Price</label>
+                                    <label for="total_unit_price" class="fw-bold">Total Amount</label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-lg-10">
                                 <div class="form-group">
                                     <input type="text" class="form-control" name="total_unit_price"
                                         value="{{ $totalAmount }}" readonly>
@@ -93,15 +171,15 @@
                         <div class="row align-items-center mt-4">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="balance_amount" class="fw-bold">Balance Amount</label>
+                                    <label for="paid_amount" class="fw-bold">Paid Amount</label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-lg-10">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="balance_amount" id="balance_amount"
-                                        value="{{ $paydetail->balance_amount ?? 0 }}" readonly>
+                                    <input type="text" class="form-control" name="paid_amount" id="paid_amount"
+                                        value="{{ $paidAmount ?? 0 }}" readonly>
                                 </div>
-                                @error('balance_amount')
+                                @error('paid_amount')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -110,15 +188,15 @@
                         <div class="row align-items-center mt-4">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="paid_amount" class="fw-bold">Paid Amount</label>
+                                    <label for="balance_amount" class="fw-bold">Balance Amount</label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-lg-10">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="paid_amount" id="paid_amount"
-                                        value="{{ $paydetail->paid_amount ?? 0 }}" readonly>
+                                    <input type="text" class="form-control" name="balance_amount" id="balance_amount"
+                                        value="{{ $balanceAmount ?? 0 }}" readonly>
                                 </div>
-                                @error('paid_amount')
+                                @error('balance_amount')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -126,15 +204,16 @@
 
 
                         <div class="row justify-content-center mt-4">
-                            <div class="col-lg-4">
+                            <div class="col-lg-10 offset-lg-2">
                                 <div class="form-group text-center">
-                                    <button type="submit" class="btn btn-primary w-100">Submit</button>
+                                    <button type="submit" class="btn btn-primary px-5">Submit</button>
                                 </div>
                             </div>
                         </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
     <div id="openingBalanceConfirmModal" class="opening-balance-modal d-none">
@@ -210,6 +289,18 @@
                                     </select>
                                 </div>
                                 @error('payment_mode')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center mb-3">
+                            <div class="col-lg-2">
+                                <label for="remarks">Remarks</label>
+                            </div>
+                            <div class="col-lg-10">
+                                <textarea id="remarks" name="remarks" class="form-control" rows="3"></textarea>
+                                @error('remarks')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -379,6 +470,35 @@
             gap: 12px;
             justify-content: center;
             flex-wrap: wrap;
+        }
+
+        .vendor-detail-table th,
+        .vendor-detail-table td {
+            padding: 16px 24px;
+        }
+
+        .vendor-detail-table thead th {
+            color: #000;
+            font-weight: 700;
+            letter-spacing: .08em;
+        }
+
+        .vendor-total-table {
+            max-width: 760px;
+        }
+
+        .vendor-total-table td {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .page-header .breadcrumbs {
+            align-items: center;
+        }
+
+        .vendor-history-card {
+            border-radius: 8px;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
         }
     </style>
 @endsection

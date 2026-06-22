@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\SiteReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Customer;
@@ -12,13 +13,19 @@ use App\Models\RoleMapping;
 use App\Models\Setting;
 use App\Models\Site;
 use App\Models\SitePayment;
+use App\Models\SubcontractorPayment;
 use App\Models\SubcontractorService;
 use App\Models\User;
 use App\Models\Wages;
+use App\Services\SiteExpenseCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SiteController extends Controller
 {
@@ -27,7 +34,7 @@ class SiteController extends Controller
         return Setting::getCurrentPlan()['site_limit'];
     }
 
-    public function index(Request $request)
+    public function index(Request $request, SiteExpenseCalculator $expenseCalculator)
     {
         $status = $request->input('status');
 
@@ -39,17 +46,15 @@ class SiteController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $sites->each(function ($site) {
-            $site->attendance_expense = $this->getAttendanceExpense((int) $site->id);
-            $site->material_expense = (float) MaterialOrder::where('site_id', $site->id)->sum('price');
-            $site->material_other_utility_expense = (float) OtherUtilities::where('site_id', $site->id)->sum('amount');
-            $site->subcontractor_expense = (float) SubcontractorService::where('site_id', $site->id)->sum('amount');
-            $site->subcontractor_other_utility_expense = (float) OtherUtilitiesSub::where('site_id', $site->id)->sum('amount');
-            $site->expense_amount = $site->attendance_expense
-                + $site->material_expense
-                + $site->material_other_utility_expense
-                + $site->subcontractor_expense
-                + $site->subcontractor_other_utility_expense;
+        $sites->each(function ($site) use ($expenseCalculator) {
+            $expenses = $expenseCalculator->breakdown((int) $site->id);
+            $site->attendance_expense = $expenses['attendance'];
+            $site->material_expense = $expenses['materials'];
+            $site->material_other_utility_expense = $expenses['material_utilities'];
+            $site->subcontractor_expense = $expenses['subcontractors'];
+            $site->petty_cash_expense = $expenses['petty_cash'];
+            $site->subcontractor_other_utility_expense = $expenses['subcontractor_utilities'];
+            $site->expense_amount = $expenses['total'];
             $site->balance_amount = (float) ($site->budget_amount ?? 0) - $site->expense_amount;
         });
 
@@ -58,24 +63,6 @@ class SiteController extends Controller
 
         return view('admin.menus.site_management.site_management', compact('sites', 'status', 'activeSiteCount', 'siteLimit'));
     }
-
-    private function getAttendanceExpense(int $siteId): float
-    {
-        $attendances = Attendance::where('site_id', $siteId)->get();
-        $wages = Wages::where('site_id', $siteId)
-            ->orderBy('date', 'desc')
-            ->get();
-
-        return $attendances->sum(function ($attendance) use ($wages) {
-            $wage = $wages
-                ->where('category', $attendance->category)
-                ->where('date', '<=', $attendance->date)
-                ->first();
-
-            return (float) $attendance->count * (float) ($wage->amount ?? 0);
-        });
-    }
-
 
  public function getForm()
 {
@@ -151,6 +138,7 @@ public function store(Request $request)
         'flat_area'      => $request->flat_area,
         'built_up_area'  => $request->built_up_area,
         'duration'       => $request->duration,
+        'status'         => 'Ongoing',
         'created_by'     => auth('admin')->id(),
     ]);
 
@@ -198,7 +186,7 @@ public function store(Request $request)
         'built_up_area'  => 'nullable|string',
         'duration'       => 'nullable|string',
         'supervisor_id'  => 'nullable|exists:users,id',
-        'status'         => 'nullable'
+        'status'         => 'nullable|in:Ongoing,Completed'
     ]);
 
     if ($validate->fails()) {
@@ -256,6 +244,14 @@ public function store(Request $request)
         $totalUnits = $site->materialOrders->sum('quantity');
         $totalValues = $site->materialOrders->sum('price');
         return view('admin.menus.site_management.site_detail', compact('site', 'totalUnits', 'totalValues'));
+    }
+
+    public function exportFullReport($id)
+    {
+        $site = Site::findOrFail($id);
+        $filename = Str::slug($site->site_name) . '-full-report-' . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new SiteReportExport($site), $filename);
     }
 
     public function paymentDetail($id)
@@ -334,10 +330,23 @@ public function store(Request $request)
         return redirect()->route('site.payment.history', $siteId)->with('success', 'Payment deleted successfully.');
     }
 
-    public function paymentHistory($id)
+    public function paymentHistory(Request $request, $id)
     {
         $site = Site::findOrFail($id);
-        $histories = SitePayment::where('site_id', $id)
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
+
+        $historyQuery = SitePayment::where('site_id', $id);
+
+        if ($fromDate) {
+            $historyQuery->whereDate('date', '>=', Carbon::parse($fromDate)->toDateString());
+        }
+
+        if ($toDate) {
+            $historyQuery->whereDate('date', '<=', Carbon::parse($toDate)->toDateString());
+        }
+
+        $histories = $historyQuery
             ->orderBy('date')
             ->orderBy('id')
             ->get();
@@ -347,5 +356,97 @@ public function store(Request $request)
         $balanceAmount = max($budgetAmount - $paidAmount, 0);
 
         return view('admin.menus.site_management.payment_history', compact('site', 'histories', 'budgetAmount', 'balanceAmount'));
+    }
+
+    public function downloadPaymentPdf($id)
+    {
+        $payment = SitePayment::with('site')->findOrFail($id);
+        $site = $payment->site;
+        $budgetAmount = (float) (optional($site)->budget_amount ?? 0);
+        $totalPaid = (float) SitePayment::where('site_id', $payment->site_id)->sum('payment');
+        $balanceAmount = max($budgetAmount - $totalPaid, 0);
+
+        $pdf = Pdf::loadView('admin.helper.site_payment_pdf', compact(
+            'payment',
+            'budgetAmount',
+            'totalPaid',
+            'balanceAmount'
+        ));
+        $filename = 'site_payment_' . $payment->id . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    public function sendPaymentWhatsapp($id)
+    {
+        $payment = SitePayment::with('site')->findOrFail($id);
+        $siteName = optional($payment->site)->site_name ?? 'Site';
+        $pdfUrl = route('site.payment.pdf', $payment->id);
+        $customer = Customer::where('site_id', $payment->site_id)
+            ->where('is_inactive', 0)
+            ->orderBy('id')
+            ->first();
+        $customerMobile = $customer ? preg_replace('/\D+/', '', $customer->mobile_no) : '';
+
+        if (strlen($customerMobile) === 10) {
+            $customerMobile = '91' . $customerMobile;
+        }
+
+        $message = "Site Payment History\n"
+            . "Site: {$siteName}\n"
+            . "Date: " . Carbon::parse($payment->date)->format('d-m-Y') . "\n"
+            . "Payment: " . number_format((float) $payment->payment, 2) . "\n"
+            . "Payment Mode: {$payment->payment_mode}\n"
+            . "PDF: {$pdfUrl}";
+
+        $whatsappUrl = $customerMobile
+            ? 'https://wa.me/' . $customerMobile . '?text=' . urlencode($message)
+            : 'https://wa.me/?text=' . urlencode($message);
+
+        return redirect()->away($whatsappUrl);
+    }
+
+    public function exportPaymentHistory(Request $request, $id)
+    {
+        $site = Site::findOrFail($id);
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
+
+        $query = SitePayment::where('site_id', $id);
+
+        if ($fromDate) {
+            $query->whereDate('date', '>=', Carbon::parse($fromDate)->toDateString());
+        }
+
+        if ($toDate) {
+            $query->whereDate('date', '<=', Carbon::parse($toDate)->toDateString());
+        }
+
+        $histories = $query->orderBy('date')->orderBy('id')->get();
+        $filename = 'site_payment_history_' . $site->id . '_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($histories) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Payment', 'Payment Mode', 'Remarks']);
+
+            foreach ($histories as $index => $history) {
+                fputcsv($file, [
+                    $index + 1,
+                    $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                    number_format((float) $history->payment, 2, '.', ''),
+                    $history->payment_mode,
+                    $history->remarks,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

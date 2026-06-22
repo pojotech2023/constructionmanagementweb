@@ -9,344 +9,529 @@
                         <a href="{{ route('admin.dashboard') }}"><i class="icon-home"></i></a>
                     </li>
                     <li class="separator"><i class="icon-arrow-right"></i></li>
+                    <li class="nav-item">
+                        <a href="{{ route('sitemanagement.list') }}">Site</a>
+                    </li>
+                    <li class="separator"><i class="icon-arrow-right"></i></li>
                     <li class="nav-item"><a href="#">Check List</a></li>
                 </ul>
             </div>
-            <div class="row">
-                <div class="col-12 col-md-8">
 
-                    <!-- Blade alert for success -->
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show w-100" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                        {{ session()->forget('success') }} {{-- Clear session --}}
-                    @endif
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show w-100" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {{ session()->forget('success') }}
+            @endif
 
-                    <form id="filterform" action="" method="GET" action="{{ route('sitemanagement.list') }}"
-                        class="row mb-3">
-                     
-                        <div class="row mb-3 align-items-center">
-                            {{--<div class="col-md-4">
-                                <select name="status" id="statusFilter" class="form-select"
-                                    onchange="document.getElementById('filterform').submit();">
-                                    <option value="" {{ request('status') == '' ? 'selected' : '' }}>All</option>
-                                    <option value="New" {{ request('status') == 'New' ? 'selected' : '' }}>New</option>
-                                    <option value="Ongoing" {{ request('status') == 'Ongoing' ? 'selected' : '' }}>Ongoing
-                                    </option>
-                                    <option value="Completed" {{ request('status') == 'Completed' ? 'selected' : '' }}>
-                                        Completed</option>
-                                </select>
-                            </div>--}}
+            @php
+                $formatChecklistName = function ($value) {
+                    $text = trim((string) $value);
+                    $text = preg_replace('/\s+/', ' ', $text);
+                    $text = preg_replace('/\s*,\s*/', ', ', $text);
+                    $text = preg_replace('/\s*&\s*/', ',&', $text);
+                    $text = \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower($text));
 
-                           {{--<div class="col-md-8 d-flex justify-content-end">
-                                <a href="{{ route('checklist-create') }}" class="btn btn-primary btn-round">
-                                    <i class="fa fa-plus"></i> Add checklist
-                                </a>
-                            </div>--}}
-                        </div>
+                    return str_replace(
+                        ['Designs', 'Drawings', 'Pcc'],
+                        ['Design', 'Drawing', 'PCC'],
+                        $text
+                    );
+                };
+            @endphp
 
-                    </form>
+            <div class="checklist-hero">
+                <div>
+                    <span class="hero-kicker">Site Checklist</span>
+                    <h2>{{ $site->site_name }}</h2>
+                    <p>Track every stage, task update, media submission, and approval status for this site.</p>
+                </div>
+                <div class="hero-action">
+                    <i class="fa fa-check-square"></i>
+                    <span>Quality Progress</span>
                 </div>
             </div>
 
-           
-<div class="accordion">
-    @foreach($checklists as $checklist)
-        @php
-            $visibleTasks = session('role_name') == 'Admin'
-                ? $checklist->tasks
-                : $checklist->tasks;
-        @endphp
+            <div class="checklist-board">
+                @forelse($checklists as $checklist)
+                    @php
+                        $visibleTasks = session('role_name') == 'Admin'
+                            ? $checklist->tasks
+                            : $checklist->tasks;
 
-        @if($visibleTasks->count() > 0)
-            <div class="accordion-item">
-                <div class="accordion-title">
-                    <span style="font-size: 20px; font-weight:bold;">{{ $checklist->stage }}</span>
-                    <span class="icon">&#9660;</span>
-                </div>
+                        $approvedCount = 0;
+                        $rejectedCount = 0;
+                        $pendingCount = 0;
+                        $yetToWorkCount = 0;
 
-                <div class="accordion-content">
-                    <ul style="list-style-type: none; padding-left: 0;">
-                        @php $previousApproved = true; @endphp
+                        foreach ($visibleTasks as $stageTask) {
+                            $stageMedia = $stageTask->media
+                                ->where('site_id', $site->id)
+                                ->sortByDesc('id')
+                                ->first();
 
-                        @foreach($visibleTasks as $task)
-                            @php
-                                // Get latest media record for this task & site
-                                $media = $task->media
-                                    ->where('site_id', $site->id)
-                                    ->sortByDesc('id')
-                                    ->first();
+                            if (!$stageMedia) {
+                                $yetToWorkCount++;
+                            } elseif (strtolower($stageMedia->status ?? '') === 'approved') {
+                                $approvedCount++;
+                            } elseif (strtolower($stageMedia->status ?? '') === 'rejected') {
+                                $rejectedCount++;
+                            } else {
+                                $pendingCount++;
+                            }
+                        }
 
-                                // Status color
-                                if ($media) {
-                                    $status = strtolower($media->status ?? '');
-                                    $color = match ($status) {
-                                        'approved' => 'green',
-                                        'rejected' => 'red',
-                                        default => 'yellow',
-                                    };
-                                } else {
-                                    $status = 'pending';
-                                    $color = 'gray';
-                                }
+                        $taskCount = $visibleTasks->count();
+                        $progress = $taskCount > 0 ? round(($approvedCount / $taskCount) * 100) : 0;
+                    @endphp
 
-                                // Task approved check
-                                $isApproved = $media && strtolower($media->status) === 'approved';
-                            @endphp
-
-                            <li style="margin-bottom: 10px; display: flex; align-items: center;">
-                                <!-- Status box -->
-                                <span style="display:inline-block; width:15px; height:15px; background-color:{{ $color }}; border-radius:3px; margin-right:10px;"></span>
-
-                                @if(session('role_name') == 'Supervisor')
-                                    @if($previousApproved)
-                                        <a href="{{ route('task.create', ['siteId' => $site->id, 'taskId' => $task->id]) }}"
-                                           style="color:black; font-weight:600;">
-                                           {{ $task->task_name }}
-                                        </a>
-                                    @else
-                                        <span style="color: grey; cursor: not-allowed;" title="Complete previous task first">
-                                            {{ $task->task_name }} 🔒
-                                        </span>
+                    @if($taskCount > 0)
+                        <div class="checklist-stage-card">
+                            <button class="checklist-stage-header" type="button" aria-expanded="false">
+                                <div class="stage-title-wrap">
+                                    <span class="stage-icon"><i class="fa fa-tasks"></i></span>
+                                    <div>
+                                        <h4>{{ $formatChecklistName($checklist->stage) }}</h4>
+                                        <p>{{ $approvedCount }} of {{ $taskCount }} tasks approved</p>
+                                    </div>
+                                </div>
+                                <div class="stage-progress-wrap">
+                                    <span class="stage-pill approved">{{ $approvedCount }} Approved</span>
+                                    @if($pendingCount > 0)
+                                        <span class="stage-pill pending">{{ $pendingCount }} Pending</span>
                                     @endif
+                                    @if($yetToWorkCount > 0)
+                                        <span class="stage-pill yet-to-work">{{ $yetToWorkCount }} Yet to Work</span>
+                                    @endif
+                                    @if($rejectedCount > 0)
+                                        <span class="stage-pill rejected">{{ $rejectedCount }} Rejected</span>
+                                    @endif
+                                    <span class="stage-toggle"><i class="fa fa-chevron-down"></i></span>
+                                </div>
+                            </button>
 
-                                    {{-- Set next unlock condition --}}
-                                    @php $previousApproved = $isApproved; @endphp
-                                @else
-                                    {{-- Admin view --}}
-                                    <a href="{{ route('admin.taskmedia.view', ['siteId' => $site->id, 'taskId' => $task->id]) }}"
-                                       style="color:black; font-weight:600;">
-                                       {{ $task->task_name }}
-                                    </a>
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
+                            <div class="checklist-stage-content">
+                                @php $previousApproved = true; @endphp
+
+                                @foreach($visibleTasks as $task)
+                                    @php
+                                        $media = $task->media
+                                            ->where('site_id', $site->id)
+                                            ->sortByDesc('id')
+                                            ->first();
+
+                                        if (!$media) {
+                                            $statusClass = 'yet-to-work';
+                                            $statusLabel = 'Yet to Work';
+                                        } else {
+                                            $status = strtolower($media->status ?? '');
+                                            $statusClass = match ($status) {
+                                                'approved' => 'approved',
+                                                'rejected' => 'rejected',
+                                                default => 'pending',
+                                            };
+                                            $statusLabel = ucfirst($statusClass);
+                                        }
+                                        $isApproved = $media && strtolower($media->status) === 'approved';
+                                    @endphp
+
+                                    <div class="checklist-task-row {{ $statusClass }}">
+                                        <span class="task-status-dot"></span>
+                                        <div class="task-main">
+                                            @if(session('role_name') == 'Supervisor')
+                                                @if($previousApproved)
+                                                    <a href="{{ route('task.create', ['siteId' => $site->id, 'taskId' => $task->id]) }}">
+                                                        {{ $formatChecklistName($task->task_name) }}
+                                                    </a>
+                                                    <span>Update checklist progress</span>
+                                                @else
+                                                    <span class="locked-task" title="Complete previous task first">
+                                                        {{ $formatChecklistName($task->task_name) }} <i class="fa fa-lock"></i>
+                                                    </span>
+                                                    <span>Previous task must be approved first</span>
+                                                @endif
+
+                                                @php $previousApproved = $isApproved; @endphp
+                                            @else
+                                                <a href="{{ route('admin.taskmedia.view', ['siteId' => $site->id, 'taskId' => $task->id]) }}">
+                                                    {{ $formatChecklistName($task->task_name) }}
+                                                </a>
+                                                <span>View submitted images, videos, and remarks</span>
+                                            @endif
+                                        </div>
+                                        <span class="task-status-label">{{ $statusLabel }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @empty
+                    <div class="empty-checklist">
+                        <i class="fa fa-clipboard"></i>
+                        <h4>No checklist found</h4>
+                        <p>Add checklist stages to start tracking site work.</p>
+                    </div>
+                @endforelse
             </div>
-        @endif
-    @endforeach
-</div>
-
-
-<!--model code-->
-
-                  
-
-    <!-- Delete Confirmation Modal (Outside Loop) -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to delete this record?
-                </div>
-                <div class="modal-footer">
-                    <form id="deleteForm" action="" method="POST">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- End of Delete Confirmation Modal -->
-
-    <!-- Spinner -->
-    <div class="d-flex justify-content-center mt-3">
-        <div class="spinner-border text-primary d-none" role="status" id="loadingSpinner">
-            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
     <script>
-        //redirect to leads detail page
-        function redirectToLeadDetails(event, card) {
-            event.stopPropagation(); // Prevents unintended clicks
-            // Remove styles from all cards
-            document.querySelectorAll('.site-card').forEach(item => {
-                item.classList.remove('selected-card');
-            });
-            // Add active class to clicked card
-            card.classList.add('selected-card');
-            // Redirect after small delay
-            let route = card.getAttribute('data-route');
-            if (route) {
-                window.location.href = route;
-            }
-        }
-
         document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.checklist-stage-header').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.checklist-stage-card');
 
-            //delete site
-            document.querySelectorAll(".deleteButton").forEach(button => {
-                button.addEventListener("click", function() {
-                    event.stopPropagation();
-                    const siteId = this.getAttribute("data-id");
-                    const action = "{{ route('sitemanagement.delete', ':id') }}".replace(':id',
-                        siteId);
-                    document.getElementById("deleteForm").setAttribute("action", action);
-                });
-                //Auto-hide success alert after 3 seconds 
-                const successAlert = document.querySelector(".alert-success");
-                const form = document.getElementById('deleteForm');
-                const spinner = document.getElementById('loadingSpinner');
-
-                if (successAlert) {
-                    setTimeout(() => {
-                        successAlert.classList.remove("show");
-                        successAlert.classList.add("fade");
-                    }, 500);
-                }
-                //Show spinner only on site form submission
-                if (form && spinner) {
-                    form.addEventListener('submit', function(event) {
-                        spinner.classList.remove('d-none'); //Show spinner
+                    document.querySelectorAll('.checklist-stage-card').forEach(item => {
+                        if (item !== card) {
+                            item.classList.remove('active');
+                            item.querySelector('.checklist-stage-header').setAttribute('aria-expanded', 'false');
+                        }
                     });
-                }
+
+                    const isActive = card.classList.toggle('active');
+                    this.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+                });
             });
+
+            const firstStage = document.querySelector('.checklist-stage-card');
+            if (firstStage) {
+                firstStage.classList.add('active');
+                firstStage.querySelector('.checklist-stage-header').setAttribute('aria-expanded', 'true');
+            }
         });
-
-        
-    const items = document.querySelectorAll('.accordion-item');
-
-    items.forEach(item => {
-      item.querySelector('.accordion-title').addEventListener('click', () => {
-        // Collapse all others (optional)
-        items.forEach(i => {
-          if (i !== item) i.classList.remove('active');
-        });
-
-        item.classList.toggle('active');
-      });
-    });
-
-
-    $(document).ready(function(){
-    $('.accordion-title').click(function(){
-        const content = $(this).next('.accordion-content');
-        const icon = $(this).find('.icon');
-
-        if (content.is(':visible')) {
-            content.slideUp();
-            icon.html('&#9660;'); // Arrow ▼
-        } else {
-            $('.accordion-content').slideUp(); // Close others
-            $('.icon').html('&#9660;'); // Reset all icons
-            content.slideDown();
-            icon.html('<span class="spinner"></span>'); // Wait icon
-        }
-    });
-});
-
-
-
     </script>
 
     <style>
-        .site-card {
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            border: 2px solid #dee2e6;
+        .page-header {
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e7edf6;
+            margin-bottom: 20px;
+        }
+
+        .checklist-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 24px;
+            padding: 28px 26px;
+            border: 1px solid #dcf0ea;
+            border-radius: 14px;
+            background: linear-gradient(110deg, #eef4ff 0%, #edf9f3 100%);
+            box-shadow: 0 10px 26px rgba(20, 35, 70, 0.06);
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 0;
+            border-radius: 0;
+            color: #087443;
+            background: transparent;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .hero-kicker::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #18b564;
+        }
+
+        .checklist-hero h2 {
+            margin: 0;
+            color: #07164a;
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .checklist-hero p {
+            max-width: 680px;
+            margin: 8px 0 0;
+            color: #58667a;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .hero-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 160px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            color: #fff;
+            background: linear-gradient(135deg, #246bfe 0%, #11a868 100%);
+            font-weight: 800;
+            box-shadow: 0 10px 22px rgba(36, 107, 254, 0.24);
+            flex: 0 0 auto;
+        }
+
+        .checklist-board {
+            display: grid;
+            gap: 20px;
+        }
+
+        .checklist-stage-card {
+            overflow: hidden;
+            border: 1px solid #e8edf6;
+            border-radius: 12px;
             background: #fff;
+            box-shadow: 0 10px 26px rgba(20, 35, 70, 0.07);
+        }
+
+        .checklist-stage-header {
+            width: 100%;
+            border: 0;
+            background: #fff;
+            padding: 22px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .stage-title-wrap,
+        .stage-progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stage-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: linear-gradient(135deg, #246bfe, #18b564);
+            box-shadow: 0 10px 20px rgba(36, 107, 254, 0.22);
+        }
+
+        .stage-title-wrap h4 {
+            margin: 0;
+            color: #07164a;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .stage-title-wrap p {
+            margin: 4px 0 0;
+            color: #6b778c;
+            font-weight: 600;
+        }
+
+        .stage-pill {
+            border-radius: 12px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .stage-pill.approved {
+            color: #087443;
+            background: #e8f8ef;
+        }
+
+        .stage-pill.pending {
+            color: #946200;
+            background: #fff4d8;
+        }
+
+        .stage-pill.yet-to-work {
+            color: #506174;
+            background: #eef3f8;
+        }
+
+        .stage-pill.rejected {
+            color: #c82435;
+            background: #ffe8eb;
+        }
+
+        .stage-toggle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #246bfe;
+            background: #eaf1ff;
+            transition: transform 0.2s ease;
+        }
+
+        .checklist-stage-card.active .stage-toggle {
+            transform: rotate(180deg);
+        }
+
+        .checklist-stage-content {
+            display: none;
+            padding: 18px;
+            border-top: 1px solid #edf1f7;
+            background: #fff;
+        }
+
+        .checklist-stage-card.active .checklist-stage-content {
+            display: grid;
+            gap: 12px;
+        }
+
+        .checklist-task-row {
+            display: grid;
+            grid-template-columns: 14px 1fr auto;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border: 1px solid #e9eef6;
             border-radius: 8px;
+            background: #fff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Hover Effect */
-        .site-card:hover {
-            transform: scale(1.02);
-            border-color: #007bff;
-            box-shadow: 0px 5px 15px rgba(0, 123, 255, 0.3);
+        .checklist-task-row:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(20, 35, 70, 0.08);
         }
 
-        .accordion {
-      max-width: 700px;
-      margin: 20px auto;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
+        .task-status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #9aa6b2;
+        }
 
-    .accordion-item {
-      border-bottom: 1px solid #ddd;
-    }
+        .checklist-task-row.approved .task-status-dot {
+            background: #18b564;
+        }
 
-    .accordion-title {
-      padding: 20px;
-      cursor: pointer;
-      background-color: white;
-      font-weight: bold;
-      transition: background-color 0.2s ease;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .checklist-task-row.pending .task-status-dot {
+            background: #f4b740;
+        }
 
-    .accordion-title:hover {
-      background-color: #f0f0f0;
-    }
+        .checklist-task-row.yet-to-work .task-status-dot {
+            background: #9aa6b2;
+        }
 
-    .accordion-content {
-      display: none;
-      padding: 0 20px 20px 20px;
-      background-color: white;
-      font-size: 15px;
-      line-height: 1.5;
-    }
+        .checklist-task-row.rejected .task-status-dot {
+            background: #f05260;
+        }
 
-    .accordion-item.active .accordion-content {
-      display: block;
-    }
+        .task-main a,
+        .locked-task {
+            display: inline-block;
+            color: #0d1b4c;
+            font-size: 15px;
+            font-weight: 800;
+            text-decoration: none !important;
+        }
 
-    .accordion-item.active .accordion-title {
-      color: #3e64ff;
-    }
+        .task-main a:hover {
+            color: #246bfe;
+        }
 
-    .arrow {
-      font-size: 16px;
-      transition: transform 0.2s ease;
-    }
+        .task-main span:last-child {
+            display: block;
+            margin-top: 3px;
+            color: #7b8797;
+            font-size: 13px;
+            font-weight: 600;
+        }
 
-    .accordion-item.active .arrow {
-      transform: rotate(180deg); /* Switches arrow direction */
-    }
-    
+        .locked-task {
+            color: #8b96a8;
+            cursor: not-allowed;
+        }
 
-.accordion-content {
-    display: none;
-    padding: 10px;
-    background: #fff;
-}
+        .task-status-label {
+            min-width: 86px;
+            text-align: center;
+            border-radius: 18px;
+            padding: 8px 14px;
+            color: #5b6678;
+            background: #f1f4f8;
+            font-size: 12px;
+            font-weight: 800;
+        }
 
-.spinner {
-    border: 2px solid #ccc;
-    border-top: 2px solid #3498db;
-    border-radius: 50%;
-    width: 14px;
-    height: 14px;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-}
+        .checklist-task-row.approved .task-status-label {
+            color: #087443;
+            background: #e8f8ef;
+        }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-a {
-    color: #1f2328;
-    text-decoration: none !important;
-}
+        .checklist-task-row.pending .task-status-label {
+            color: #946200;
+            background: #fff4d8;
+        }
+
+        .checklist-task-row.yet-to-work .task-status-label {
+            color: #506174;
+            background: #eef3f8;
+        }
+
+        .checklist-task-row.rejected .task-status-label {
+            color: #c82435;
+            background: #ffe8eb;
+        }
+
+        .empty-checklist {
+            padding: 42px 24px;
+            border: 1px dashed #b9c5d6;
+            border-radius: 16px;
+            text-align: center;
+            background: #fff;
+        }
+
+        .empty-checklist i {
+            color: #246bfe;
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .empty-checklist h4 {
+            color: #07164a;
+            font-weight: 800;
+        }
+
+        .empty-checklist p {
+            color: #6b778c;
+            margin: 0;
+        }
+
+        @media (max-width: 767px) {
+            .checklist-hero,
+            .checklist-stage-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero-action {
+                width: 100%;
+            }
+
+            .checklist-task-row {
+                grid-template-columns: 14px 1fr;
+            }
+
+            .task-status-label {
+                grid-column: 2;
+                justify-self: flex-start;
+            }
+        }
     </style>
 @endsection

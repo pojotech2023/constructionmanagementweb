@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\OtherUtilities;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,7 +17,9 @@ class OtherUtilitiesController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('admin.menus.site_management.view_utilities', compact('utilities'));
+        $siteId = $id;
+
+        return view('admin.menus.site_management.view_utilities', compact('utilities', 'siteId'));
     }
 
 
@@ -103,6 +106,46 @@ class OtherUtilitiesController extends Controller
         }
         $util->delete();
         return redirect()->back()->with('success', 'Others utility deleted successfully!');
+    }
+
+    public function export(Request $request, $id)
+    {
+        $query = OtherUtilities::where('site_id', $id);
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', Carbon::parse($request->from_date)->toDateString());
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', Carbon::parse($request->to_date)->toDateString());
+        }
+
+        $utilities = $query->orderBy('id', 'desc')->get();
+
+        $filename = 'material_other_utilities_' . $id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($utilities) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Amount', 'Remarks', 'Image']);
+
+            foreach ($utilities as $index => $utility) {
+                fputcsv($file, [
+                    $index + 1,
+                    $utility->created_at ? Carbon::parse($utility->created_at)->format('d-m-Y') : '',
+                    number_format((float) $utility->amount, 2, '.', ''),
+                    $utility->remarks,
+                    $utility->image ? asset('storage/' . $utility->image) : '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
 }

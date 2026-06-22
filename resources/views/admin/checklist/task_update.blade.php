@@ -14,7 +14,7 @@
                         <i class="icon-arrow-right"></i>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ url('admin/checklist/'.$site->id) }}">checklist</a>
+                        <a href="{{ url('admin/checklist/'.$site->id) }}">Check List</a>
                     </li>
                     <li class="separator">
                         <i class="icon-arrow-right"></i>

@@ -2,7 +2,25 @@
 
 @section('content')
 <div class="container d-flex flex-column ">
-    <h3 class="fw-bold mb-4 text-center"style="margin-top:30px">Tickets for Site</h3>
+    @php
+        $site = $tickets->first()->site ?? null;
+    @endphp
+    <div class="page-header" style="margin-top:30px">
+        <h3 class="fw-bold mb-3">Tickets for Site</h3>
+        <ul class="breadcrumbs mb-3">
+            <li class="nav-home">
+                <a href="{{ route('admin.dashboard') }}"><i class="icon-home"></i></a>
+            </li>
+            <li class="separator"><i class="icon-arrow-right"></i></li>
+            <li class="nav-item"><a href="{{ route('sitemanagement.list') }}">Site</a></li>
+            @if($site)
+                <li class="separator"><i class="icon-arrow-right"></i></li>
+                <li class="nav-item"><a href="{{ route('site.detail', $site->id) }}">{{ $site->site_name }}</a></li>
+            @endif
+            <li class="separator"><i class="icon-arrow-right"></i></li>
+            <li class="nav-item"><a href="#">Tickets</a></li>
+        </ul>
+    </div>
 
     <div class="row justify-content-center" style="width: 100%;margin-left:10px">
        @forelse ($tickets as $ticket)

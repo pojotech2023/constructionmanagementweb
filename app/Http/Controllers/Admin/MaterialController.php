@@ -8,6 +8,7 @@ use App\Models\MaterialPayment;
 use App\Models\MaterialRequest;
 use App\Models\Site;
 use App\Models\VendorPayDetail;
+use App\Models\VendorPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -167,19 +168,26 @@ class MaterialController extends Controller
     {
         $monthYear = $request->query('month') ?: now()->format('Y-m');
         $week = (int) $request->query('week');
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
 
-        $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
-        $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+        if ($fromDate || $toDate) {
+            $startDate = $fromDate ? Carbon::parse($fromDate)->startOfDay() : Carbon::create(1900, 1, 1)->startOfDay();
+            $endDate = $toDate ? Carbon::parse($toDate)->endOfDay() : now()->endOfDay();
+        } else {
+            $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
+            $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
 
-        $startDate = $startOfMonth->copy();
-        $endDate = $endOfMonth->copy();
+            $startDate = $startOfMonth->copy();
+            $endDate = $endOfMonth->copy();
 
-        if ($week >= 1 && $week <= 4) {
-            $daysInMonth = $startOfMonth->daysInMonth;
-            $weekLength = ceil($daysInMonth / 4);
-            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
-            $endDate = $startDate->copy()->addDays($weekLength - 1);
-            if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+            if ($week >= 1 && $week <= 4) {
+                $daysInMonth = $startOfMonth->daysInMonth;
+                $weekLength = ceil($daysInMonth / 4);
+                $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+                $endDate = $startDate->copy()->addDays($weekLength - 1);
+                if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+            }
         }
 
         $materials = \App\Models\MaterialOrder::with('vendor')
@@ -202,7 +210,7 @@ class MaterialController extends Controller
             fputcsv($file, $columns);
             foreach ($materials as $m) {
                 fputcsv($file, [
-                    $m->date,
+                    $m->date ? Carbon::parse($m->date)->format('d-m-Y') : '',
                     $m->quantity,
                     optional($m->vendor)->name,
                     $m->price,
@@ -351,28 +359,23 @@ public function materialRequest(Request $request)
         ]);
 
         // ✅ Vendor payment details update
-        $paydetail = VendorPayDetail::where('vendor_id', $request->vendor_id)->first();
-        if ($paydetail) {
-            $paydetail->update([
-                'total_units' => $paydetail->total_units + $request->quantity,
-                'total_unit_price' => $paydetail->total_unit_price + $request->price,
-                'balance_amount' => $paydetail->balance_amount + $request->price
-            ]);
-        } else {
-            VendorPayDetail::create([
-                'vendor_id' => $request->vendor_id,
-                'total_units' => $request->quantity,
-                'total_unit_price' => $request->price,
-                'balance_amount' => $request->price,
-                'created_by' => auth('admin')->id(),
-            ]);
-        }
+        $totalUnits = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('quantity');
+        $totalAmount = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('price');
+        $paidAmount = VendorPayment::where('vendor_id', $request->vendor_id)->sum('payment');
+
+        VendorPayDetail::updateOrCreate(
+            ['vendor_id' => $request->vendor_id],
+            [
+                'total_units' => $totalUnits,
+                'total_unit_price' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
 
         // ✅ Update site expense
         $site = Site::findOrFail($request->site_id);
-        $site->update([
-            'expense' => $site->expense + $request->price
-        ]);
 
         // ✅ WhatsApp message
         $message = "*POJO INFRA 360*\n"

@@ -112,6 +112,7 @@ Route::prefix('admin')->group(function () {
         Route::post('pay-update', [VendorController::class, 'vendorpayUpdate'])->name('paydetail.update');
         Route::post('payment-add', [VendorController::class, 'addPayment'])->name('payment.add');
         Route::get('payment-history/{vendorId}', [VendorController::class, 'paymentHistory'])->name('payment.history');
+        Route::get('payment-history/{vendorId}/export', [VendorController::class, 'exportPaymentHistory'])->name('payment.history.export');
 
         //Subcontractor Management
         Route::get('/subcontractor-management', [SubcontractorController::class, 'index'])->name('subcontractor.list');
@@ -126,7 +127,10 @@ Route::prefix('admin')->group(function () {
         //opening Balance
         Route::post('subpay-update', [SubcontractorController::class, 'subcontractorpayUpdate'])->name('subpaydetail.update');
         Route::post('subpayment-add', [SubcontractorController::class, 'addPayment'])->name('subpayment.add');
+        Route::patch('subpayment-update/{id}', [SubcontractorController::class, 'updatePayment'])->name('subpayment.update');
+        Route::delete('subpayment-delete/{id}', [SubcontractorController::class, 'deletePayment'])->name('subpayment.delete');
         Route::get('subpayment-history/{subcontractorId}', [SubcontractorController::class, 'paymentHistory'])->name('subpayment.history');
+        Route::get('subpayment-history/{subcontractorId}/export', [SubcontractorController::class, 'exportPaymentHistory'])->name('subpayment.history.export');
 
         //Supervisor Creation
         Route::get('/supervisor-management', [SupervisorCreationController::class, 'index'])->name('supervisor.list');
@@ -144,11 +148,15 @@ Route::prefix('admin')->group(function () {
         Route::patch('/site-update/{id}', [SiteController::class, 'update'])->name('sitemanagement.update');
         Route::patch('/site-inactivate/{id}', [SiteController::class, 'delete'])->name('sitemanagement.delete');
         Route::get('/site-detail/{id}', [SiteController::class, 'siteDetail'])->name('site.detail');
+        Route::get('/site-detail/{id}/full-report', [SiteController::class, 'exportFullReport'])->name('site.full-report.export');
         Route::get('/site-payment-detail/{id}', [SiteController::class, 'paymentDetail'])->name('site.paymentDetail');
         Route::post('/site-payment-add', [SiteController::class, 'addPayment'])->name('site.payment.add');
         Route::get('/site-payment-history/{id}', [SiteController::class, 'paymentHistory'])->name('site.payment.history');
         Route::patch('/site-payment-update/{id}', [SiteController::class, 'updatePayment'])->name('site.payment.update');
         Route::delete('/site-payment-delete/{id}', [SiteController::class, 'deletePayment'])->name('site.payment.delete');
+        Route::get('/site-payment-pdf/{id}', [SiteController::class, 'downloadPaymentPdf'])->name('site.payment.pdf');
+        Route::get('/site-payment-whatsapp/{id}', [SiteController::class, 'sendPaymentWhatsapp'])->name('site.payment.whatsapp');
+        Route::get('/site-payment-export/{id}', [SiteController::class, 'exportPaymentHistory'])->name('site.payment.export');
 
         //Attendance
         Route::get('/attendance/{siteId}', [AttendanceController::class, 'index'])->name('attendance');
@@ -190,6 +198,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/utilities-add', [OtherUtilitiesController::class, 'store'])->name('utilities.add');
         Route::patch('/utilities-update/{id}', [OtherUtilitiesController::class, 'update'])->name('utilities.update');
         Route::delete('/utilities-delete/{id}', [OtherUtilitiesController::class, 'delete'])->name('utilities.delete');
+        Route::get('/site-utilities/{id}/export', [OtherUtilitiesController::class, 'export'])->name('utilities.export');
 
         // Material export (CSV)
         Route::get('/material/{siteId}/{materialType}/export', [\App\Http\Controllers\Admin\MaterialController::class, 'export'])->name('material.export');
@@ -200,6 +209,7 @@ Route::prefix('admin')->group(function () {
         //Subcontractor
         Route::get('/subcontractor-detail/{siteId}', [SubcontractorController::class, 'getSubcontractor'])->name('subcontractor.detail');
         Route::get('/subcontractor-petty-cash/{siteId}', [SubcontractorController::class, 'pettyCashPaymentDetail'])->name('subcontractor.pettyCash');
+        Route::get('/subcontractor-petty-cash/{siteId}/export', [SubcontractorController::class, 'exportPettyCash'])->name('subcontractor.pettyCash.export');
         
         Route::get('/subcontractor/{siteId}/{subcontractorType}', [SubcontractorController::class, 'getSubcontractorDetails'])->name('subcontractor.detailList');
         Route::post('/subcontractor/get-data/{siteId}', [SubcontractorController::class, 'getSubcontractorData'])->name('subcontractor.getData');
@@ -214,6 +224,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/subutilities-add', [OtherUtilitiesSubController::class, 'store'])->name('subutilities.add');
         Route::patch('/subutilities-update/{id}', [OtherUtilitiesSubController::class, 'update'])->name('subutilities.update');
         Route::delete('/subutilities-delete/{id}', [OtherUtilitiesSubController::class, 'delete'])->name('subutilities.delete');
+        Route::get('/site-subutilities/{id}/export', [OtherUtilitiesSubController::class, 'export'])->name('subutilities.export');
         // Subcontractor exports
         Route::get('/subcontractor/{siteId}/export', [\App\Http\Controllers\Admin\SubcontractorController::class, 'exportSite'])->name('subcontractor.export');
         Route::get('/subcontractor/{siteId}/{subcontractorType}/export', [\App\Http\Controllers\Admin\SubcontractorController::class, 'exportType'])->name('subcontractor.export.type');

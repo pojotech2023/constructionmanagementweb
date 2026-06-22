@@ -22,6 +22,12 @@
                             <i class="icon-arrow-right"></i>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route('site.detail', $siteId) }}">{{ $siteName }}</a>
+                        </li>
+                        <li class="separator">
+                            <i class="icon-arrow-right"></i>
+                        </li>
+                        <li class="nav-item">
                             <a href="#">{{ ucfirst($materialType) }} Details</a>
                         </li>
                     </ul>
@@ -40,27 +46,29 @@
                             </div>
                             <div class="row mb-2 align-items-end pb-3"
                                 style="border-bottom: 1px solid rgb(235, 236, 236) !important;">
-                                <div class="col-md-2">
+                                <div class="col-12 col-md-3">
                                     <input type="month" id="monthPicker" class="form-control">
                                 </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="1">Week 1</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="2">Week 2</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="3">Week 3</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="4">Week 4</span>
+
+                                <div class="col-12">
+                                    <div class="row justify-content-center align-items-center" id="weekFilterRow">
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-secondary week-reset-btn active">
+                                                Full Month
+                                            </span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="1">Week 1</span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="2">Week 2</span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="3">Week 3</span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="4">Week 4</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -75,17 +83,11 @@
     <!-- Buttons -->
         <div class="col-12 col-md-6">
         <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-            @php
-                $exportUrl = route('material.export', ['siteId' => $siteId, 'materialType' => $materialType]);
-                $query = request()->getQueryString();
-                if (!empty($query)) $exportUrl .= '?' . $query;
-            @endphp
-
-            <a href="{{ $exportUrl }}" class="btn btn-outline-secondary w-100 w-md-auto">Export</a>
-
             <a href="{{ route('material.requestForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-info w-100 w-md-auto">Request</a>
 
             <a href="{{ route('material.orderForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-primary w-100 w-md-auto">Add Order</a>
+
+            <button type="button" class="btn btn-success w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#materialExportModal">Export</button>
         </div>
     </div>
 </div>
@@ -122,7 +124,7 @@
                                             @foreach ($materials as $index => $brick)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $brick->date }}</td>
+                                                    <td>{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
                                                     <td>{{ $brick->quantity }}</td>
                                                     <td>{{ $brick->vendor->name }}</td>
                                                     <td>{{ $brick->price }}</td>
@@ -151,6 +153,34 @@
                             </div>
                         @endif
                     </div>
+                    <!-- Export Modal -->
+                    <div class="modal fade" id="materialExportModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="GET" action="{{ route('material.export', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="js-export-modal-form">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Export {{ ucfirst($materialType) }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">From Date</label>
+                                            <input type="date" name="from_date" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">To Date</label>
+                                            <input type="date" name="to_date" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Download</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Edit Order Modal -->
                     <div class="modal fade" id="editOrderModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog">
@@ -258,8 +288,19 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.js-export-modal-form').forEach(function(form) {
+                form.addEventListener('submit', function() {
+                    var modalEl = form.closest('.modal');
+                    var modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                    if (modal) {
+                        modal.hide();
+                    }
+                });
+            });
+
             const monthPicker = document.getElementById('monthPicker');
             const weekButtons = document.querySelectorAll('.week-btn');
+            const weekResetButton = document.querySelector('.week-reset-btn');
             const spinner = document.getElementById('loadingSpinner');
             const tableBody = document.getElementById('bricksTableBody');
 
@@ -269,23 +310,45 @@
             const currentMonth = new Date().toISOString().slice(0, 7);
             monthPicker.value = currentMonth;
 
-            // When week button clicked
-            weekButtons.forEach((button, index) => {
-                button.addEventListener('click', function() {
-                    selectedWeek = index + 1;
+            function setActiveWeekButton(activeButton) {
+                weekButtons.forEach(btn => btn.classList.remove('active'));
+                if (weekResetButton) {
+                    weekResetButton.classList.toggle('active', !activeButton);
+                }
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                }
+            }
 
-                    // Highlight selected week
-                    weekButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
+            // When week button clicked
+            weekButtons.forEach((button) => {
+                button.addEventListener('click', function() {
+                    const wasActive = this.classList.contains('active');
+
+                    if (wasActive) {
+                        selectedWeek = 0;
+                        setActiveWeekButton(null);
+                    } else {
+                        selectedWeek = Number(this.getAttribute('data-week')) || 0;
+                        setActiveWeekButton(this);
+                    }
 
                     fetchData();
                 });
             });
 
+            if (weekResetButton) {
+                weekResetButton.addEventListener('click', function() {
+                    selectedWeek = 0;
+                    setActiveWeekButton(null);
+                    fetchData();
+                });
+            }
+
             // When month changed
             monthPicker.addEventListener('change', function() {
                 selectedWeek = 0;
-                weekButtons.forEach(btn => btn.classList.remove('active'));
+                setActiveWeekButton(null);
                 fetchData();
             });
 
@@ -311,10 +374,11 @@
                         // Update table
                         tableBody.innerHTML = '';
                         data.bricks.forEach((item, index) => {
+                            const displayDate = formatDisplayDate(item.date);
                             tableBody.innerHTML += `
                             <tr>
                                 <td>${index + 1}</td>
-                                <td>${item.date}</td>
+                                <td>${displayDate}</td>
                                 <td>${item.quantity}</td>
                                 <td>${item.vendor ? item.vendor.name : ''}</td>
                                 <td>${item.price}</td>
@@ -352,6 +416,24 @@
             // Initial fetch
             fetchData();
 
+            function toIsoDate(dateValue) {
+                if (!dateValue) return '';
+                const parts = dateValue.split('-');
+                if (parts.length === 3 && parts[0].length === 2) {
+                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+                return dateValue;
+            }
+
+            function formatDisplayDate(dateValue) {
+                if (!dateValue) return '-';
+                const parts = dateValue.split('-');
+                if (parts.length === 3 && parts[0].length === 4) {
+                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+                return dateValue;
+            }
+
             // Event delegation for edit/delete buttons
             document.addEventListener('click', function (e) {
                 const editBtn = e.target.closest('.editOrderBtn');
@@ -364,7 +446,7 @@
                     const price = editBtn.getAttribute('data-price');
                     const form = document.getElementById('editOrderForm');
                     form.action = '/admin/material-order-update/' + id;
-                    document.getElementById('edit_order_date').value = date;
+                    document.getElementById('edit_order_date').value = toIsoDate(date);
                     document.getElementById('edit_order_quantity').value = quantity;
                     document.getElementById('edit_order_price').value = price;
                 }
@@ -383,9 +465,18 @@
             cursor: pointer;
         }
 
+        .week-reset-btn {
+            cursor: pointer;
+        }
+
         .week-btn.active {
             background-color: #007bff;
             color: white;
+        }
+
+        .week-reset-btn.active {
+            background: #198754;
+            color: #fff;
         }
     </style>
 @endsection

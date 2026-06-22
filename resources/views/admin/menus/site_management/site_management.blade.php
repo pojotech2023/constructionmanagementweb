@@ -38,7 +38,6 @@
                                 <select name="status" id="statusFilter" class="form-select"
                                     onchange="document.getElementById('filterform').submit();">
                                     <option value="" {{ request('status') == '' ? 'selected' : '' }}>All</option>
-                                    <option value="quoted" {{ request('status') == 'quoted' ? 'selected' : '' }}>Quoted</option>
                                     <option value="Ongoing" {{ request('status') == 'Ongoing' ? 'selected' : '' }}>Ongoing
                                     </option>
                                     <option value="Completed" {{ request('status') == 'Completed' ? 'selected' : '' }}>
@@ -81,16 +80,15 @@
                                         <div class="col-6 text-end">
                                             @php
     // Get status from database
-    $status = $site->status ?? 'Quoted';
+    $status = $site->status ?? 'Ongoing';
 
-    // If database has 'new', display as 'coated'
-    if ($status === 'New') {
-        $status = 'Quoted';
+    // Old quoted/new projects are shown as ongoing.
+    if (in_array($status, ['New', 'quoted', 'Quoted', null], true)) {
+        $status = 'Ongoing';
     }
 
     // Set badge class based on status
     $badgeClass = match ($status) {
-        'quoted' => 'badge-info',
         'Ongoing' => 'badge-warning',
         'Completed' => 'badge-success',
         default => 'badge-secondary',

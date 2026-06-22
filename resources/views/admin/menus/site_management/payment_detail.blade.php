@@ -6,6 +6,17 @@
             <div class="row align-items-center mb-4 mt-3">
                 <div class="col-lg-6">
                     <h3 class="pb-2">Payment Detail</h3>
+                    <ul class="breadcrumbs mb-0">
+                        <li class="nav-home">
+                            <a href="{{ route('admin.dashboard') }}"><i class="icon-home"></i></a>
+                        </li>
+                        <li class="separator"><i class="icon-arrow-right"></i></li>
+                        <li class="nav-item"><a href="{{ route('sitemanagement.list') }}">Site</a></li>
+                        <li class="separator"><i class="icon-arrow-right"></i></li>
+                        <li class="nav-item"><a href="{{ route('site.detail', $site->id) }}">{{ $site->site_name }}</a></li>
+                        <li class="separator"><i class="icon-arrow-right"></i></li>
+                        <li class="nav-item"><a href="#">Payment Detail</a></li>
+                    </ul>
                 </div>
                 <div class="col-lg-6 text-end">
                     <button class="btn btn-success me-2 mb-2" type="button" data-bs-toggle="modal" data-bs-target="#addPaymentModal">

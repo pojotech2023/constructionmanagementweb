@@ -2,7 +2,8 @@
 @section('content')
     <div class="container">
         <div class="page-inner">
-            <div class="page-header">
+            <div class="page-header d-flex flex-wrap align-items-center justify-content-between">
+                <div>
                 <h3 class="fw-bold mb-3">Site Details</h3>
                 <ul class="breadcrumbs mb-3">
                     <li class="nav-home">
@@ -20,9 +21,13 @@
                         <i class="icon-arrow-right"></i>
                     </li>
                     <li class="nav-item">
-                        <a href="#">Site Details</a>
+                        <a href="#">{{ $site->site_name }}</a>
                     </li>
                 </ul>
+                </div>
+                <a href="{{ route('site.full-report.export', $site->id) }}" class="btn btn-success mb-3">
+                    <i class="fas fa-file-excel me-1"></i> Download Full Report
+                </a>
             </div>
             <div class="row g-4">
                 <!-- Blade alert for success -->
@@ -79,7 +84,7 @@
                             <div class="h1">
                                 <img src="{{ asset('images/sri/checklist.png') }}" class="w-100">
                             </div>
-                            <div class="text-muted">checklist</div>
+                            <div class="text-muted">Check List</div>
                         </div>
                     </div>
                 </div>

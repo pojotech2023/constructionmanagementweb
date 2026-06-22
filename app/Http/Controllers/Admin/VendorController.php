@@ -7,6 +7,7 @@ use App\Models\MaterialOrder;
 use App\Models\Vendor;
 use App\Models\VendorPayDetail;
 use App\Models\VendorPayment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -94,20 +95,29 @@ class VendorController extends Controller
 
     public function dashboard()
     {
-        $vendors = Vendor::with(['vendorPayDetail'])->withSum('vendorPayment', 'payment')->get();
+        $vendors = Vendor::withSum('vendorPayment', 'payment')
+            ->withSum('materialOrders', 'price')
+            ->get();
 
         return view('admin.menus.vendor.vendor_dashboard', compact('vendors'));
     }
 
     public function getPayDetailsForm($vendorId)
     {
-        $orders = MaterialOrder::where('vendor_id', $vendorId)->get();
+        $vendor = Vendor::findOrFail($vendorId);
+        $orders = MaterialOrder::with('site')
+            ->where('vendor_id', $vendorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
         $totalUnits = $orders->sum('quantity');
         $totalAmount = $orders->sum('price');
 
         $paydetail = VendorPayDetail::where('vendor_id', $vendorId)->first();
+        $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
+        $balanceAmount = $totalAmount - $paidAmount;
 
-        return view('admin.menus.vendor.vendor_paydetail', compact('totalUnits', 'totalAmount', 'vendorId', 'paydetail'));
+        return view('admin.menus.vendor.vendor_paydetail', compact('vendor', 'orders', 'totalUnits', 'totalAmount', 'vendorId', 'paydetail', 'paidAmount', 'balanceAmount'));
     }
 
     public function vendorpayUpdate(Request $request)
@@ -115,7 +125,6 @@ class VendorController extends Controller
         //dd($request->all());
         $validate = Validator::make($request->all(), [
             'vendor_id'    => 'required|exists:vendors,id',
-            'opening_balance' => 'nullable',
             'total_units'   => 'required',
             'total_unit_price' => 'required',
             'balance_amount'  => 'required',
@@ -127,29 +136,25 @@ class VendorController extends Controller
         }
 
         $payDetail = VendorPayDetail::where('vendor_id', $request->vendor_id)->first();
+        $paidAmount = VendorPayment::where('vendor_id', $request->vendor_id)->sum('payment');
+        $balanceAmount = (float) $request->total_unit_price - (float) $paidAmount;
 
         if ($payDetail) {
-
-            $newOpeningBalance = $payDetail->opening_balance + $request->opening_balance;
-            $newBalanceAmount = $payDetail->balance_amount + $request->opening_balance;
-
             $payDetail->update([
                 'vendor_id' => $request->vendor_id,
-                'opening_balance'    => $newOpeningBalance,
                 'total_units' => $request->total_units,
                 'total_unit_price' => $request->total_unit_price,
-                'balance_amount'  => $newBalanceAmount,
-                'paid_amount'  => $request->paid_amount,
+                'balance_amount'  => $balanceAmount,
+                'paid_amount'  => $paidAmount,
                 'updated_by'  => auth('admin')->id(),
             ]);
         } else {
             VendorPayDetail::create([
                 'vendor_id'         => $request->vendor_id,
-                'opening_balance'    => $request->opening_balance,
                 'total_units'       => $request->total_units,
                 'total_unit_price'   => $request->total_unit_price,
-                'balance_amount'      => $request->opening_balance + $request->total_unit_price,
-                'paid_amount' => $request->paid_amount,
+                'balance_amount'      => $balanceAmount,
+                'paid_amount' => $paidAmount,
                 'created_by'  => auth('admin')->id(),
             ]);
         }
@@ -163,7 +168,8 @@ class VendorController extends Controller
             'vendor_id' => 'required|exists:vendors,id',
             'payment' => 'required|numeric',
             'date' => 'required|date',
-            'payment_mode' => 'required'
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string'
         ]);
 
         if ($validate->fails()) {
@@ -178,17 +184,24 @@ class VendorController extends Controller
             'payment' => $request->payment,
             'date' => $request->date,
             'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
             'created_by'  => auth('admin')->id(),
         ]);
 
-        $payDetail = VendorPayDetail::where('vendor_id', $request->vendor_id)->first();
+        $paidAmount = VendorPayment::where('vendor_id', $request->vendor_id)->sum('payment');
+        $totalUnits = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('quantity');
+        $totalAmount = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('price');
 
-        if ($payDetail) {
-            $payDetail->update([
-                'balance_amount' => $payDetail->balance_amount - $request->payment,
-                'paid_amount' => $payDetail->paid_amount + $request->payment,
-            ]);
-        }
+        VendorPayDetail::updateOrCreate(
+            ['vendor_id' => $request->vendor_id],
+            [
+                'total_units' => $totalUnits,
+                'total_unit_price' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
 
         // Get Vendor Info
         $vendor = Vendor::find($request->vendor_id);
@@ -205,12 +218,53 @@ class VendorController extends Controller
 
     public function paymentHistory($vendorId)
     {
+        $vendor = Vendor::findOrFail($vendorId);
         $histories = VendorPayment::with('vendor')
             ->where('vendor_id', $vendorId)
             ->get();
 
         $paidAmount = $histories->sum('payment');
 
-        return view('admin.menus.vendor.payment_history', compact('histories', 'vendorId', 'paidAmount'));
+        return view('admin.menus.vendor.payment_history', compact('vendor', 'histories', 'vendorId', 'paidAmount'));
+    }
+
+    public function exportPaymentHistory(Request $request, $vendorId)
+    {
+        $vendor = Vendor::findOrFail($vendorId);
+        $query = VendorPayment::where('vendor_id', $vendorId);
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('date', '>=', Carbon::parse($request->from_date)->toDateString());
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('date', '<=', Carbon::parse($request->to_date)->toDateString());
+        }
+
+        $histories = $query->orderBy('date')->orderBy('id')->get();
+        $filename = 'vendor_payment_history_' . $vendor->id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($histories) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Total Payment', 'Payment Mode', 'Remarks']);
+
+            foreach ($histories as $index => $history) {
+                fputcsv($file, [
+                    $index + 1,
+                    $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                    number_format((float) $history->payment, 2, '.', ''),
+                    $history->payment_mode,
+                    $history->remarks,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

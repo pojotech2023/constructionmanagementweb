@@ -19,15 +19,19 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
     protected $siteId;
     protected $month;
     protected $week;
+    protected $fromDate;
+    protected $toDate;
     protected $rows = [];
     protected $grandTotal = 0;
     protected $siteName;
 
-    public function __construct($siteId, $month = null, $week = null)
+    public function __construct($siteId, $month = null, $week = null, $fromDate = null, $toDate = null)
     {
         $this->siteId = $siteId;
         $this->month = $month;
         $this->week = $week;
+        $this->fromDate = $fromDate;
+        $this->toDate = $toDate;
 
         // Fetch site name
         $this->siteName = Site::find($siteId)->site_name ?? 'Unknown Site';
@@ -43,7 +47,15 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
     {
         $query = Attendance::where('site_id', $this->siteId);
 
-        if ($this->month) {
+        if ($this->fromDate || $this->toDate) {
+            if ($this->fromDate) {
+                $query->whereDate('date', '>=', Carbon::parse($this->fromDate)->toDateString());
+            }
+
+            if ($this->toDate) {
+                $query->whereDate('date', '<=', Carbon::parse($this->toDate)->toDateString());
+            }
+        } elseif ($this->month) {
             $startDate = Carbon::parse($this->month . '-01');
             $endDate = $startDate->copy()->endOfMonth();
             $query->whereBetween('date', [$startDate, $endDate]);
@@ -71,7 +83,7 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
             $this->grandTotal += $total;
 
             $this->rows[] = [
-                Carbon::parse($attendance->date)->format('Y-m-d'),
+                Carbon::parse($attendance->date)->format('d-m-Y'),
                 ucfirst($attendance->category),
                 $attendance->count,
                 $amount,

@@ -106,7 +106,7 @@
                                             @foreach ($bricks as $index => $brick)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $brick->date }}</td>
+                                                    <td>{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
                                                     <td>{{ $brick->quantity }}</td>
                                                     <td>{{ $brick->vendor->name }}</td>
                                                     <td>{{ $brick->price }}</td>
@@ -249,7 +249,7 @@
                         const row = `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${brick.date}</td>
+                        <td>${formatDisplayDate(brick.date)}</td>
                         <td>${brick.unit}</td>
                         <td>${brick.vendor?.name || ''}</td>
                         <td>${brick.price}</td>
@@ -279,6 +279,15 @@
                 <td><p class="text-danger fw-bold">${data.pendingAmount}</p></td>
             </tr>
         `;
+            }
+
+            function formatDisplayDate(dateValue) {
+                if (!dateValue) return '-';
+                const parts = dateValue.split('-');
+                if (parts.length === 3 && parts[0].length === 4) {
+                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+                return dateValue;
             }
         });
     </script>

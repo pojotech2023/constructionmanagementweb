@@ -14,7 +14,13 @@
                         <i class="icon-arrow-right"></i>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ url('admin/drawing/'.$site->id) }}">Drawing</a>
+                        <a href="{{ route('sitemanagement.list') }}">Site</a>
+                    </li>
+                    <li class="separator">
+                        <i class="icon-arrow-right"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('site.detail', $site->id) }}">{{ $site->site_name }}</a>
                     </li>
                     <li class="separator">
                         <i class="icon-arrow-right"></i>

@@ -188,7 +188,7 @@ public function viewTaskMedia($siteId, $taskId)
 
     $task = Task::findOrFail($taskId);
 
-    return view('admin.checklist.task_view', compact('taskMedia', 'task'));
+    return view('admin.checklist.task_view', compact('taskMedia', 'task', 'siteId'));
 }
 
 public function updateTaskMedia(Request $request, $id)

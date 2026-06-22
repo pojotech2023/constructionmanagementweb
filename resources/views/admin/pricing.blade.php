@@ -199,7 +199,7 @@
             yearly: '14,999',
             sites: '15 Sites',
             desc: 'Adds attendance exports and property management.',
-            features: ['Quotation Generator', 'Attendance Report Download (Excel)', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Real Estate Property Management', 'Profile', 'Settings'],
+            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Profile', 'Settings'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
@@ -207,7 +207,7 @@
             yearly: '21,999',
             sites: '20 Sites',
             desc: 'Adds supervisor apps and checklist support.',
-            features: ['Quotation Generator', 'Attendance Report Download (Excel)', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
+            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
@@ -215,7 +215,7 @@
             yearly: '25,000',
             sites: '25 Sites',
             desc: 'Adds admin mobile access for larger operations.',
-            features: ['Quotation Generator', 'Attendance Report Download (Excel)', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
+            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
@@ -223,7 +223,7 @@
             yearly: '29,999',
             sites: '30 Sites',
             desc: 'Expanded capacity for bigger construction teams.',
-            features: ['Quotation Generator', 'Attendance Report Download (Excel)', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
+            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
@@ -231,7 +231,7 @@
             yearly: '38,999',
             sites: '35 Sites',
             desc: 'Full suite with Admin, Supervisor and Client app, drawings, and tickets.',
-            features: ['Quotation Generator', 'Attendance Report Download (Excel)', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Client Mobile App', 'Client Ticket Creation', 'Drawings', 'Check List (50 nos)', 'Profile', 'Settings'],
+            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Client Mobile App', 'Client Ticket Creation', 'Drawings', 'Check List (50 nos)', 'Profile', 'Settings'],
             supportLink: 'https://wa.me/918072515050'
         }
     ];

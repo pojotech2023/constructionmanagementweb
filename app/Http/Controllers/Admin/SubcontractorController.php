@@ -151,10 +151,13 @@ class SubcontractorController extends Controller
         $paidAmount = $histories->sum('payment');
         $title = 'Petty Cash Payment Detail';
         $backRoute = route('subcontractor.detail', ['siteId' => $site->id]);
+        $siteName = $site->site_name;
 
         return view('admin.menus.subcontractor.subcontractor_paydetail', compact(
             'totalAmount',
             'subcontractorId',
+            'siteId',
+            'siteName',
             'paydetail',
             'histories',
             'paidAmount',
@@ -199,19 +202,26 @@ class SubcontractorController extends Controller
     {
         $month = $request->query('month') ?: now()->format('Y-m');
         $week = (int) $request->query('week');
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
 
-        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-        $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+        if ($fromDate || $toDate) {
+            $startDate = $fromDate ? Carbon::parse($fromDate)->startOfDay() : Carbon::create(1900, 1, 1)->startOfDay();
+            $endDate = $toDate ? Carbon::parse($toDate)->endOfDay() : now()->endOfDay();
+        } else {
+            $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+            $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
 
-        $startDate = $startOfMonth->copy();
-        $endDate = $endOfMonth->copy();
+            $startDate = $startOfMonth->copy();
+            $endDate = $endOfMonth->copy();
 
-        if ($week >= 1 && $week <= 4) {
-            $daysInMonth = $startOfMonth->daysInMonth;
-            $weekLength = ceil($daysInMonth / 4);
-            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
-            $endDate = $startDate->copy()->addDays($weekLength - 1);
-            if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+            if ($week >= 1 && $week <= 4) {
+                $daysInMonth = $startOfMonth->daysInMonth;
+                $weekLength = ceil($daysInMonth / 4);
+                $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+                $endDate = $startDate->copy()->addDays($weekLength - 1);
+                if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+            }
         }
 
         $records = SubcontractorService::with('subcontractor')
@@ -232,7 +242,7 @@ class SubcontractorController extends Controller
             fputcsv($file, $columns);
             foreach ($records as $r) {
                 fputcsv($file, [
-                    $r->date,
+                    $r->date ? Carbon::parse($r->date)->format('d-m-Y') : '',
                     $r->subcontractor_type,
                     optional($r->subcontractor)->name,
                     $r->amount,
@@ -250,19 +260,26 @@ class SubcontractorController extends Controller
     {
         $month = $request->query('month') ?: now()->format('Y-m');
         $week = (int) $request->query('week');
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
 
-        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-        $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+        if ($fromDate || $toDate) {
+            $startDate = $fromDate ? Carbon::parse($fromDate)->startOfDay() : Carbon::create(1900, 1, 1)->startOfDay();
+            $endDate = $toDate ? Carbon::parse($toDate)->endOfDay() : now()->endOfDay();
+        } else {
+            $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+            $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
 
-        $startDate = $startOfMonth->copy();
-        $endDate = $endOfMonth->copy();
+            $startDate = $startOfMonth->copy();
+            $endDate = $endOfMonth->copy();
 
-        if ($week >= 1 && $week <= 4) {
-            $daysInMonth = $startOfMonth->daysInMonth;
-            $weekLength = ceil($daysInMonth / 4);
-            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
-            $endDate = $startDate->copy()->addDays($weekLength - 1);
-            if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+            if ($week >= 1 && $week <= 4) {
+                $daysInMonth = $startOfMonth->daysInMonth;
+                $weekLength = ceil($daysInMonth / 4);
+                $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+                $endDate = $startDate->copy()->addDays($weekLength - 1);
+                if ($endDate->gt($endOfMonth)) $endDate = $endOfMonth;
+            }
         }
 
         $records = SubcontractorService::with('subcontractor')
@@ -383,30 +400,18 @@ class SubcontractorController extends Controller
             'created_by'  => auth('admin')->id(),
         ]);
 
-        $paydetail = SubcontractorPayDetail::where('subcontractor_id', $request->subcontractor_id)->first();
-        if ($paydetail) {
-            $newTotalAmount =   $paydetail->total_amount + $request->amount;
-            $newBalanaceAmount =   $paydetail->balance_amount + $request->amount;
+        $totalAmount = SubcontractorService::where('subcontractor_id', $request->subcontractor_id)->sum('amount');
+        $paidAmount = SubcontractorPayment::where('subcontractor_id', $request->subcontractor_id)->sum('payment');
 
-            $paydetail->update([
-                'total_amount' => $newTotalAmount,
-                'balance_amount' => $newBalanaceAmount
-            ]);
-        } else {
-            SubcontractorPayDetail::create([
-                'subcontractor_id' => $request->subcontractor_id,
-                'total_amount' => $request->amount,
-                'balance_amount'  => $request->amount,
-                'created_by'  => auth('admin')->id(),
-            ]);
-        }
-
-        $site = Site::where('id', $request->site_id)->first();
-        $oldExpense = $site->expense;
-
-        $site->update([
-            'expense' => $oldExpense + $request->amount
-        ]);
+        SubcontractorPayDetail::updateOrCreate(
+            ['subcontractor_id' => $request->subcontractor_id],
+            [
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
 
         $site = Site::find($request->site_id);
 
@@ -433,7 +438,8 @@ class SubcontractorController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'date' => 'required|date',
-            'amount' => 'required|numeric'
+            'amount' => 'required|numeric',
+            'remarks' => 'nullable|string'
         ]);
 
         if ($validate->fails()) {
@@ -444,6 +450,7 @@ class SubcontractorController extends Controller
         $service->update([
             'date' => $request->date,
             'amount' => $request->amount,
+            'remarks' => $request->remarks,
         ]);
 
         return redirect()->back()->with('success', 'Subcontractor service updated successfully.');
@@ -459,14 +466,22 @@ class SubcontractorController extends Controller
 
      public function dashboard()
     {
-        $subcontractors = Subcontractor::with(['subcontractorPayDetail'])->withSum('subcontractorPayment', 'payment')->get();
+        $subcontractors = Subcontractor::withSum('subcontractorPayment', 'payment')
+            ->withSum('subcontractorService', 'amount')
+            ->get();
 
         return view('admin.menus.subcontractor.subcontractor_dashboard', compact('subcontractors'));
     }
 
     public function getPayDetailsForm($subcontractorId)
     {
-        $services = SubcontractorService::where('subcontractor_id', $subcontractorId)->get();
+        $subcontractor = Subcontractor::findOrFail($subcontractorId);
+        $services = SubcontractorService::with('site')
+            ->where('subcontractor_id', $subcontractorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+        $totalCounts = $services->sum('no_counts');
         $totalAmount = $services->sum('amount');
 
         $paydetail = SubcontractorPayDetail::where('subcontractor_id', $subcontractorId)->first();
@@ -475,13 +490,18 @@ class SubcontractorController extends Controller
             ->orderBy('id', 'desc')
             ->get();
         $paidAmount = $histories->sum('payment');
+        $balanceAmount = $totalAmount - $paidAmount;
 
         return view('admin.menus.subcontractor.subcontractor_paydetail', compact(
+            'subcontractor',
+            'services',
+            'totalCounts',
             'totalAmount',
             'subcontractorId',
             'paydetail',
             'histories',
-            'paidAmount'
+            'paidAmount',
+            'balanceAmount'
         ));
     }
 
@@ -490,7 +510,6 @@ class SubcontractorController extends Controller
         //dd($request->all());
         $validate = Validator::make($request->all(), [
             'subcontractor_id'    => 'required|exists:subcontractors,id',
-            'opening_balance' => 'nullable',
             'total_amount' => 'required',
             'balance_amount'  => 'required',
             'paid_amount'  => 'nullable'
@@ -501,27 +520,23 @@ class SubcontractorController extends Controller
         }
 
         $payDetail = SubcontractorPayDetail::where('subcontractor_id', $request->subcontractor_id)->first();
+        $paidAmount = SubcontractorPayment::where('subcontractor_id', $request->subcontractor_id)->sum('payment');
+        $balanceAmount = (float) $request->total_amount - (float) $paidAmount;
 
         if ($payDetail) {
-
-            $newOpeningBalance = $payDetail->opening_balance + $request->opening_balance;
-            $newBalanceAmount = $payDetail->balance_amount + $request->opening_balance;
-
             $payDetail->update([
                 'subcontractor_id' => $request->subcontractor_id,
-                'opening_balance'    => $newOpeningBalance,
                 'total_amount' => $request->total_amount,
-                'balance_amount'  => $newBalanceAmount,
-                'paid_amount'  => $request->paid_amount,
+                'balance_amount'  => $balanceAmount,
+                'paid_amount'  => $paidAmount,
                 'updated_by'  => auth('admin')->id(),
             ]);
         } else {
             SubcontractorPayDetail::create([
                 'subcontractor_id'         => $request->subcontractor_id,
-                'opening_balance'    => $request->opening_balance,
                 'total_amount'   => $request->total_amount,
-                'balance_amount'      => $request->opening_balance + $request->total_amount,
-                'paid_amount' => $request->paid_amount,
+                'balance_amount'      => $balanceAmount,
+                'paid_amount' => $paidAmount,
                 'created_by'  => auth('admin')->id(),
             ]);
         }
@@ -533,6 +548,7 @@ class SubcontractorController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'subcontractor_id' => 'required|exists:subcontractors,id',
+            'site_id' => 'nullable|exists:sites,id',
             'payment' => 'required|numeric',
             'date' => 'required|date',
             'payment_mode' => 'required',
@@ -548,6 +564,7 @@ class SubcontractorController extends Controller
 
         $payment = SubcontractorPayment::create([
             'subcontractor_id' => $request->subcontractor_id,
+            'site_id' => $request->site_id,
             'payment' => $request->payment,
             'date' => $request->date,
             'payment_mode' => $request->payment_mode,
@@ -555,14 +572,19 @@ class SubcontractorController extends Controller
             'created_by'  => auth('admin')->id(),
         ]);
 
-        $payDetail = SubcontractorPayDetail::where('subcontractor_id', $request->subcontractor_id)->first();
+        $paidAmount = SubcontractorPayment::where('subcontractor_id', $request->subcontractor_id)->sum('payment');
+        $services = SubcontractorService::where('subcontractor_id', $request->subcontractor_id);
+        $totalAmount = (clone $services)->sum('amount');
 
-        if ($payDetail) {
-            $payDetail->update([
-                'balance_amount' => $payDetail->balance_amount - $request->payment,
-                'paid_amount' => $payDetail->paid_amount + $request->payment,
-            ]);
-        }
+        SubcontractorPayDetail::updateOrCreate(
+            ['subcontractor_id' => $request->subcontractor_id],
+            [
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
 
         // Get Subcontractor Info
         $subcontractor = Subcontractor::find($request->subcontractor_id);
@@ -576,16 +598,169 @@ class SubcontractorController extends Controller
         ]);
     }
 
+    public function updatePayment(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'payment' => 'required|numeric',
+            'date' => 'required|date',
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string'
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+        $payment = SubcontractorPayment::findOrFail($id);
+
+        $payment->update([
+            'payment' => $request->payment,
+            'date' => $request->date,
+            'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
+            'updated_by' => auth('admin')->id(),
+        ]);
+
+        $paidAmount = SubcontractorPayment::where('subcontractor_id', $payment->subcontractor_id)->sum('payment');
+        $totalAmount = SubcontractorService::where('subcontractor_id', $payment->subcontractor_id)->sum('amount');
+
+        SubcontractorPayDetail::updateOrCreate(
+            ['subcontractor_id' => $payment->subcontractor_id],
+            [
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Payment updated successfully.');
+    }
+
+    public function deletePayment($id)
+    {
+        $payment = SubcontractorPayment::findOrFail($id);
+        $subcontractorId = $payment->subcontractor_id;
+
+        $payment->delete();
+
+        $paidAmount = SubcontractorPayment::where('subcontractor_id', $subcontractorId)->sum('payment');
+        $totalAmount = SubcontractorService::where('subcontractor_id', $subcontractorId)->sum('amount');
+
+        SubcontractorPayDetail::updateOrCreate(
+            ['subcontractor_id' => $subcontractorId],
+            [
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Payment deleted successfully.');
+    }
+
+    public function exportPettyCash(Request $request, $siteId)
+    {
+        $site = Site::findOrFail($siteId);
+        $pettyCashEmail = 'pettycash.site.' . $site->id . '@local.invalid';
+        $subcontractor = Subcontractor::where('email', $pettyCashEmail)->firstOrFail();
+
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
+
+        $historyQuery = SubcontractorPayment::where('subcontractor_id', $subcontractor->id);
+
+        if ($fromDate) {
+            $historyQuery->whereDate('date', '>=', Carbon::parse($fromDate)->toDateString());
+        }
+
+        if ($toDate) {
+            $historyQuery->whereDate('date', '<=', Carbon::parse($toDate)->toDateString());
+        }
+
+        $histories = $historyQuery
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $filename = 'petty_cash_' . $site->id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($histories) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Payment Mode', 'Remarks', 'Payment']);
+
+            foreach ($histories as $index => $history) {
+                fputcsv($file, [
+                    $index + 1,
+                    $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                    $history->payment_mode,
+                    $history->remarks,
+                    number_format((float) $history->payment, 2, '.', ''),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
 
     public function paymentHistory($subcontractorId)
     {
+        $subcontractor = Subcontractor::findOrFail($subcontractorId);
         $histories = SubcontractorPayment::with('subcontractor')
             ->where('subcontractor_id', $subcontractorId)
             ->get();
 
         $paidAmount = $histories->sum('payment');
 
-        return view('admin.menus.subcontractor.payment_history', compact('histories', 'subcontractorId', 'paidAmount'));
+        return view('admin.menus.subcontractor.payment_history', compact('subcontractor', 'histories', 'subcontractorId', 'paidAmount'));
+    }
+
+    public function exportPaymentHistory(Request $request, $subcontractorId)
+    {
+        $subcontractor = Subcontractor::findOrFail($subcontractorId);
+        $query = SubcontractorPayment::where('subcontractor_id', $subcontractorId);
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('date', '>=', Carbon::parse($request->from_date)->toDateString());
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('date', '<=', Carbon::parse($request->to_date)->toDateString());
+        }
+
+        $histories = $query->orderBy('date')->orderBy('id')->get();
+        $filename = 'subcontractor_payment_history_' . $subcontractor->id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($histories) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Total Payment', 'Payment Mode', 'Remarks']);
+
+            foreach ($histories as $index => $history) {
+                fputcsv($file, [
+                    $index + 1,
+                    $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                    number_format((float) $history->payment, 2, '.', ''),
+                    $history->payment_mode,
+                    $history->remarks,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     

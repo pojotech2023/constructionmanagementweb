@@ -14,6 +14,7 @@ class VendorPayment extends Model
         'payment',
         'date',
         'payment_mode',
+        'remarks',
         'created_by',
         'updated_by'
     ];

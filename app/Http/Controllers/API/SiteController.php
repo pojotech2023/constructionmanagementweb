@@ -95,7 +95,7 @@ if ($request->hasFile('site_img')) {
         'flat_area'     => $request->flat_area,
         'built_up_area' => $request->built_up_area,
         'duration'      => $request->duration,
-        'status'        =>'quoted'
+        'status'        => 'Ongoing'
     ]);
 
     $customer = Customer::create([

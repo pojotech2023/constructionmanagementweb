@@ -11,6 +11,7 @@ class SubcontractorPayment extends Model
 
     protected $fillable = [
         'subcontractor_id',
+        'site_id',
         'payment',
         'date',
         'payment_mode',

@@ -15,6 +15,8 @@
                     <li class="separator"><i class="icon-arrow-right"></i></li>
                     <li class="nav-item"><a href="{{ route('sitemanagement.list') }}">Site</a></li>
                     <li class="separator"><i class="icon-arrow-right"></i></li>
+                    <li class="nav-item"><a href="{{ route('site.detail', $siteId) }}">{{ $siteName }}</a></li>
+                    <li class="separator"><i class="icon-arrow-right"></i></li>
                     <li class="nav-item"><a href="#">Attendance Details</a></li>
                 </ul>
             </div>
@@ -81,19 +83,13 @@
 
                     <div class="col-12 col-md-8">
                         <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-                            @php
-                                $exportUrl = route('attendance.export', ['siteId' => $siteId]);
-                                $query = request()->getQueryString();
-                                if (!empty($query)) $exportUrl .= '?' . $query;
-                            @endphp
-
-                            <a href="{{ $exportUrl }}" class="btn btn-outline-secondary">
-                                Export
-                            </a>
-
                             <a href="{{ route('wages.form', ['siteId' => $siteId]) }}" class="btn btn-info">
                                 Add Wages
                             </a>
+
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#attendanceExportModal">
+                                Export
+                            </button>
 
                             {{-- Add Attendance button removed per request --}}
 
@@ -127,23 +123,32 @@
                                     <th>{{ ucfirst($cat) }}</th>
                                 @endforeach
                                 <th>Total (₹)</th>
+                                <th class="text-center attendance-action-column">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($groupedByDate as $day)
                                 <tr>
-                                    <td>{{ $day['date'] }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($day['date'])->format('d-m-Y') }}</td>
                                     @foreach ($allCategories as $cat)
                                         <td>{{ $day[$cat] ?? '--' }}</td>
                                     @endforeach
                                     <td>
                                         ₹{{ $day['total'] }}
-                                        <a href="{{ route('edit.attendance.wages', [
-                                            'site_id' => $siteId,
-                                            'date' => $day['date']
-                                        ]) }}" class="btn btn-sm btn-warning ms-2">Edit</a>
+                                    </td>
+                                    <td class="text-center attendance-action-column">
+                                        <div class="attendance-action-group">
+                                            <a href="{{ route('edit.attendance.wages', [
+                                                'site_id' => $siteId,
+                                                'date' => $day['date']
+                                            ]) }}" class="btn btn-link btn-primary btn-sm attendance-action-btn" title="Edit" aria-label="Edit">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
 
-                                        <button type="button" class="btn btn-sm btn-danger ms-2 deleteDateBtn" data-siteid="{{ $siteId }}" data-date="{{ $day['date'] }}" data-bs-toggle="modal" data-bs-target="#deleteDateModal">Delete</button>
+                                            <button type="button" class="btn btn-link btn-danger btn-sm deleteDateBtn attendance-action-btn" data-siteid="{{ $siteId }}" data-date="{{ $day['date'] }}" data-bs-toggle="modal" data-bs-target="#deleteDateModal" title="Delete" aria-label="Delete">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -213,6 +218,34 @@
         </div>
     </div>
 
+    <!-- Export Attendance Modal -->
+    <div class="modal fade" id="attendanceExportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="GET" action="{{ route('attendance.export', ['siteId' => $siteId]) }}" class="js-export-modal-form">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Export Attendance</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">From Date</label>
+                            <input type="date" name="from_date" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">To Date</label>
+                            <input type="date" name="to_date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Download</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Delete Attendance Modal -->
     <div class="modal fade" id="deleteAttendanceModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -261,13 +294,23 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.js-export-modal-form').forEach(function(form) {
+                form.addEventListener('submit', function() {
+                    var modalEl = form.closest('.modal');
+                    var modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                    if (modal) {
+                        modal.hide();
+                    }
+                });
+            });
+
             document.querySelectorAll('.deleteDateBtn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var siteId = this.getAttribute('data-siteid');
                     var date = this.getAttribute('data-date');
                     var form = document.getElementById('deleteDateForm');
                     form.action = '/admin/attendance-delete-date/' + siteId + '/' + date;
-                    document.getElementById('deleteDateText').textContent = date;
+                    document.getElementById('deleteDateText').textContent = formatDisplayDate(date);
                 });
             });
         });
@@ -281,7 +324,7 @@
                     var date = this.getAttribute('data-date');
                     var form = document.getElementById('deleteAttendanceForm');
                     form.action = '/admin/attendance-delete/' + id;
-                    document.getElementById('deleteAttendanceDate').textContent = date;
+                    document.getElementById('deleteAttendanceDate').textContent = formatDisplayDate(date);
                 });
             });
         });
@@ -375,6 +418,15 @@
             return urlParams.get(param);
         }
 
+        function formatDisplayDate(dateValue) {
+            if (!dateValue) return '-';
+            const parts = dateValue.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateValue;
+        }
+
         // Highlight selected week and day on page load
         const selectedWeek = getQueryParam('week');
         const selectedDate = getQueryParam('date');
@@ -436,6 +488,29 @@
 .selected-day {
     background: #007bff !important;
     color: #fff !important;
+}
+
+.attendance-action-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    line-height: 1;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attendance-action-column {
+    width: 140px;
+}
+
+.attendance-action-group {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 72px;
 }
     </style>
 @endsection

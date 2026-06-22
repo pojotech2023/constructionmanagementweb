@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('settled_amnt');
             $table->string('pending_amnt');
             $table->string('expense')->nullable();
-            $table->string('status')->default('New')->nullable();
+            $table->string('status')->default('Ongoing')->nullable();
             $table->boolean('is_inactive')->default(0);
             $table->timestamps();
         });

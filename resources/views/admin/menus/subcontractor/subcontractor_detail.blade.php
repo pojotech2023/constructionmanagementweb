@@ -21,6 +21,12 @@
                             <i class="icon-arrow-right"></i>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route('site.detail', $site->id) }}">{{ $site->site_name }}</a>
+                        </li>
+                        <li class="separator">
+                            <i class="icon-arrow-right"></i>
+                        </li>
+                        <li class="nav-item">
                             <a href="#">SubContractor Details</a>
                         </li>
                     </ul>
@@ -183,7 +189,7 @@
                             </div>
                         </div>
                     </div>
-                    {{-- <div class="col-6 col-sm-4 col-lg-2">
+                    <div class="col-6 col-sm-4 col-lg-2">
                         <div class="card h-100 w-100 site-card"
                             data-route="{{ route('subcontractor.pettyCash', ['siteId' => $site->id]) }}"
                             onclick="redirectToDetails(event, this)">
@@ -195,7 +201,7 @@
                                 <div class="text-success fw-bold">Payment Detail</div>
                             </div>
                         </div>
-                    </div> --}}
+                    </div>
                 </div>
 
                 <div class="row justify-content-center mt-4" id="addButton" data-bs-toggle="modal"

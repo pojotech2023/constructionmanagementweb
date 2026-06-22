@@ -33,6 +33,9 @@
                                     </div>
                                 </form> --}}
                             </div>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#subUtilityExportModal">
+                                Export
+                            </button>
                         </div>
 
                         <!-- Blade alert for success -->
@@ -65,7 +68,7 @@
                                             @foreach ($utilities as $index => $utility)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($utility->created_at)->format('Y-m-d') }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($utility->created_at)->format('d-m-Y') }}</td>
                                                     <td>{{ $utility->amount }}</td>
                                                     <td>{{ $utility->remarks }}</td>
                                                     <td>
@@ -104,6 +107,34 @@
                     </div>
                 </div>
             </div>
+            <!-- Export Utility Modal -->
+            <div class="modal fade" id="subUtilityExportModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form method="GET" action="{{ url('/admin/site-subutilities/' . $siteId . '/export') }}" class="js-export-modal-form">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Export Other Utilities</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" name="from_date" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" name="to_date" class="form-control">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Download</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal fade" id="editUtilityModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -165,6 +196,16 @@
 
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
+                    document.querySelectorAll('.js-export-modal-form').forEach(function(form) {
+                        form.addEventListener('submit', function() {
+                            var modalEl = form.closest('.modal');
+                            var modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                            if (modal) {
+                                modal.hide();
+                            }
+                        });
+                    });
+
                     document.querySelectorAll('.editUtilityBtn').forEach(function (btn) {
                         btn.addEventListener('click', function () {
                             var id = this.getAttribute('data-id');

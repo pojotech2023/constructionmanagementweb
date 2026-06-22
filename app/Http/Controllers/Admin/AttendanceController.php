@@ -287,13 +287,19 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
 {
     $month = $request->query('month'); // format YYYY-MM
     $week = $request->query('week');   // optional week number
+    $fromDate = $request->query('from_date');
+    $toDate = $request->query('to_date');
 
     $fileName = 'Attendance_Site_'.$siteId;
+    if ($fromDate || $toDate) {
+        if ($fromDate) $fileName .= '_from_'.$fromDate;
+        if ($toDate) $fileName .= '_to_'.$toDate;
+    }
     if ($month) $fileName .= '_'.$month;
     if ($week) $fileName .= '_Week'.$week;
     $fileName .= '.xlsx';
 
-    return Excel::download(new AttendanceExport($siteId, $month, $week), $fileName);
+    return Excel::download(new AttendanceExport($siteId, $month, $week, $fromDate, $toDate), $fileName);
 }
 
 public function editPage($site_id, $date)
@@ -354,6 +360,27 @@ public function updateAttendance(Request $request)
         );
     }
 
+    foreach ($request->input('attendance_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $count = $row['count'] ?? null;
+
+        if ($category === '' || $count === null || $count === '') {
+            continue;
+        }
+
+        Attendance::updateOrCreate(
+            [
+                'site_id'  => $request->site_id,
+                'date'     => $request->date,
+                'category' => $category,
+            ],
+            [
+                'count' => $count,
+                'created_by' => auth('admin')->id()
+            ]
+        );
+    }
+
     return redirect()->back()->with('success', 'Attendance updated successfully!');
 }
 
@@ -382,6 +409,27 @@ public function updateWages(Request $request)
             ],
             [
                 'amount' => $input,
+                'created_by' => auth('admin')->id()
+            ]
+        );
+    }
+
+    foreach ($request->input('wage_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $amount = $row['amount'] ?? null;
+
+        if ($category === '' || $amount === null || $amount === '') {
+            continue;
+        }
+
+        Wages::updateOrCreate(
+            [
+                'site_id'  => $request->site_id,
+                'date'     => $request->date,
+                'category' => $category,
+            ],
+            [
+                'amount' => $amount,
                 'created_by' => auth('admin')->id()
             ]
         );

@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-10 d-flex justify-content-center">
-                <h3>Edit for Date: {{ $date }}</h3>
+                <h3>Edit for Date: {{ \Carbon\Carbon::parse($date)->format('d-m-Y') }}</h3>
             </div>
             
         </div>
@@ -22,11 +22,18 @@
                         {{ session()->forget('success') }}
                     @endif
 
-                   <h4>Update Attendance</h4>
+                   <div class="d-flex justify-content-between align-items-center mb-3">
+                       <h4 class="mb-0">Update Attendance</h4>
+                       <button type="button" class="btn btn-primary px-4 py-2 fw-bold" id="addCombinedRow">
+                           Add Row
+                       </button>
+                   </div>
 <form action="{{ route('update.attendance') }}" method="POST">
     @csrf
     <input type="hidden" name="site_id" value="{{ $siteId }}">
     <input type="hidden" name="date" value="{{ $date }}">
+
+    <div id="attendanceRows"></div>
 
     @foreach ($categories as $cat)
         <div class="row mt-2">
@@ -52,6 +59,8 @@
     
     <input type="hidden" name="site_id" value="{{ $siteId }}">
     <input type="hidden" name="date" value="{{ $date }}">
+
+    <div id="wageRows"></div>
 
     @foreach ($categories as $cat)
         <div class="row mt-2">
@@ -86,6 +95,51 @@
             const form = document.getElementById('requestForm');
             const spinner = document.getElementById('loadingSpinner');
             const alert = document.querySelector('.alert');
+            const attendanceRows = document.getElementById('attendanceRows');
+            const wageRows = document.getElementById('wageRows');
+            let attendanceRowIndex = 0;
+            let wageRowIndex = 0;
+            let combinedRowIndex = 0;
+
+            function addDynamicRow(container, index, pairId, fieldName, valueName, valueLabel, inputStep) {
+                const row = document.createElement('div');
+                row.className = 'row mt-2 align-items-end dynamic-row';
+                row.setAttribute('data-pair-id', pairId);
+                row.innerHTML = `
+                    <div class="col-md-4">
+                        <label>Category</label>
+                        <input type="text" class="form-control" name="${fieldName}[${index}][category]" placeholder="Category">
+                    </div>
+                    <div class="col-md-4">
+                        <label>${valueLabel}</label>
+                        <input type="number" step="${inputStep}" class="form-control" name="${fieldName}[${index}][${valueName}]" placeholder="${valueLabel}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" aria-label="Remove row">&times;</button>
+                    </div>
+                `;
+                container.prepend(row);
+            }
+
+            document.getElementById('addCombinedRow').addEventListener('click', function() {
+                const pairId = `combined-${combinedRowIndex++}`;
+                addDynamicRow(attendanceRows, attendanceRowIndex++, pairId, 'attendance_rows', 'count', 'Count', '1');
+                addDynamicRow(wageRows, wageRowIndex++, pairId, 'wage_rows', 'amount', 'Amount', '0.01');
+            });
+
+            document.addEventListener('click', function(event) {
+                const removeButton = event.target.closest('.remove-row');
+                if (removeButton) {
+                    const row = removeButton.closest('.dynamic-row');
+                    const pairId = row ? row.getAttribute('data-pair-id') : null;
+
+                    if (pairId) {
+                        document.querySelectorAll(`.dynamic-row[data-pair-id="${pairId}"]`).forEach(function(pairRow) {
+                            pairRow.remove();
+                        });
+                    }
+                }
+            });
 
             // ✅ Spinner on submit
             if (form && spinner) {

@@ -22,6 +22,12 @@
                             <i class="icon-arrow-right"></i>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route('site.detail', $siteId) }}">{{ $siteName }}</a>
+                        </li>
+                        <li class="separator">
+                            <i class="icon-arrow-right"></i>
+                        </li>
+                        <li class="nav-item">
                             <a href="#">{{ ucfirst($subcontractorType) }} Details</a>
                         </li>
                     </ul>
@@ -40,43 +46,41 @@
                             </div>
                             <div class="row mb-2 align-items-end pb-3"
                                 style="border-bottom: 1px solid rgb(235, 236, 236) !important;">
-                                <div class="col-md-2">
+                                <div class="col-12 col-md-3">
                                     <input type="month" id="monthPicker" class="form-control">
                                 </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="1">Week 1</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="2">Week 2</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="3">Week 3</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="text-center fw-bold">
-                                        <span class="badge badge-black week-btn" data-week="4">Week 4</span>
+
+                                <div class="col-12">
+                                    <div class="row justify-content-center align-items-center" id="weekFilterRow">
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-secondary week-reset-btn active">
+                                                Full Month
+                                            </span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="1">Week 1</span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="2">Week 2</span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="3">Week 3</span>
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <span class="badge badge-black week-btn" data-week="4">Week 4</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center mt-3">
-                                <h4 class="card-title" style="margin-right: 360px;">{{ ucfirst($subcontractorType) }} Overview
-                                </h4>
-                                @php
-                                    $exportUrl = route('subcontractor.export.type', ['siteId' => $siteId, 'subcontractorType' => $subcontractorType]);
-                                    $query = request()->getQueryString();
-                                    if (!empty($query)) $exportUrl .= '?' . $query;
-                                @endphp
-                                <div class="me-2">
-                                    <a href="{{ $exportUrl }}" class="btn btn-outline-secondary">Export</a>
+                            <div class="row align-items-center mt-3">
+                                <div class="col-12 col-md-6 mb-2 mb-md-0">
+                                    <h4 class="card-title mb-0">{{ ucfirst($subcontractorType) }} Overview</h4>
                                 </div>
-                                <div class="col-md-2" style="margin-left: 20px">
-                                    <a href="{{ route('subcontractor.serviceForm', ['siteId' => $siteId, 'subcontractorType' => $subcontractorType]) }}" class="btn btn-primary w-100">Add Service</a>
+                                <div class="col-12 col-md-6">
+                                    <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                                        <a href="{{ route('subcontractor.serviceForm', ['siteId' => $siteId, 'subcontractorType' => $subcontractorType]) }}" class="btn btn-primary w-100 w-md-auto">Add Service</a>
+                                        <button type="button" class="btn btn-success w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#subcontractorExportModal">Export</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -112,7 +116,7 @@
                                             @foreach ($subcontractors as $index => $sub)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $sub->date }}</td>
+                                                    <td>{{ $sub->date ? \Carbon\Carbon::parse($sub->date)->format('d-m-Y') : '-' }}</td>
                                                     <td>{{ $sub->subcontractor->name }}</td>
                                                     <td>{{ $sub->amount }}</td>
                                                     <td>{{ $sub->remarks ?? '-' }}</td>
@@ -122,6 +126,7 @@
                                                                 data-id="{{ $sub->id }}"
                                                                 data-date="{{ $sub->date }}"
                                                                 data-amount="{{ $sub->amount }}"
+                                                                data-remarks="{{ $sub->remarks }}"
                                                                 data-bs-toggle="modal" data-bs-target="#editServiceModal">
                                                                 <i class="fa fa-edit"></i>
                                                             </button>
@@ -139,6 +144,34 @@
                             </div>
                         @endif
                     </div>
+                    <!-- Export Modal -->
+                    <div class="modal fade" id="subcontractorExportModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="GET" action="{{ route('subcontractor.export.type', ['siteId' => $siteId, 'subcontractorType' => $subcontractorType]) }}" class="js-export-modal-form">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Export {{ ucfirst($subcontractorType) }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">From Date</label>
+                                            <input type="date" name="from_date" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">To Date</label>
+                                            <input type="date" name="to_date" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Download</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Edit Service Modal -->
                     <div class="modal fade" id="editServiceModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog">
@@ -158,6 +191,10 @@
                                         <div class="mb-3">
                                             <label class="form-label">Amount</label>
                                             <input type="number" step="0.01" name="amount" id="edit_service_amount" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Remarks</label>
+                                            <textarea name="remarks" id="edit_service_remarks" class="form-control" rows="3"></textarea>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -221,8 +258,19 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.js-export-modal-form').forEach(function(form) {
+            form.addEventListener('submit', function() {
+                var modalEl = form.closest('.modal');
+                var modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                if (modal) {
+                    modal.hide();
+                }
+            });
+        });
+
         const monthPicker = document.getElementById('monthPicker');
         const weekButtons = document.querySelectorAll('.week-btn');
+        const weekResetButton = document.querySelector('.week-reset-btn');
         const spinner = document.getElementById('loadingSpinner'); // Optional spinner element
         const tableBody = document.getElementById('bricksTableBody');
         let selectedWeek = 0;
@@ -230,18 +278,43 @@
         const currentMonth = new Date().toISOString().slice(0, 7);
         monthPicker.value = currentMonth;
 
-        weekButtons.forEach((button, index) => {
+        function setActiveWeekButton(activeButton) {
+            weekButtons.forEach(btn => btn.classList.remove('active'));
+            if (weekResetButton) {
+                weekResetButton.classList.toggle('active', !activeButton);
+            }
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        weekButtons.forEach((button) => {
             button.addEventListener('click', function() {
-                selectedWeek = index + 1;
-                weekButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
+                const wasActive = this.classList.contains('active');
+
+                if (wasActive) {
+                    selectedWeek = 0;
+                    setActiveWeekButton(null);
+                } else {
+                    selectedWeek = Number(this.getAttribute('data-week')) || 0;
+                    setActiveWeekButton(this);
+                }
+
                 fetchData();
             });
         });
 
+        if (weekResetButton) {
+            weekResetButton.addEventListener('click', function() {
+                selectedWeek = 0;
+                setActiveWeekButton(null);
+                fetchData();
+            });
+        }
+
         monthPicker.addEventListener('change', function() {
             selectedWeek = 0;
-            weekButtons.forEach(btn => btn.classList.remove('active'));
+            setActiveWeekButton(null);
             fetchData();
         });
 
@@ -265,10 +338,11 @@
                     if (spinner) spinner.classList.add('d-none');
                     tableBody.innerHTML = '';
                     data.subcontractors.forEach((item, index) => {
+                        const displayDate = formatDisplayDate(item.date);
                         tableBody.innerHTML += `
                             <tr>
                                 <td>${index + 1}</td>
-                                <td>${item.date}</td>
+                                <td>${displayDate}</td>
                                 <td>${item.subcontractor.name}</td>
                                 <td>${item.amount}</td>
                                 <td>${item.remarks || '-'}</td>
@@ -278,6 +352,7 @@
                                             data-id="${item.id}"
                                             data-date="${item.date}"
                                             data-amount="${item.amount}"
+                                            data-remarks="${escapeAttr(item.remarks)}"
                                             data-bs-toggle="modal" data-bs-target="#editServiceModal">
                                             <i class="fa fa-edit"></i>
                                         </button>
@@ -300,6 +375,33 @@
 
         // Initial load
         fetchData();
+
+        function toIsoDate(dateValue) {
+            if (!dateValue) return '';
+            const parts = dateValue.split('-');
+            if (parts.length === 3 && parts[0].length === 2) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateValue;
+        }
+
+        function formatDisplayDate(dateValue) {
+            if (!dateValue) return '-';
+            const parts = dateValue.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateValue;
+        }
+
+        function escapeAttr(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
         // Event delegation for edit/delete buttons
         document.addEventListener('click', function (e) {
             const editBtn = e.target.closest('.editServiceBtn');
@@ -309,10 +411,12 @@
                 const id = editBtn.getAttribute('data-id');
                 const date = editBtn.getAttribute('data-date');
                 const amount = editBtn.getAttribute('data-amount');
+                const remarks = editBtn.getAttribute('data-remarks') || '';
                 const form = document.getElementById('editServiceForm');
                 form.action = '/admin/subcontractor-service-update/' + id;
-                document.getElementById('edit_service_date').value = date;
+                document.getElementById('edit_service_date').value = toIsoDate(date);
                 document.getElementById('edit_service_amount').value = amount;
+                document.getElementById('edit_service_remarks').value = remarks;
             }
 
             if (delBtn) {
@@ -330,9 +434,18 @@
             cursor: pointer;
         }
 
+        .week-reset-btn {
+            cursor: pointer;
+        }
+
         .week-btn.active {
             background-color: #007bff;
             color: white;
+        }
+
+        .week-reset-btn.active {
+            background: #198754;
+            color: #fff;
         }
     </style>
 @endsection
