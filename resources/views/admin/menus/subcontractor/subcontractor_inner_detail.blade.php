@@ -47,28 +47,25 @@
                             <div class="row mb-2 align-items-end pb-3"
                                 style="border-bottom: 1px solid rgb(235, 236, 236) !important;">
                                 <div class="col-12 col-md-3">
-                                    <input type="month" id="monthPicker" class="form-control">
+                                    <input type="month" id="monthPicker" class="form-control"
+                                           value="{{ $month }}">
                                 </div>
 
                                 <div class="col-12">
                                     <div class="row justify-content-center align-items-center" id="weekFilterRow">
                                         <div class="col-auto mb-2">
-                                            <span class="badge badge-secondary week-reset-btn active">
+                                            <span class="badge badge-secondary week-reset-btn {{ empty($week) ? 'active' : '' }}">
                                                 Full Month
                                             </span>
                                         </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="1">Week 1</span>
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="2">Week 2</span>
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="3">Week 3</span>
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="4">Week 4</span>
-                                        </div>
+                                        @foreach ([1, 2, 3, 4] as $weekNumber)
+                                            <div class="col-auto mb-2">
+                                                <span class="badge badge-black week-btn {{ (string) $week === (string) $weekNumber ? 'active' : '' }}"
+                                                      data-week="{{ $weekNumber }}">
+                                                    Week {{ $weekNumber }}
+                                                </span>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
@@ -271,110 +268,43 @@
         const monthPicker = document.getElementById('monthPicker');
         const weekButtons = document.querySelectorAll('.week-btn');
         const weekResetButton = document.querySelector('.week-reset-btn');
-        const spinner = document.getElementById('loadingSpinner'); // Optional spinner element
-        const tableBody = document.getElementById('bricksTableBody');
-        let selectedWeek = 0;
+        const subcontractorBaseUrl = @json(route('subcontractor.detailList', ['siteId' => $siteId, 'subcontractorType' => $subcontractorType]));
 
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        monthPicker.value = currentMonth;
+        let currentSelectedMonth = monthPicker.value;
 
-        function setActiveWeekButton(activeButton) {
-            weekButtons.forEach(btn => btn.classList.remove('active'));
-            if (weekResetButton) {
-                weekResetButton.classList.toggle('active', !activeButton);
+        // Month change => reload page with selected month
+        monthPicker.addEventListener('change', function() {
+            currentSelectedMonth = this.value;
+            if (currentSelectedMonth) {
+                window.location.href = `${subcontractorBaseUrl}?month=${currentSelectedMonth}`;
             }
-            if (activeButton) {
-                activeButton.classList.add('active');
-            }
-        }
+        });
 
-        weekButtons.forEach((button) => {
-            button.addEventListener('click', function() {
+        // Week button click => reload page with month + week
+        weekButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
                 const wasActive = this.classList.contains('active');
+                const selectedWeek = this.getAttribute('data-week');
 
                 if (wasActive) {
-                    selectedWeek = 0;
-                    setActiveWeekButton(null);
-                } else {
-                    selectedWeek = Number(this.getAttribute('data-week')) || 0;
-                    setActiveWeekButton(this);
+                    window.location.href = `${subcontractorBaseUrl}?month=${currentSelectedMonth}`;
+                    return;
                 }
 
-                fetchData();
+                if (currentSelectedMonth && selectedWeek) {
+                    window.location.href =
+                        `${subcontractorBaseUrl}?month=${currentSelectedMonth}&week=${selectedWeek}`;
+                }
             });
         });
 
         if (weekResetButton) {
             weekResetButton.addEventListener('click', function() {
-                selectedWeek = 0;
-                setActiveWeekButton(null);
-                fetchData();
+                if (currentSelectedMonth) {
+                    window.location.href = `${subcontractorBaseUrl}?month=${currentSelectedMonth}`;
+                }
             });
         }
-
-        monthPicker.addEventListener('change', function() {
-            selectedWeek = 0;
-            setActiveWeekButton(null);
-            fetchData();
-        });
-
-        function fetchData() {
-            if (spinner) spinner.classList.remove('d-none');
-
-            fetch(`{{ route('subcontractor.getData', ['siteId' => $siteId]) }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        monthYear: monthPicker.value,
-                        week: selectedWeek,
-                        subcontractor_type: '{{ $subcontractorType }}'
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (spinner) spinner.classList.add('d-none');
-                    tableBody.innerHTML = '';
-                    data.subcontractors.forEach((item, index) => {
-                        const displayDate = formatDisplayDate(item.date);
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${displayDate}</td>
-                                <td>${item.subcontractor.name}</td>
-                                <td>${item.amount}</td>
-                                <td>${item.remarks || '-'}</td>
-                                <td>
-                                    <div class="form-button-action">
-                                        <button type="button" class="btn btn-link btn-primary btn-sm editServiceBtn"
-                                            data-id="${item.id}"
-                                            data-date="${item.date}"
-                                            data-amount="${item.amount}"
-                                            data-remarks="${escapeAttr(item.remarks)}"
-                                            data-bs-toggle="modal" data-bs-target="#editServiceModal">
-                                            <i class="fa fa-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-link btn-danger btn-sm deleteServiceBtn"
-                                            data-id="${item.id}" data-bs-toggle="modal" data-bs-target="#deleteServiceModal">
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>`;
-                    });
-
-                    document.getElementById('totalUnits').textContent = data.totalAmount;
-                })
-                .catch(error => {
-                    if (spinner) spinner.classList.add('d-none');
-                    console.error('Error fetching subcontractor data:', error);
-                });
-        }
-
-        // Initial load
-        fetchData();
 
         function toIsoDate(dateValue) {
             if (!dateValue) return '';
@@ -383,23 +313,6 @@
                 return `${parts[2]}-${parts[1]}-${parts[0]}`;
             }
             return dateValue;
-        }
-
-        function formatDisplayDate(dateValue) {
-            if (!dateValue) return '-';
-            const parts = dateValue.split('-');
-            if (parts.length === 3 && parts[0].length === 4) {
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-            return dateValue;
-        }
-
-        function escapeAttr(value) {
-            return String(value || '')
-                .replace(/&/g, '&amp;')
-                .replace(/"/g, '&quot;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
         }
 
         // Event delegation for edit/delete buttons

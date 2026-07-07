@@ -202,6 +202,19 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card"
+                            data-route="{{ route('subcontractor.rentalManagement', ['siteId' => $site->id]) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/rent icon.png') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Rental Management</div>
+                                <div class="text-success fw-bold">Payment Detail</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row justify-content-center mt-4" id="addButton" data-bs-toggle="modal"

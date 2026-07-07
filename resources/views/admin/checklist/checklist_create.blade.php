@@ -3,7 +3,7 @@
     <div class="container">
         <div class="page-inner">
             <div class="page-header">
-                <h3 class="fw-bold mb-3">Add Site</h3>
+                <h3 class="fw-bold mb-3">Add Checklist</h3>
                 <ul class="breadcrumbs mb-3">
                     <li class="nav-home">
                         <a href="{{ route('admin.dashboard') }}">
@@ -20,7 +20,7 @@
                         <i class="icon-arrow-right"></i>
                     </li>
                     <li class="nav-item">
-                        <a href="#">Site Form</a>
+                        <a href="#">Checklist Form</a>
                     </li>
                 </ul>
             </div>
@@ -29,7 +29,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="d-flex align-items-center justify-content-between w-100">
-                                <h4 class="card-title">Site Form</h4>
+                                <h4 class="card-title">Checklist Form</h4>
                             </div>
                         </div>
                         <div class="card-body">
@@ -52,7 +52,7 @@
                                     <div class="row align-items-center mt-5">
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="site_name">STAGES</label>
+                                                <label for="site_name">Stages</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-10">
@@ -69,13 +69,14 @@
                                          <div class="row">
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="site_img">TASK List</label>
+                                                <label for="site_img">Task List</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-10">
                                         <div id="file-upload-wrapper">
-                                        <div class="form-group file-group mb-2">
+                                        <div class="form-group file-group mb-2 task-field-row">
                                         <input type="text" name="task_list[]" class="form-control">
+                                        <button type="button" class="task-remove-btn remove-btn" aria-label="Remove task">&times;</button>
                                         </div>
                                         </div>
                                         <button type="button" class="btn btn-primary btn-sm mt-1" id="add-file-button">+ Add another file</button>
@@ -86,8 +87,8 @@
                                         </div>
 
                                     <div class="card-action text-end">
-                                        <button class="btn btn-success" id="saveButton">Submit</button>
-                                        <button class="btn btn-danger">Cancel</button>
+                                        <button type="submit" class="btn btn-success" id="saveButton">Submit</button>
+                                        <button type="button" class="btn btn-danger" onclick="window.history.back()">Cancel</button>
                                     </div>
                                 </form>
                             </div>
@@ -142,22 +143,59 @@ document.getElementById('add-file-button').addEventListener('click', function ()
     const wrapper = document.getElementById('file-upload-wrapper');
 
     const newField = document.createElement('div');
-    newField.classList.add('form-group', 'file-group', 'mb-2');
+    newField.classList.add('form-group', 'file-group', 'mb-2', 'task-field-row');
 
     newField.innerHTML = `
         <input type="text" name="task_list[]" class="form-control">
-        <button type="button" class="btn btn-danger btn-sm mt-1 remove-btn">Remove</button>
+        <button type="button" class="task-remove-btn remove-btn" aria-label="Remove task">&times;</button>
     `;
 
     wrapper.appendChild(newField);
 });
 
-// Optional: Remove a cloned field
+// Remove a task field, keeping at least one field on the form
 document.addEventListener('click', function (e) {
     if (e.target && e.target.classList.contains('remove-btn')) {
-        e.target.parentElement.remove();
+        const wrapper = document.getElementById('file-upload-wrapper');
+        if (wrapper.querySelectorAll('.task-field-row').length > 1) {
+            e.target.closest('.task-field-row').remove();
+        } else {
+            e.target.closest('.task-field-row').querySelector('input').value = '';
+        }
     }
 });
 </script>
+
+<style>
+    .task-field-row {
+        position: relative;
+    }
+
+    .task-field-row .form-control {
+        padding-right: 40px;
+    }
+
+    .task-remove-btn {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        line-height: 22px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: #dc3545;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .task-remove-btn:hover {
+        background: #b52a37;
+    }
+</style>
 
 @endsection

@@ -26,6 +26,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SitePaymentMail;
 
 class SiteController extends Controller
 {
@@ -92,21 +94,21 @@ public function store(Request $request)
 
     $validate = Validator::make($request->all(), [
         'site_name'      => 'required|string',
-        'site_img'       => 'required_without:temp_site_img|image|mimes:jpg,jpeg,png,webp',
+        'site_img'       => 'nullable|image|mimes:jpg,jpeg,png,webp',
         'temp_site_img'  => 'nullable|string',
-        'location'       => 'required|string',
+        'location'       => 'nullable|string',
         'budget_amount'  => 'nullable|numeric|min:0',
-        'flat_area'      => 'required|string',
-        'built_up_area'  => 'required|string',
-        'duration'       => 'required|string',
-        'supervisor_id'  => 'required|exists:users,id',
+        'flat_area'      => 'nullable|string',
+        'built_up_area'  => 'nullable|string',
+        'duration'       => 'nullable|string',
+        'supervisor_id'  => 'nullable|exists:users,id',
 
         // Customer fields
-        'name'           => 'required|string',
-        'mobile_no'      => 'required|numeric|digits:10',
-        'email'          => 'required|email|unique:customers,email',
-        'dob'            => 'required|date',
-        'address'        => 'required|string',
+        'name'           => 'nullable|string',
+        'mobile_no'      => 'nullable|numeric|digits:10',
+        'email'          => 'nullable|email|unique:customers,email',
+        'dob'            => 'nullable|date',
+        'address'        => 'nullable|string',
     ]);
 
     if ($validate->fails()) {
@@ -238,6 +240,8 @@ public function store(Request $request)
     //Site Detail
     public function siteDetail($id)
     {
+        abort_unless(\App\Models\Setting::getMenuVisibility()['site_detail'] ?? true, 403);
+
         $site = Site::with('materialOrders')
             ->where('id', $id)->first();
 
@@ -248,6 +252,8 @@ public function store(Request $request)
 
     public function exportFullReport($id)
     {
+        abort_unless(\App\Models\Setting::getMenuVisibility()['export'] ?? true, 403);
+
         $site = Site::findOrFail($id);
         $filename = Str::slug($site->site_name) . '-full-report-' . now()->format('Y-m-d') . '.xlsx';
 
@@ -355,7 +361,13 @@ public function store(Request $request)
         $paidAmount = (float) $histories->sum('payment');
         $balanceAmount = max($budgetAmount - $paidAmount, 0);
 
-        return view('admin.menus.site_management.payment_history', compact('site', 'histories', 'budgetAmount', 'balanceAmount'));
+        $customer = Customer::where('site_id', $id)
+            ->where('is_inactive', 0)
+            ->orderBy('id')
+            ->first();
+        $customerEmail = optional($customer)->email;
+
+        return view('admin.menus.site_management.payment_history', compact('site', 'histories', 'budgetAmount', 'balanceAmount', 'customerEmail'));
     }
 
     public function downloadPaymentPdf($id)
@@ -404,6 +416,37 @@ public function store(Request $request)
             : 'https://wa.me/?text=' . urlencode($message);
 
         return redirect()->away($whatsappUrl);
+    }
+
+    public function sendPaymentMail($id)
+    {
+        $payment = SitePayment::with('site')->findOrFail($id);
+        $customer = Customer::where('site_id', $payment->site_id)
+            ->where('is_inactive', 0)
+            ->orderBy('id')
+            ->first();
+
+        if (!$customer || !$customer->email) {
+            return redirect()->route('site.payment.history', $payment->site_id)
+                ->with('error', 'No customer email found for this site.');
+        }
+
+        $site = $payment->site;
+        $budgetAmount = (float) (optional($site)->budget_amount ?? 0);
+        $totalPaid = (float) SitePayment::where('site_id', $payment->site_id)->sum('payment');
+        $balanceAmount = max($budgetAmount - $totalPaid, 0);
+
+        $pdf = Pdf::loadView('admin.helper.site_payment_pdf', compact(
+            'payment',
+            'budgetAmount',
+            'totalPaid',
+            'balanceAmount'
+        ));
+
+        Mail::to($customer->email)->send(new SitePaymentMail($payment, $pdf->output()));
+
+        return redirect()->route('site.payment.history', $payment->site_id)
+            ->with('success', 'Payment receipt emailed successfully.');
     }
 
     public function exportPaymentHistory(Request $request, $id)

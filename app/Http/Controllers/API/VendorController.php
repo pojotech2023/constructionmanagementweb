@@ -154,21 +154,60 @@ class VendorController extends Controller
         ]);
     }
 
+    //Vendor Material Order Details
+    public function materialOrders($vendorId)
+    {
+        $vendor = Vendor::findOrFail($vendorId);
+
+        $orders = MaterialOrder::with('site')
+            ->where('vendor_id', $vendorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $orderList = $orders->map(function ($order) {
+            return [
+                'id' => $order->id,
+                'date' => $order->date ? Carbon::parse($order->date)->format('d-m-Y') : null,
+                'site_name' => optional($order->site)->site_name,
+                'quantity' => $order->quantity,
+                'amount' => $order->price,
+            ];
+        });
+
+        return response()->json([
+            'response code' => 200,
+            'status' => true,
+            'data' => [
+                'vendor' => $vendor,
+                'orders' => $orderList,
+                'total_units' => $orders->sum('quantity'),
+                'total_amount' => $orders->sum('price'),
+            ],
+            'message' => 'Vendor material order details fetched successfully!.'
+        ]);
+    }
+
     public function getPayDetailsForm($vendorId)
     {
-        $orders = MaterialOrder::where('vendor_id', $vendorId)->get();
-        $totalUnits = $orders->sum('quantity');
-        $totalAmount = $orders->sum('price');
+        $vendor = Vendor::findOrFail($vendorId);
+
+        $totalUnits = MaterialOrder::where('vendor_id', $vendorId)->sum('quantity');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
 
         $paydetail = VendorPayDetail::where('vendor_id', $vendorId)->first();
-
-        $vendor = Vendor::find($vendorId);
+        $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
+        $openingBalance = optional($paydetail)->opening_balance ?? 0;
+        $balanceAmount = ($totalAmount + $openingBalance) - $paidAmount;
 
         return response()->json([
             'response code' => 200,
             'data' => [
                 'total_units' => $totalUnits,
                 'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => $balanceAmount,
+                'opening_balance' => $openingBalance,
                 'pay_detail' => $paydetail,
                 'vendor' => $vendor
             ],
@@ -236,7 +275,8 @@ class VendorController extends Controller
             'vendor_id' => 'required|exists:vendors,id',
             'payment' => 'required|numeric',
             'date' => 'required|date',
-            'payment_mode' => 'required'
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string'
         ]);
 
         if ($validate->fails()) {
@@ -253,6 +293,7 @@ class VendorController extends Controller
             'payment' => $request->payment,
             'date' => $date,
             'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
             'created_by' => auth('api')->id(),
         ]);
 
@@ -282,20 +323,82 @@ class VendorController extends Controller
 
     public function paymentHistory($vendorId)
     {
+        $vendor = Vendor::findOrFail($vendorId);
+
         $histories = VendorPayment::with('vendor')
             ->where('vendor_id', $vendorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
             ->get();
 
+        $historyList = $histories->map(function ($history) {
+            return [
+                'id' => $history->id,
+                'vendor_id' => $history->vendor_id,
+                'payment' => $history->payment,
+                'date' => $history->date ? Carbon::parse($history->date)->format('d-m-Y') : null,
+                'payment_mode' => $history->payment_mode,
+                'remarks' => $history->remarks,
+                'created_at' => $history->created_at,
+                'updated_at' => $history->updated_at,
+            ];
+        });
+
         $paidAmount = $histories->sum('payment');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
 
         return response()->json([
             'response code' => 200,
             'status' => true,
             'data' => [
-                'payment_historyList' => $histories,
-                'total_paidAmount' => $paidAmount
+                'vendor' => $vendor,
+                'payment_historyList' => $historyList,
+                'total_paidAmount' => $paidAmount,
+                'total_amount' => $totalAmount,
+                'balance_amount' => $totalAmount - $paidAmount,
             ],
             'message' => 'Vendor payment history fetched successfully!.'
         ]);
+    }
+
+    //Export Vendor Payment History (CSV)
+    public function exportPaymentHistory(Request $request, $vendorId)
+    {
+        $vendor = Vendor::findOrFail($vendorId);
+        $query = VendorPayment::where('vendor_id', $vendorId);
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('date', '>=', Carbon::parse($request->from_date)->toDateString());
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('date', '<=', Carbon::parse($request->to_date)->toDateString());
+        }
+
+        $histories = $query->orderBy('date')->orderBy('id')->get();
+        $filename = 'vendor_payment_history_' . $vendor->id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($histories) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Total Payment', 'Payment Mode', 'Remarks']);
+
+            foreach ($histories as $index => $history) {
+                fputcsv($file, [
+                    $index + 1,
+                    $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                    number_format((float) $history->payment, 2, '.', ''),
+                    $history->payment_mode,
+                    $history->remarks,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

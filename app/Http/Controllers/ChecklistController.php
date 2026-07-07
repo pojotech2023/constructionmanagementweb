@@ -9,6 +9,7 @@ use App\Models\Site;
 use App\Models\TaskMedia;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Services\FirebaseService;
 class ChecklistController extends Controller
 {
     public function store(Request $request)
@@ -32,6 +33,40 @@ class ChecklistController extends Controller
 
 
     return redirect()->back()->with('success', 'Checklist created successfully.');
+}
+
+// api for checklist add
+public function apiStore(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'stage' => 'required|string|max:255',
+        'task_list' => 'required|array',
+        'task_list.*' => 'required|string|max:255',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $checklist = Checklist::create([
+        'stage' => $request->stage,
+    ]);
+
+    foreach ($request->task_list as $task) {
+        $checklist->tasks()->create([
+            'task_name' => $task,
+        ]);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Checklist created successfully.',
+        'data' => $checklist->load('tasks'),
+    ], 201);
 }
 
 public function update(Request $request, $id)
@@ -421,10 +456,32 @@ public function taskmediastore(Request $request)
         ]);
     }
 
+    $this->notifyAdminsOfChecklistUpdate($siteId, $taskId);
+
     return response()->json([
         'status' => true,
         'message' => 'Task media inserted successfully',
     ]);
+}
+
+private function notifyAdminsOfChecklistUpdate($siteId, $taskId)
+{
+    try {
+        $site = Site::find($siteId);
+        $task = Task::find($taskId);
+
+        app(FirebaseService::class)->notifyAdmins(
+            'Checklist Updated',
+            'Supervisor submitted "' . ($task->task_name ?? 'a task') . '" for ' . ($site->site_name ?? 'a site'),
+            [
+                'type' => 'checklist',
+                'site_id' => (string) $siteId,
+                'task_id' => (string) $taskId,
+            ]
+        );
+    } catch (\Exception $e) {
+        \Log::error('Failed to send checklist push notification: ' . $e->getMessage());
+    }
 }
 
 

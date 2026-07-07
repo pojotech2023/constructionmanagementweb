@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class SalesBill extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'site_id',
+        'name',
+        'mobile_no',
+        'email',
+        'subject',
+        'date',
+        'location',
+        'total_amount',
+        'created_by',
+        'updated_by',
+    ];
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class);
+    }
+
+    public function details()
+    {
+        return $this->hasMany(SalesBillDetail::class, 'sales_bill_id');
+    }
+}

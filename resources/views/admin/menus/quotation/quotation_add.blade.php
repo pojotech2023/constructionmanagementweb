@@ -39,6 +39,14 @@
                     </div>
 
                     <div class="row mt-4">
+                        <div class="col-md-2 fw-bold">Email</div>
+                        <div class="col-md-4">
+                            <input type="email" name="email" id="email" class="form-control" placeholder="Email Address">
+                            @error('email') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
                         <div class="col-md-2 fw-bold">Date</div>
                         <div class="col-md-4">
                             <input type="date" name="date" class="form-control">
@@ -135,10 +143,13 @@
                     </div>
 
                     <div class="row align-items-center mt-4 g-3 quotation-action-row">
-                        <div class="col-md-6 text-start">
+                        <div class="col-md-4 text-start">
                             <button type="button" class="btn btn-primary quotation-action-btn" id="whatsappButton">Send WhatsApp</button>
                         </div>
-                        <div class="col-md-6 text-end">
+                        <div class="col-md-4 text-center">
+                            <button type="button" class="btn btn-success quotation-action-btn" id="sendMailButton">Send Mail</button>
+                        </div>
+                        <div class="col-md-4 text-end">
                             <button type="button" class="btn btn-outline-primary quotation-action-btn" id="downloadPdfButton">Download PDF Quotation</button>
                         </div>
                     </div>
@@ -195,10 +206,19 @@ $(document).ready(function () {
         if (action === 'download' && response.pdf_url) {
             triggerPdfDownload(response.pdf_url);
         }
+
+        if (action === 'mail' && response.mail_sent) {
+            alert('Quotation emailed successfully.');
+        }
     }
 
     function submitQuotation(action) {
-        if (!quotationDirty && cachedQuotationLinks) {
+        if (action === 'mail' && !$('#email').val().trim()) {
+            alert('Please enter an email address before sending the mail.');
+            return;
+        }
+
+        if (action !== 'mail' && !quotationDirty && cachedQuotationLinks) {
             runQuotationAction(action, cachedQuotationLinks);
             return;
         }
@@ -298,6 +318,10 @@ $(document).ready(function () {
 
     $('#downloadPdfButton').on('click', function () {
         submitQuotation('download');
+    });
+
+    $('#sendMailButton').on('click', function () {
+        submitQuotation('mail');
     });
 
     $('#quotationForm').on('submit', function (e) {

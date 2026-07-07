@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Admin\SupervisorCreationController;
 use App\Http\Controllers\Controller;
 use App\Models\RoleMapping;
+use App\Models\Site;
 use App\Models\SupervisorPermission;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -134,13 +135,31 @@ class SupervisorController extends Controller
             }
         }
 
+        $assignedSites = Site::where('supervisor_id', $id)->get(['id', 'site_name']);
+
+        return response()->json([
+            'response_code'  => 200,
+            'status'         => true,
+            'message'        => 'Permissions fetched successfully!',
+            'supervisor_id'  => (int) $id,
+            'supervisor'     => $supervisor->name,
+            'permissions'    => $permissions,
+            'assigned_sites' => $assignedSites,
+        ]);
+    }
+
+    public function getSites($id)
+    {
+        $supervisor = User::findOrFail($id);
+
+        $sites = Site::where('supervisor_id', $id)->get(['id', 'site_name', 'location']);
+
         return response()->json([
             'response_code' => 200,
             'status'        => true,
-            'message'       => 'Permissions fetched successfully!',
+            'message'       => 'Assigned sites fetched successfully!',
             'supervisor_id' => (int) $id,
-            'supervisor'    => $supervisor->name,
-            'permissions'   => $permissions,
+            'data'          => $sites,
         ]);
     }
 }

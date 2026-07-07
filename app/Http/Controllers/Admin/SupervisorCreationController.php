@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RoleMapping;
+use App\Models\Site;
 use App\Models\SupervisorPermission;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -99,7 +100,10 @@ class SupervisorCreationController extends Controller
             ->get()
             ->keyBy(fn($p) => $p->module . '.' . $p->action);
 
-        return view('admin.menus.supervisor.permissions', compact('supervisor', 'modules', 'saved'));
+        $sites = Site::orderBy('site_name')->get();
+        $assignedSiteIds = Site::where('supervisor_id', $id)->pluck('id')->toArray();
+
+        return view('admin.menus.supervisor.permissions', compact('supervisor', 'modules', 'saved', 'sites', 'assignedSiteIds'));
     }
 
     public function savePermissions(Request $request, $id)
@@ -117,6 +121,18 @@ class SupervisorCreationController extends Controller
             }
         }
 
+        $selectedSiteIds = $request->input('sites', []);
+
+        // Unassign sites that were previously assigned to this supervisor but are now unchecked
+        Site::where('supervisor_id', $id)
+            ->whereNotIn('id', $selectedSiteIds)
+            ->update(['supervisor_id' => null]);
+
+        // Assign the checked sites to this supervisor (reassigns from any other supervisor)
+        if (!empty($selectedSiteIds)) {
+            Site::whereIn('id', $selectedSiteIds)->update(['supervisor_id' => $id]);
+        }
+
         return redirect()->back()->with('success', 'Permissions saved successfully!');
     }
 
@@ -132,6 +148,7 @@ class SupervisorCreationController extends Controller
                     'view_materials'         => ['label' => 'Materials',            'parent' => 'view_site'],
                     'view_subcontractor'     => ['label' => 'SubContractor',        'parent' => 'view_site'],
                     'view_payment_status'    => ['label' => 'Payment Status',       'parent' => 'view_site'],
+                    'view_sales_bill'        => ['label' => 'Sales Bill',           'parent' => 'view_site'],
                     'view_checklist'         => ['label' => 'Checklist',            'parent' => 'view_site'],
                     'view_tickets'           => ['label' => 'Tickets',              'parent' => 'view_site'],
                     'view_drawing'           => ['label' => 'Drawing',              'parent' => 'view_site'],

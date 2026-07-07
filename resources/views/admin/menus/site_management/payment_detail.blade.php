@@ -130,6 +130,7 @@
                                     <option value="Cheque">Cheque</option>
                                     <option value="Net Banking">Net Banking</option>
                                     <option value="Cash">Cash</option>
+                                    <option value="Cash-B">Cash-B</option>
                                 </select>
                             </div>
                         </div>

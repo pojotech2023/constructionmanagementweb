@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\QuotationMail;
 
 class QuotationController extends Controller
 {
@@ -32,6 +34,7 @@ class QuotationController extends Controller
         'rate' => 'required|array',
         'sqFt' => 'required|array',
         'unit' => 'required|array',
+        'email' => 'nullable|email',
     ]);
 
     if ($validate->fails()) {
@@ -89,10 +92,17 @@ class QuotationController extends Controller
         $message = urlencode("Hi {$quotation->name}, your quotation is ready. Download here: $pdfUrl");
         $whatsappLink = "https://wa.me/91{$quotation->mobile_no}?text=$message";
 
+        $mailSent = false;
+        if ($request->filled('email')) {
+            Mail::to($request->email)->send(new QuotationMail($quotation, $pdf->output()));
+            $mailSent = true;
+        }
+
         return response()->json([
             'status' => 'success',
             'whatsapp_url' => $whatsappLink,
             'pdf_url' => $pdfUrl,
+            'mail_sent' => $mailSent,
         ]);
 
     } catch (\Exception $e) {

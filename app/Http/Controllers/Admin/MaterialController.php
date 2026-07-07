@@ -42,16 +42,35 @@ class MaterialController extends Controller
 
 
     // Material details
-    public function index($siteId, $materialType)
+    public function index(Request $request, $siteId, $materialType)
     {
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $month = $request->query('month') ?: Carbon::now()->format('Y-m');
+        $week = (int) $request->query('week');
+
+        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+        $startDate = $startOfMonth->copy();
+        $endDate = $endOfMonth->copy();
+
+        if ($week >= 1 && $week <= 4) {
+            $daysInMonth = $startOfMonth->daysInMonth;
+            $weekLength = ceil($daysInMonth / 4);
+
+            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+            $endDate = $startDate->copy()->addDays($weekLength - 1);
+
+            if ($endDate->gt($endOfMonth)) {
+                $endDate = $endOfMonth;
+            }
+        } else {
+            $week = null;
+        }
 
         $materials = MaterialOrder::with('vendor')
             ->where('site_id', $siteId)
             ->where('material_type', $materialType)
-            ->whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
+            ->whereBetween('date', [$startDate, $endDate])
             ->get()
             ->map(function ($material) {
                 $material->date = $material->date ? Carbon::parse($material->date)->format('d-m-Y') : null;
@@ -66,26 +85,22 @@ class MaterialController extends Controller
 
         $totalUnits = MaterialOrder::where('site_id', $siteId)
             ->where('material_type', $materialType)
-            ->whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
+            ->whereBetween('date', [$startDate, $endDate])
             ->sum('quantity');
 
         $totalAmount = MaterialOrder::where('site_id', $siteId)
             ->where('material_type', $materialType)
-            ->whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
+            ->whereBetween('date', [$startDate, $endDate])
             ->sum('price');
 
         $settledAmount = MaterialPayment::where('site_id', $siteId)
             ->where('material_type', $materialType)
-            ->whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
+            ->whereBetween('date', [$startDate, $endDate])
             ->sum('settled_amount');
 
         $pendingAmount = MaterialPayment::where('site_id', $siteId)
             ->where('material_type', $materialType)
-            ->whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
+            ->whereBetween('date', [$startDate, $endDate])
             ->sum('pending_amount');
 
         return view('admin.menus.material.material_details', compact(
@@ -96,7 +111,9 @@ class MaterialController extends Controller
             'settledAmount',
             'pendingAmount',
             'totalUnits',
-            'materialType'
+            'materialType',
+            'month',
+            'week'
         ));
     }
 
@@ -328,6 +345,7 @@ public function materialRequest(Request $request)
             'quantity' => 'required|numeric',
             'unit' => 'nullable',
             'price' => 'required|numeric',
+            'gst' => 'nullable|numeric',
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
@@ -354,6 +372,7 @@ public function materialRequest(Request $request)
             'quantity' => $request->quantity,
             'unit' => $request->unit,
             'price' => $request->price,
+            'gst' => $request->gst,
             'created_by' => auth('admin')->id(),
             'image_url' => $imageUrl
         ]);
@@ -466,7 +485,8 @@ public function materialRequest(Request $request)
         $validate = Validator::make($request->all(), [
             'date' => 'required|date',
             'quantity' => 'required|numeric',
-            'price' => 'required|numeric'
+            'price' => 'required|numeric',
+            'gst' => 'nullable|numeric',
         ]);
 
         if ($validate->fails()) {
@@ -478,9 +498,21 @@ public function materialRequest(Request $request)
             'date' => $request->date,
             'quantity' => $request->quantity,
             'price' => $request->price,
+            'gst' => $request->gst,
         ]);
 
         return redirect()->back()->with('success', 'Material order updated successfully.');
+    }
+
+    // Download material order purchase invoice PDF
+    public function orderPdf($id)
+    {
+        $order = MaterialOrder::with('vendor')->findOrFail($id);
+
+        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order'));
+        $filename = 'material_order_' . $order->id . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     // Delete material order

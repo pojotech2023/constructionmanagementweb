@@ -115,9 +115,10 @@
                 {{-- MONTH VIEW TABLE --}}
                 @if (!empty($month) && empty($date))
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover attendance-table">
                         <thead>
                             <tr>
+                                
                                 <th>Date</th>
                                 @foreach ($allCategories as $cat)
                                     <th>{{ ucfirst($cat) }}</th>
@@ -153,6 +154,21 @@
                                 </tr>
                             @endforeach
                         </tbody>
+                        <tfoot>
+                            <tr class="attendance-total-box-row">
+                                <td></td>
+                                @foreach ($allCategories as $cat)
+                                    <td>
+                                        <div class="attendance-total-box">
+                                            <div>Total</div>
+                                            <strong>{{ $workerCategoryTotals[$cat] ?? 0 }}</strong>
+                                        </div>
+                                    </td>
+                                @endforeach
+                                <td></td>
+                                <td class="attendance-action-column"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
 
@@ -193,10 +209,35 @@
                 </div>
                 @endif
 
-                <!-- TOTAL WAGES -->
-                <div class="row justify-content-center mt-4">
-                    <div class="col-md-6">
+                @if (!empty($date))
+                <!-- TOTAL WORKERS -->
+                <div class="row justify-content-center mt-4 g-3">
+                    @foreach ($allCategories as $cat)
+                    <div class="col-12 col-sm-6 col-md-3">
                         <div class="card border border-primary text-center">
+                            <div class="card-body">
+                                <h5>{{ ucfirst($cat) }}</h5>
+                                <h3 class="fw-bold">{{ $workerCategoryTotals[$cat] ?? 0 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+
+                <!-- TOTAL WORKERS + WAGES -->
+                <div class="row justify-content-center mt-4 g-3">
+                    <div class="col-md-5">
+                        <div class="card border border-primary text-center attendance-grand-total-card">
+                            <div class="card-body">
+                                <h5>Total Workers</h5>
+                                <h3 class="fw-bold">{{ $totalWorkers ?? 0 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="card border border-primary text-center attendance-grand-total-card">
                             <div class="card-body">
                                 <h5>Total Wages</h5>
                                 <h3 class="fw-bold">₹{{ $totalWages ?? 0 }}</h3>
@@ -502,7 +543,7 @@
 }
 
 .attendance-action-column {
-    width: 140px;
+    width: 88px;
 }
 
 .attendance-action-group {
@@ -512,5 +553,88 @@
     gap: 8px;
     min-width: 72px;
 }
+
+.attendance-total-box-row td {
+    background: #fff;
+    padding-top: 12px;
+    vertical-align: top;
+}
+
+.attendance-table {
+    table-layout: auto;
+    min-width: max-content;
+}
+
+.attendance-table th,
+.attendance-table td {
+    padding: 12px 14px;
+    white-space: nowrap;
+}
+
+.attendance-table th:first-child,
+.attendance-table td:first-child {
+    width: 130px;
+    min-width: 130px;
+}
+
+.attendance-table th:not(:first-child):not(:last-child),
+.attendance-table td:not(:first-child):not(:last-child) {
+    width: 145px;
+    min-width: 145px;
+}
+
+.attendance-table th:nth-last-child(2),
+.attendance-table td:nth-last-child(2) {
+    width: 120px;
+    min-width: 120px;
+}
+
+.table.attendance-table th:not(:first-child),
+.table.attendance-table td:not(:first-child) {
+    text-align: center;
+}
+
+.table.attendance-table th:first-child,
+.table.attendance-table td:first-child {
+    text-align: left;
+}
+
+.attendance-total-box {
+    min-height: 62px;
+    border: 1px solid #0d6efd;
+    border-radius: 8px;
+    padding: 8px 6px;
+    text-align: center;
+    color: #101828;
+    background: #fff;
+}
+
+.attendance-total-box div {
+    min-height: 24px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.attendance-total-box strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.attendance-grand-total-card .card-body {
+    padding: 16px 12px;
+}
+
+.attendance-grand-total-card h5 {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.attendance-grand-total-card h3 {
+    font-size: 24px;
+}
+
     </style>
 @endsection

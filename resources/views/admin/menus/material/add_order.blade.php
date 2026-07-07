@@ -154,6 +154,23 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
+                                    <label for="gst">GST</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                        <input id="gst" name="gst" type="number" class="form-control no-arrow"
+                                            min="0" step="0.01" placeholder="Enter GST amount" />
+                                </div>
+                                @error('gst')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center mt-5">
+                            <div class="col-lg-2">
+                                <div class="form-group">
                                     <label for="price">Total Price</label>
                                 </div>
                             </div>
@@ -294,7 +311,12 @@
                                     form[0].reset();
                                     const siteId = "{{ $siteId }}";
                                     const materialType = "{{ $materialType }}";
-                                    window.location.href = "/admin/public/admin/material/" + siteId + "/" + materialType;
+                                    const enteredDate = formData.get('date');
+                                    let url = "/admin/public/admin/material/" + siteId + "/" + materialType;
+                                    if (enteredDate) {
+                                        url += "?month=" + enteredDate.slice(0, 7);
+                                    }
+                                    window.location.href = url;
                                 }
                             });
                         }

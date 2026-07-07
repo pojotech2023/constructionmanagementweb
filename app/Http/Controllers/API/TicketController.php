@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
-use Illuminate\Support\Facades\Session;  
+use App\Services\FirebaseService;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 class TicketController extends Controller
 {
@@ -35,6 +36,22 @@ class TicketController extends Controller
         'ticket' => $request->ticket,
         'file_path' => $filePath,
     ]);
+
+    try {
+        $site = \App\Models\Site::find($ticket->site_id);
+
+        app(FirebaseService::class)->notifyAdmins(
+            'New Ticket Raised',
+            'A new ticket was raised for ' . ($site->site_name ?? 'a site') . ': ' . \Illuminate\Support\Str::limit($ticket->ticket, 80),
+            [
+                'type' => 'ticket',
+                'ticket_id' => (string) $ticket->id,
+                'site_id' => (string) $ticket->site_id,
+            ]
+        );
+    } catch (\Exception $e) {
+        \Log::error('Failed to send ticket push notification: ' . $e->getMessage());
+    }
 
     return response()->json([
         'status' => true,

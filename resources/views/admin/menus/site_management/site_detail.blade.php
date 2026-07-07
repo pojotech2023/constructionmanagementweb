@@ -25,9 +25,11 @@
                     </li>
                 </ul>
                 </div>
+                @if ($sharedMenuVisibility['export'] ?? true)
                 <a href="{{ route('site.full-report.export', $site->id) }}" class="btn btn-success mb-3">
                     <i class="fas fa-file-excel me-1"></i> Download Full Report
                 </a>
+                @endif
             </div>
             <div class="row g-4">
                 <!-- Blade alert for success -->
@@ -38,6 +40,7 @@
                     </div>
                     {{ session()->forget('success') }} {{-- Clear session --}}
                 @endif
+                @if ($sharedMenuVisibility['attendance'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('attendance', $site->id) }}" onclick="redirectToDetails(event, this)">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
@@ -48,6 +51,8 @@
                         </div>
                     </div>
                 </div>
+                @endif
+                @if ($sharedMenuVisibility['materials'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('material.detail', $site->id) }}" onclick="redirectToDetails(event, this)">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
@@ -58,6 +63,8 @@
                         </div>
                     </div>
                 </div>
+                @endif
+                @if ($sharedMenuVisibility['subcontractor_detail'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('subcontractor.detail', $site->id) }}" onclick="redirectToDetails(event, this)">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
@@ -68,6 +75,8 @@
                         </div>
                     </div>
                 </div>
+                @endif
+                @if ($sharedMenuVisibility['payment_status'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('site.paymentDetail', $site->id) }}" onclick="redirectToDetails(event, this)">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
@@ -78,6 +87,8 @@
                         </div>
                     </div>
                 </div>
+                @endif
+                @if ($sharedMenuVisibility['checklist'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('checklist', $site->id) }}" onclick="redirectToDetails(event, this)">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
@@ -88,6 +99,8 @@
                         </div>
                     </div>
                 </div>
+                @endif
+                @if ($sharedMenuVisibility['tickets'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('ticket', $site->id) }}" onclick="redirectToDetails(event, this)">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
@@ -98,6 +111,8 @@
                         </div>
                     </div>
                 </div>
+                @endif
+                @if ($sharedMenuVisibility['drawing'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('drawing', $site->id) }}" onclick="redirectToDetails(event, this)">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
@@ -108,6 +123,20 @@
                         </div>
                     </div>
                 </div>
+                @endif
+                @if ($sharedMenuVisibility['sales_bill'] ?? true)
+                <div class="col-6 col-sm-4 col-lg-2">
+                    <div class="card h-100 w-100 site-card" data-route="{{ route('salesBill.form', $site->id) }}" onclick="redirectToDetails(event, this)">
+                        <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                            <div class="h1">
+                                <img src="{{ asset('images/sri/sales.png') }}" class="w-100">
+                            </div>
+                            <div class="text-muted">Sales Bill</div>
+                        </div>
+
+                    </div>
+                </div>
+                @endif
         </div>
     </div>
 

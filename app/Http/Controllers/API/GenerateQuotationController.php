@@ -12,6 +12,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\DefaultItem;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\QuotationMail;
 
 class GenerateQuotationController extends Controller
 {
@@ -24,6 +26,7 @@ public function store(Request $request)
         'mobile_no' => 'required',
         'location' => 'required',
         'contractor' => 'required',
+        'email' => 'nullable|email',
 
         'data' => 'required|array|min:1',
         'data.*.particular' => 'required|string',
@@ -75,13 +78,20 @@ public function store(Request $request)
         $message = urlencode("Hi {$quotation->name}, your quotation is ready. Download here: $pdfUrl");
         $whatsappLink = "https://wa.me/91{$quotation->mobile_no}?text=$message";
 
+        $mailSent = false;
+        if ($request->filled('email')) {
+            Mail::to($request->email)->send(new QuotationMail($quotation, $pdf->output()));
+            $mailSent = true;
+        }
+
        return response()->json([
     'status' => true,
     'message' => 'Quotation created successfully with default + user items',
     'quotation_id' => $quotation->id,
     'pdf_url' => $pdfUrl,
     'whatsapp_url' => $whatsappLink,
-    'total_amount' => $totalAmount
+    'total_amount' => $totalAmount,
+    'mail_sent' => $mailSent
 ], 200);
 
 
@@ -143,7 +153,7 @@ public function removeDetail($id)
     /**
      * ✅ 4️⃣ Generate final PDF (after removing unwanted defaults)
      */
-    public function generatePdf($id)
+    public function generatePdf(Request $request, $id)
     {
        $quotation = Quotation::with('details')->find($id);
 
@@ -167,12 +177,20 @@ $pdfUrl = asset('storage/' . $pdfPath);
 $message = urlencode("Hi {$quotation->name}, your quotation is ready. Download here: $pdfUrl");
 $whatsappLink = "https://wa.me/91{$quotation->mobile_no}?text=$message";
 
+$mailSent = false;
+$email = $request->input('email');
+if (!empty($email)) {
+    Mail::to($email)->send(new QuotationMail($quotation, $pdf->output()));
+    $mailSent = true;
+}
+
 return response()->json([
     'status' => true,
     'message' => 'PDF generated successfully',
     'pdf_url' => $pdfUrl,
     'whatsapp_url' => $whatsappLink,
     'total_amount' => $totalAmount,
+    'mail_sent' => $mailSent,
 ]);
     }
 

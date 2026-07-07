@@ -272,39 +272,74 @@ private function getApplicableWage($siteId, $category, $attendanceDate)
 public function attendanceByDate(Request $request, $siteId)
 {
     $date = $request->query('date');
+    $fromDate = $request->query('from_date');
+    $toDate = $request->query('to_date');
 
-    if (!$date) {
+    if (!$date && !($fromDate && $toDate)) {
         return response()->json([
             'status'  => false,
-            'message' => 'Date is required (YYYY-MM-DD)'
+            'message' => 'Date is required (YYYY-MM-DD), or provide from_date and to_date for a range.'
         ], 422);
     }
 
-    /* =======================
-       WAGE MASTER
-    ========================*/
     $wages = Wages::where('site_id', $siteId)
         ->orderBy('category')
         ->get();
 
+    $categories = [];
+    foreach ($wages as $wage) {
+        $categoryKey = (string) Str::of($wage->category)
+            ->lower()
+            ->replace(' ', '_');
+
+        $categories[$categoryKey] = $categoryKey;
+    }
+
+    // 🔹 Week/range view
+    if ($fromDate && $toDate) {
+        $start = Carbon::parse($fromDate);
+        $end = Carbon::parse($toDate);
+
+        $days = [];
+        for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
+            $days[] = $this->buildDayData($siteId, $day->format('Y-m-d'), $categories);
+        }
+
+        return response()->json([
+            'status'      => true,
+            'site_id'     => (string) $siteId,
+            'from_date'   => $fromDate,
+            'to_date'     => $toDate,
+            'data'        => $days,
+            'categories'  => array_values($categories),
+            'total_wages' => array_sum(array_column($days, 'total')),
+        ]);
+    }
+
+    // 🔹 Single day view
+    $dayData = $this->buildDayData($siteId, $date, $categories);
+
+    return response()->json([
+        'status'      => true,
+        'site_id'     => (string) $siteId,
+        'date'        => $date,
+        'data'        => $dayData,
+        'categories'  => array_values($categories),
+        'total_wages' => $dayData['total'],
+    ]);
+}
+
+private function buildDayData($siteId, $date, $categories)
+{
     $dayData = [
         'date'  => $date,
         'total' => 0,
     ];
 
-    $categories = [];
-
     // 🔹 Default all categories (count=0, wage=0)
-    foreach ($wages as $wage) {
-
-        $categoryKey = (string) Str::of($wage->category)
-            ->lower()
-            ->replace(' ', '_');
-
+    foreach ($categories as $categoryKey) {
         $dayData[$categoryKey] = 0;
         $dayData[$categoryKey . '_wage'] = "0"; // ✅ IMPORTANT
-
-        $categories[$categoryKey] = $categoryKey;
     }
 
     /* =======================
@@ -338,14 +373,7 @@ public function attendanceByDate(Request $request, $siteId)
         $dayData['total'] += ($rec->count * $amount);
     }
 
-    return response()->json([
-        'status'      => true,
-        'site_id'     => (string) $siteId,
-        'date'        => $date,
-        'data'        => $dayData,
-        'categories'  => array_values($categories),
-        'total_wages' => $dayData['total'],
-    ]);
+    return $dayData;
 }
 
 
@@ -518,6 +546,25 @@ public function attendanceByDate(Request $request, $siteId)
         ]);
     }
 
+
+    public function destroy($id)
+    {
+        $attendance = Attendance::find($id);
+
+        if (!$attendance) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Attendance record not found.',
+            ], 404);
+        }
+
+        $attendance->delete();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Attendance record deleted successfully.',
+        ]);
+    }
 
     public function updateAttendanceAndWages(Request $request)
 {

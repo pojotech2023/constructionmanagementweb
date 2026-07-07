@@ -76,9 +76,7 @@
         <div class="col-lg-4">
             <div class="form-group">
                 <input type="file" name="site_img" id="site_img" class="form-control">
-                @if ($site->site_img)
-                    <img src="{{ $site->site_image_url }}" width="100" class="mt-2 rounded shadow-sm" alt="Site Image Preview">
-                @endif
+                <img src="{{ $site->site_image_url }}" width="100" class="mt-2 rounded shadow-sm" alt="Site Image Preview">
             </div>
             @error('site_img')
                 <div class="text-danger">{{ $message }}</div>

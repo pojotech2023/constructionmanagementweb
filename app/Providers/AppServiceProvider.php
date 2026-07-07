@@ -34,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
                 'sharedRemainingSiteLimit' => $remainingSiteLimit,
                 'sharedCurrentPlanName' => $currentPlan['name'],
                 'sharedCurrentPlanKey' => $currentPlan['key'],
+                'sharedMenuVisibility' => Setting::getMenuVisibility(),
             ]);
         });
     }

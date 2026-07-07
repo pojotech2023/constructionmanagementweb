@@ -36,9 +36,8 @@ class ProfileController extends Controller
             return redirect()->back()->withErrors($validate)->withInput();
         }
 
-        // Update basic fields
+        // Update basic fields (email is not editable from the profile page)
         $user->name = $request->name ?? $user->name;
-        $user->email = $request->email ?? $user->email;
         $user->mobile_no = $request->mobile_no ?? $user->mobile_no;
 
         // Update password only if entered

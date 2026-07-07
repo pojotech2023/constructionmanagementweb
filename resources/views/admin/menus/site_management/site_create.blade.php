@@ -236,12 +236,12 @@
                                     <div class="row align-items-center mt-5">
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="name">Name <span style="color:red">*</span></label>
+                                                <label for="name">Name</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" name="name" class="form-control" required value="{{ old('name') }}">
+                                                <input type="text" name="name" class="form-control" value="{{ old('name') }}">
                                             </div>
                                             @error('name')
                                                 <div class="text-danger">{{ $message }}</div>
@@ -251,7 +251,7 @@
                                         <!-- Mobile Number -->
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="mobile_no">Mobile Number <span style="color:red">*</span></label>
+                                                <label for="mobile_no">Mobile Number</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">

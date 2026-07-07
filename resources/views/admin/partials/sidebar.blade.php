@@ -37,12 +37,14 @@
                     </a>
                 </li> --}}
 
+           @if ($sharedMenuVisibility['site_management'] ?? true)
            <li class="nav-item {{ request()->routeIs('sitemanagement.*', 'site.*') ? 'active' : '' }}">
                     <a href="{{ route('sitemanagement.list')  }}" class="collapsed" aria-expanded="false">
                     <i class="far fa-chart-bar"></i>
                     <p>Site Management</p>
                     </a>
                 </li>
+                @endif
 
                {{-- <li class="nav-item">
                     <a href="{{ session('role_name') == 'Admin' ? route('sitemanagement.list') : route('admin.dashboard') }}" class="collapsed" aria-expanded="false">
@@ -51,19 +53,25 @@
                     </a>
                 </li>--}}
 
+                @if ($sharedMenuVisibility['generate_quotation'] ?? true)
                  <li class="nav-item {{ request()->routeIs('quotation.*') ? 'active' : '' }}">
                     <a href="{{ route('quotation.form') }}" class="collapsed" aria-expanded="false">
                        <i class="fa-solid fa-file"></i>
                        <p>Generate Quotation</p>
                     </a>
                 </li>
+                @endif
 
+                @if ($sharedMenuVisibility['customer_management'] ?? true)
                 <li class="nav-item {{ request()->routeIs('customer.*') ? 'active' : '' }}">
                     <a href="{{ route('customer.list') }}" class="collapsed" aria-expanded="false">
                         <i class="bi bi-people-fill"></i>
                         <p>Customer Management</p>
                     </a>
                 </li>
+                @endif
+
+                @if ($sharedMenuVisibility['vendor'] ?? true)
                 <li class="nav-item {{ request()->routeIs('vendor.*', 'paydetail.*', 'payment.*') ? 'active' : '' }}">
                     <a data-bs-toggle="collapse" href="#vendormenu">
                         <i class="bi bi-person-fill-add"></i>
@@ -85,7 +93,9 @@
                         </ul>
                     </div>
                 </li>
+                @endif
 
+                @if ($sharedMenuVisibility['subcontractor'] ?? true)
                 <li class="nav-item {{ request()->routeIs('subcontractor.*', 'subpaydetail.*', 'subpayment.*') ? 'active' : '' }}">
                     <a data-bs-toggle="collapse" href="#subcontractormenu">
                         <i class="bi bi-person-fill-add"></i>
@@ -107,19 +117,34 @@
                         </ul>
                     </div>
                 </li>
-                
+                @endif
+
+                @if ($sharedMenuVisibility['supervisor_creation'] ?? true)
                 <li class="nav-item {{ request()->routeIs('supervisor.*') ? 'active' : '' }}">
                     <a href="{{ route('supervisor.list') }}" class="collapsed" aria-expanded="false">
                         <i class="bi bi-person-plus-fill"></i>
                         <p>Supervisor Creation</p>
                     </a>
                 </li>
+                @endif
+
+                @if ($sharedMenuVisibility['property_list'] ?? true)
                 <li class="nav-item {{ request()->routeIs('property-*', 'property.*', 'agent.*') ? 'active' : '' }}">
                     <a href="{{ route('property-list') }}" class="collapsed" aria-expanded="false">
                         <i class="bi bi-person-plus-fill"></i>
                         <p>Property List</p>
                     </a>
                 </li>
+                @endif
+
+                @if (session('role_name') == 'Admin')
+                <li class="nav-item {{ request()->routeIs('admin.control.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.control.index') }}" class="collapsed" aria-expanded="false">
+                        <i class="bi bi-toggles"></i>
+                        <p>Admin Control</p>
+                    </a>
+                </li>
+                @endif
 
                 {{-- Logout (Visible to all roles) --}}
                 <li class="nav-item">

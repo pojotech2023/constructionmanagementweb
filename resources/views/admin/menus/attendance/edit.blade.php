@@ -23,16 +23,17 @@
                     @endif
 
                    <div class="d-flex justify-content-between align-items-center mb-3">
-                       <h4 class="mb-0">Update Attendance</h4>
+                       <h4 class="mb-0">Update Attendance &amp; Wages</h4>
                        <button type="button" class="btn btn-primary px-4 py-2 fw-bold" id="addCombinedRow">
                            Add Row
                        </button>
                    </div>
-<form action="{{ route('update.attendance') }}" method="POST">
+<form action="{{ route('update.attendance.wages') }}" method="POST">
     @csrf
     <input type="hidden" name="site_id" value="{{ $siteId }}">
     <input type="hidden" name="date" value="{{ $date }}">
 
+    <h5>Attendance</h5>
     <div id="attendanceRows"></div>
 
     @foreach ($categories as $cat)
@@ -48,18 +49,9 @@
         </div>
     @endforeach
 
-    <button class="btn btn-primary mt-3">Update Attendance</button>
-</form>
+    <hr>
 
-<hr>
-
-<h4>Update Wages</h4>
-<form action="{{ route('update.wages') }}" method="POST">
-    @csrf
-    
-    <input type="hidden" name="site_id" value="{{ $siteId }}">
-    <input type="hidden" name="date" value="{{ $date }}">
-
+    <h5>Wages</h5>
     <div id="wageRows"></div>
 
     @foreach ($categories as $cat)
@@ -75,7 +67,7 @@
         </div>
     @endforeach
 
-    <button class="btn btn-success mt-3">Update Wages</button>
+    <button class="btn btn-primary mt-3">Update Attendance &amp; Wages</button>
 </form>
                 </div>
             </div>

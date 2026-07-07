@@ -14,6 +14,7 @@ use App\Http\Controllers\API\OtherUtilitiesController;
 use App\Http\Controllers\API\OtherUtilitiesSubController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\PropertyController;
+use App\Http\Controllers\API\SalesBillController;
 use App\Http\Controllers\API\SiteController;
 use App\Http\Controllers\API\SubContractorController;
 use App\Http\Controllers\API\SupervisorController;
@@ -64,20 +65,36 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/site-detail/{id}', [SiteController::class, 'siteDetail']);
   Route::post('/site-payment-add', [SiteController::class, 'addPayment']);
   Route::get('/site-payment-history/{siteId}', [SiteController::class, 'paymentHistory']);
+  Route::get('/site-payment-history/{siteId}/export', [SiteController::class, 'exportPaymentHistory']);
   Route::get('/site-payment-summary/{siteId}', [SiteController::class, 'paymentSummary']);
+  Route::get('/site-payment-pdf/{id}', [SiteController::class, 'downloadPaymentPdf']);
+  Route::get('/site-payment-whatsapp/{id}', [SiteController::class, 'sendPaymentWhatsapp']);
+  Route::get('/site-payment-mail/{id}', [SiteController::class, 'sendPaymentMail']);
+
+  //Sales Bill
+  Route::get('/sales-bill-form/{siteId}', [SalesBillController::class, 'getDetails']);
+  Route::post('/sales-bill-add', [SalesBillController::class, 'store']);
+  Route::get('/sales-bill/{id}', [SalesBillController::class, 'show']);
 
   //Attendance
-  
+  Route::delete('/attendance-delete/{id}', [AttendanceController::class, 'destroy']);
 
   //Material Details
   Route::get('/material-detail/{siteId}', [MaterialController::class, 'getMaterial']); //material quantity & vlaues
   Route::post('/material/{siteId}/{materialType}', [MaterialController::class, 'materialData']); //bricks, sand list
-  Route::post('/request-order', [MaterialController::class, 'materialRequest']); //add request 
+  Route::post('/request-order', [MaterialController::class, 'materialRequest']); //add request
   Route::post('/add-order', [MaterialController::class, 'materialOrder']);    // add order
   Route::get('/materials-unit', [MaterialController::class, 'index']);
+  Route::get('/material-export', [MaterialController::class, 'exportMaterial']);
+  Route::post('/material-update/{id}', [MaterialController::class, 'updateMaterial']);
+  Route::delete('/material-delete/{id}', [MaterialController::class, 'destroyMaterial']);
+  Route::get('/material-order/{id}/pdf', [MaterialController::class, 'orderPdf']);
   //Material Other Utilities
   Route::get('/site-utilities/{id}', [OtherUtilitiesController::class, 'index']); //siteId
   Route::post('/utilities-add', [OtherUtilitiesController::class, 'store']);
+  Route::post('/update-utility/{id}', [OtherUtilitiesController::class, 'update']);
+  Route::delete('/utility-delete/{id}', [OtherUtilitiesController::class, 'destroy']);
+  Route::get('/site-utilities/{id}/export', [OtherUtilitiesController::class, 'export']);
 
   //Subcontractor
   Route::get('/subcontractor-detail/{siteId}', [SubcontractorController::class, 'getSubcontractor']);
@@ -85,10 +102,16 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/subcontractor/{siteId}/{subcontractorType}', [SubcontractorController::class, 'subcontractorData']);
   
   Route::post('/add-service', [SubcontractorController::class, 'subcontractorService']);
+  Route::post('/service-update/{id}', [SubContractorController::class, 'updateService']);
+  Route::delete('/service-delete/{id}', [SubContractorController::class, 'destroyService']);
+  Route::get('/subcontractor-export', [SubContractorController::class, 'exportSubcontractor']);
 
   //Other Utilities Subcontractor
   Route::get('/site-subutilities/{id}', [OtherUtilitiesSubController::class, 'index']);
   Route::post('/subutilities-add', [OtherUtilitiesSubController::class, 'store']);
+  Route::post('/update-subutility/{id}', [OtherUtilitiesSubController::class, 'update']);
+  Route::delete('/subutility-delete/{id}', [OtherUtilitiesSubController::class, 'destroy']);
+  Route::get('/site-subutilities/{id}/export', [OtherUtilitiesSubController::class, 'export']);
 
   //Customer Management
   Route::get('/customer-management', [CustomerController::class, 'index']);
@@ -101,6 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/supervisor-update', [SupervisorController::class, 'update']);
   Route::delete('/supervisor-delete/{id}', [SupervisorController::class, 'delete']);
   Route::get('/supervisor-permissions/{id}', [SupervisorController::class, 'getPermissions']);
+  Route::get('/supervisor-sites/{id}', [SupervisorController::class, 'getSites']);
 
   //Vendor Management
   Route::get('/vendor-management', [VendorController::class, 'index']);
@@ -111,10 +135,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
   //Vendor Dashboard
   Route::get('/vendor-dashboard', [VendorController::class, 'dashboard']);
+  Route::get('/vendor-material-orders/{vendorId}', [VendorController::class, 'materialOrders']);
   Route::get('/paydetail/{vendorId}', [VendorController::class, 'getPayDetailsForm']);
   Route::post('paydetail-update', [VendorController::class, 'paydetailUpdate']); //only for opening balance
   Route::post('payment-add', [VendorController::class, 'addPayment']);
   Route::get('payment-history/{vendorId}', [VendorController::class, 'paymentHistory']);
+  Route::get('payment-history/{vendorId}/export', [VendorController::class, 'exportPaymentHistory']);
 
   //Subcontractor Management
   Route::get('/subcontractor-management', [SubcontractorController::class, 'index']);
@@ -129,6 +155,14 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('subpaydetail-update', [SubcontractorController::class, 'subcontractorpayUpdate']); //only for opening balance
   Route::post('subpayment-add', [SubcontractorController::class, 'addPayment']);
   Route::get('subpayment-history/{subcontractorId}', [SubcontractorController::class, 'paymentHistory']);
+  Route::get('subpayment-history/{subcontractorId}/export', [SubcontractorController::class, 'exportPaymentHistory']);
+  Route::get('subcontractor-orders/{subcontractorId}', [SubcontractorController::class, 'subcontractorOrders']);
+
+  //Petty Cash / Rental Management (site-scoped wrapper subcontractors)
+  Route::get('/subcontractor-petty-cash/{siteId}', [SubcontractorController::class, 'pettyCashPaymentDetail']);
+  Route::get('/subcontractor-petty-cash/{siteId}/export', [SubcontractorController::class, 'exportPettyCash']);
+  Route::get('/subcontractor-rental-management/{siteId}', [SubcontractorController::class, 'rentalManagementPaymentDetail']);
+  Route::get('/subcontractor-rental-management/{siteId}/export', [SubcontractorController::class, 'exportRentalManagement']);
 
   //Agent
   Route::get('/agent-management', [AgentController::class, 'index']);
@@ -150,6 +184,8 @@ Route::get('/quotations', [GenerateQuotationController::class, 'index']);
 
  Route::post('/admin/task/update', [ChecklistController::class, 'adminUpdateTask']);
 
+  //Checklist Add
+  Route::post('/checklist-add', [ChecklistController::class, 'apiStore']);
 
 });
 Route::post('/login-customer', [AuthController::class, 'loginWithMobile']);
@@ -180,10 +216,11 @@ Route::delete('/drawing/{id}', [DrawingController::class, 'destroy']);
 
 
  Route::post('/create_sites', [SiteController::class, 'store']);
- Route::get('/all_sites', [SiteController::class, 'siteview']);  
+ Route::get('/all_sites', [SiteController::class, 'siteview']);
  Route::get('/sites/{id}', [SiteController::class, 'edit']);        // Get site + customer details for edit
  Route::post('/sites/update', [SiteController::class, 'update']);      // Update site + customer
 Route::delete('/sites/{id}', [SiteController::class, 'destroy']);
+Route::get('/sites/{id}/full-report', [SiteController::class, 'exportFullReport']);
 
 
 

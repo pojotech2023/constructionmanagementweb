@@ -42,6 +42,44 @@
                             <form action="{{ route('supervisor.permissions.save', $supervisor->id) }}" method="POST">
                                 @csrf
 
+                                {{-- Assigned Sites --}}
+                                <div class="mb-5">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <span class="badge bg-dark px-3 py-2 me-3" style="font-size:13px; white-space:nowrap;">
+                                            Assigned Sites
+                                        </span>
+                                        <hr class="flex-grow-1 m-0">
+                                    </div>
+
+                                    <small class="text-muted d-block mb-2">
+                                        Select the sites this supervisor can view. A site can be assigned to only one supervisor at a time &mdash; checking a site here will move it away from any other supervisor.
+                                    </small>
+
+                                    <div class="row row-cols-2 row-cols-sm-3 row-cols-lg-4 g-2 ms-1">
+                                        @forelse ($sites as $site)
+                                            @php
+                                                $siteChecked = in_array($site->id, $assignedSiteIds);
+                                            @endphp
+                                            <div class="col">
+                                                <div class="border rounded px-3 py-2 d-flex align-items-center gap-2 h-100"
+                                                    style="background:#f8f9fa;">
+                                                    <input class="form-check-input m-0"
+                                                        type="checkbox"
+                                                        id="site_{{ $site->id }}"
+                                                        name="sites[]"
+                                                        value="{{ $site->id }}"
+                                                        {{ $siteChecked ? 'checked' : '' }}>
+                                                    <label class="form-check-label mb-0 small" for="site_{{ $site->id }}">
+                                                        {{ $site->site_name }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <p class="text-muted ms-1">No sites available.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+
                                 @foreach ($modules as $moduleKey => $module)
                                     <div class="mb-5">
 

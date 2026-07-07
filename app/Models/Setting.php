@@ -54,6 +54,80 @@ class Setting extends Model
         return self::PLAN_DEFINITIONS;
     }
 
+    public const MENU_VISIBILITY_KEY = 'sidebar_menu_visibility';
+
+    public const MENU_ITEMS = [
+        'site_management' => 'Site Management',
+        'generate_quotation' => 'Generate Quotation',
+        'customer_management' => 'Customer Management',
+        'vendor' => 'Vendor',
+        'subcontractor' => 'SubContractor',
+        'supervisor_creation' => 'Supervisor Creation',
+        'property_list' => 'Property List',
+        'site_detail' => 'Site Detail',
+        'export' => 'Export (Site Detail Report)',
+        'attendance' => 'Today Attendance',
+        'materials' => 'Materials',
+        'subcontractor_detail' => 'SubContractor (Site Detail)',
+        'payment_status' => 'Payment Status',
+        'checklist' => 'Check List',
+        'tickets' => 'Tickets',
+        'drawing' => 'Drawing',
+        'sales_bill' => 'Sales Bill',
+    ];
+
+    // Sub-items nested under a parent menu on the Admin Control screen.
+    public const MENU_CHILDREN = [
+        'site_management' => [
+            'site_detail', 'export', 'attendance', 'materials',
+            'subcontractor_detail', 'payment_status', 'checklist', 'tickets', 'drawing', 'sales_bill',
+        ],
+    ];
+
+    public static function getMenuGroups(): array
+    {
+        $childKeys = array_merge(...array_values(self::MENU_CHILDREN));
+
+        $groups = [];
+        foreach (self::MENU_ITEMS as $key => $label) {
+            if (in_array($key, $childKeys, true)) {
+                continue;
+            }
+
+            $groups[$key] = [
+                'label' => $label,
+                'children' => array_map(
+                    fn ($childKey) => ['key' => $childKey, 'label' => self::MENU_ITEMS[$childKey]],
+                    self::MENU_CHILDREN[$key] ?? []
+                ),
+            ];
+        }
+
+        return $groups;
+    }
+
+    public static function getMenuVisibility(): array
+    {
+        $stored = json_decode((string) self::getValue(self::MENU_VISIBILITY_KEY, '{}'), true) ?: [];
+
+        $visibility = [];
+        foreach (array_keys(self::MENU_ITEMS) as $key) {
+            $visibility[$key] = array_key_exists($key, $stored) ? (bool) $stored[$key] : true;
+        }
+
+        return $visibility;
+    }
+
+    public static function setMenuVisibility(array $visibility): void
+    {
+        $data = [];
+        foreach (array_keys(self::MENU_ITEMS) as $key) {
+            $data[$key] = !empty($visibility[$key]);
+        }
+
+        self::setValue(self::MENU_VISIBILITY_KEY, json_encode($data));
+    }
+
     public static function getCurrentPlan(): array
     {
         $storedPlanKey = self::getValue('plan_name', self::DEFAULT_PLAN_KEY);

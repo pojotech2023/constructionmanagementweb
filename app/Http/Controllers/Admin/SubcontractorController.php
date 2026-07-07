@@ -152,6 +152,8 @@ class SubcontractorController extends Controller
         $title = 'Petty Cash Payment Detail';
         $backRoute = route('subcontractor.detail', ['siteId' => $site->id]);
         $siteName = $site->site_name;
+        $exportRoute = route('subcontractor.pettyCash.export', ['siteId' => $site->id]);
+        $exportModalTitle = 'Export Petty Cash';
 
         return view('admin.menus.subcontractor.subcontractor_paydetail', compact(
             'totalAmount',
@@ -162,21 +164,89 @@ class SubcontractorController extends Controller
             'histories',
             'paidAmount',
             'title',
-            'backRoute'
+            'backRoute',
+            'exportRoute',
+            'exportModalTitle'
+        ));
+    }
+
+    public function rentalManagementPaymentDetail($siteId)
+    {
+        $site = Site::findOrFail($siteId);
+        $rentalEmail = 'rental.site.' . $site->id . '@local.invalid';
+
+        $subcontractor = Subcontractor::firstOrCreate(
+            ['email' => $rentalEmail],
+            [
+                'name' => 'Rental Management - ' . $site->site_name,
+                'subcontractors' => 'Rental Management',
+                'mobile_no' => '0000000000',
+                'address' => $site->address ?? $site->site_name,
+                'gst' => 'N/A',
+                'created_by' => auth('admin')->id(),
+            ]
+        );
+
+        $services = SubcontractorService::where('subcontractor_id', $subcontractor->id)->get();
+        $totalAmount = $services->sum('amount');
+        $subcontractorId = $subcontractor->id;
+        $paydetail = SubcontractorPayDetail::where('subcontractor_id', $subcontractorId)->first();
+        $histories = SubcontractorPayment::where('subcontractor_id', $subcontractorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+        $paidAmount = $histories->sum('payment');
+        $title = 'Rental Management Payment Detail';
+        $backRoute = route('subcontractor.detail', ['siteId' => $site->id]);
+        $siteName = $site->site_name;
+        $exportRoute = route('subcontractor.rentalManagement.export', ['siteId' => $site->id]);
+        $exportModalTitle = 'Export Rental Management';
+
+        return view('admin.menus.subcontractor.subcontractor_paydetail', compact(
+            'totalAmount',
+            'subcontractorId',
+            'siteId',
+            'siteName',
+            'paydetail',
+            'histories',
+            'paidAmount',
+            'title',
+            'backRoute',
+            'exportRoute',
+            'exportModalTitle'
         ));
     }
 
     //subcontractor inner detail
-    public function getSubcontractorDetails($siteId, $subcontractorType)
+    public function getSubcontractorDetails(Request $request, $siteId, $subcontractorType)
     {
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $month = $request->query('month') ?: Carbon::now()->format('Y-m');
+        $week = (int) $request->query('week');
+
+        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+        $startDate = $startOfMonth->copy();
+        $endDate = $endOfMonth->copy();
+
+        if ($week >= 1 && $week <= 4) {
+            $daysInMonth = $startOfMonth->daysInMonth;
+            $weekLength = ceil($daysInMonth / 4);
+
+            $startDate = $startOfMonth->copy()->addDays(($week - 1) * $weekLength);
+            $endDate = $startDate->copy()->addDays($weekLength - 1);
+
+            if ($endDate->gt($endOfMonth)) {
+                $endDate = $endOfMonth;
+            }
+        } else {
+            $week = null;
+        }
 
         $subcontractors = SubcontractorService::with('subcontractor')
             ->where('site_id', $siteId)
             ->where('subcontractor_type', $subcontractorType)
-            ->whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
+            ->whereBetween('date', [$startDate, $endDate])
             ->get();
 
         $site = Site::find($siteId);
@@ -184,8 +254,7 @@ class SubcontractorController extends Controller
 
         $totalAmount = SubcontractorService::where('site_id', $siteId)
             ->where('subcontractor_type', $subcontractorType)
-            ->whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
+            ->whereBetween('date', [$startDate, $endDate])
             ->sum('amount');
 
         return view('admin.menus.subcontractor.subcontractor_inner_detail', compact(
@@ -193,7 +262,9 @@ class SubcontractorController extends Controller
             'siteId',
             'siteName',
             'totalAmount',
-            'subcontractorType'
+            'subcontractorType',
+            'month',
+            'week'
         ));
     }
 
@@ -685,6 +756,56 @@ class SubcontractorController extends Controller
             ->get();
 
         $filename = 'petty_cash_' . $site->id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($histories) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Payment Mode', 'Remarks', 'Payment']);
+
+            foreach ($histories as $index => $history) {
+                fputcsv($file, [
+                    $index + 1,
+                    $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                    $history->payment_mode,
+                    $history->remarks,
+                    number_format((float) $history->payment, 2, '.', ''),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportRentalManagement(Request $request, $siteId)
+    {
+        $site = Site::findOrFail($siteId);
+        $rentalEmail = 'rental.site.' . $site->id . '@local.invalid';
+        $subcontractor = Subcontractor::where('email', $rentalEmail)->firstOrFail();
+
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
+
+        $historyQuery = SubcontractorPayment::where('subcontractor_id', $subcontractor->id);
+
+        if ($fromDate) {
+            $historyQuery->whereDate('date', '>=', Carbon::parse($fromDate)->toDateString());
+        }
+
+        if ($toDate) {
+            $historyQuery->whereDate('date', '<=', Carbon::parse($toDate)->toDateString());
+        }
+
+        $histories = $historyQuery
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $filename = 'rental_management_' . $site->id . '_' . now()->format('Ymd_His') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',

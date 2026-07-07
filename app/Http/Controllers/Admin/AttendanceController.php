@@ -33,6 +33,8 @@ class AttendanceController extends Controller
         $groupedByDate = [];
         $categoryWages = [];
         $totalWages = 0;
+        $workerCategoryTotals = [];
+        $totalWorkers = 0;
         $allCategories = [];
 
         $startDate = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
@@ -90,8 +92,11 @@ class AttendanceController extends Controller
 
         foreach ($attendances as $attendance) {
             $amount = $this->getApplicableWage($attendance->category, Carbon::parse($attendance->date), $wages);
+            $workerCategoryTotals[$attendance->category] = ($workerCategoryTotals[$attendance->category] ?? 0) + $attendance->count;
+            $totalWorkers += $attendance->count;
             $categoryWages[$attendance->category] = ($categoryWages[$attendance->category] ?? 0) + $attendance->count * $amount;
             $totalWages += $attendance->count * $amount;
+            $allCategories[$attendance->category] = true;
         }
 
         $allCategories = array_keys($allCategories);
@@ -106,6 +111,8 @@ class AttendanceController extends Controller
             'attendances',
             'wages',
             'categoryWages',
+            'workerCategoryTotals',
+            'totalWorkers',
             'totalWages',
             'groupedByDate',
             'allCategories',
@@ -436,6 +443,91 @@ public function updateWages(Request $request)
     }
 
     return redirect()->back()->with('success', 'Wages updated successfully!');
+}
+
+public function updateAttendanceAndWages(Request $request)
+{
+    $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
+
+    foreach ($categories as $cat) {
+        $countKey = "count_" . str_replace(' ', '_', $cat);
+        $count = $request->input($countKey);
+
+        if ($count !== null && $count !== '') {
+            Attendance::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $cat,
+                ],
+                [
+                    'count' => $count,
+                    'created_by' => auth('admin')->id()
+                ]
+            );
+        }
+
+        $amountKey = "amount_" . str_replace(' ', '_', $cat);
+        $amount = $request->input($amountKey);
+
+        if ($amount !== null && $amount !== '') {
+            Wages::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $cat,
+                ],
+                [
+                    'amount' => $amount,
+                    'created_by' => auth('admin')->id()
+                ]
+            );
+        }
+    }
+
+    foreach ($request->input('attendance_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $count = $row['count'] ?? null;
+
+        if ($category !== '' && $count !== null && $count !== '') {
+            Attendance::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
+                ],
+                [
+                    'count' => $count,
+                    'created_by' => auth('admin')->id()
+                ]
+            );
+        }
+    }
+
+    foreach ($request->input('wage_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $amount = $row['amount'] ?? null;
+
+        if ($category !== '' && $amount !== null && $amount !== '') {
+            Wages::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
+                ],
+                [
+                    'amount' => $amount,
+                    'created_by' => auth('admin')->id()
+                ]
+            );
+        }
+    }
+
+    return redirect()->route('attendance', [
+            'siteId' => $request->site_id,
+            'month'  => Carbon::parse($request->date)->format('Y-m'),
+        ])
+        ->with('success', 'Attendance and Wages updated successfully!');
 }
 
     // Delete a single attendance record

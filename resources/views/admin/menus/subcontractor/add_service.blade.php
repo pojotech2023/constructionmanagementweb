@@ -249,8 +249,13 @@
                                 setTimeout(function() {
                                     const siteId = "{{ $siteId }}";
                                     const subcontractorType = "{{ $subcontractorType }}";
-                                    window.location.href = "/admin/public/admin/subcontractor/" +
+                                    const enteredDate = form.find('[name="date"]').val();
+                                    let url = "/admin/public/admin/subcontractor/" +
                                         siteId + "/" + subcontractorType;
+                                    if (enteredDate) {
+                                        url += "?month=" + enteredDate.slice(0, 7);
+                                    }
+                                    window.location.href = url;
                                 }, 500);
                             }
                         },

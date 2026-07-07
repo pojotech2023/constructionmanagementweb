@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminControlController;
 use App\Http\Controllers\Admin\AgentController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\AuthController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Admin\OtherUtilitiesSubController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\QuotationController;
+use App\Http\Controllers\Admin\SalesBillController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\SubcontractorController;
 use App\Http\Controllers\Admin\SupervisorCreationController;
@@ -140,6 +142,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/supervisor-permissions/{id}', [SupervisorCreationController::class, 'getPermissions'])->name('supervisor.permissions.get');
         Route::post('/supervisor-permissions/{id}', [SupervisorCreationController::class, 'savePermissions'])->name('supervisor.permissions.save');
 
+        //Admin Control (sidebar / feature visibility toggles)
+        Route::middleware(['checkUserRole:Admin'])->group(function () {
+            Route::get('/admin-control', [AdminControlController::class, 'index'])->name('admin.control.index');
+            Route::post('/admin-control', [AdminControlController::class, 'update'])->name('admin.control.update');
+        });
+
         //Site Management
         Route::get('/site-form', [SiteController::class, 'getForm'])->name('site.form');
         Route::get('/site-management', [SiteController::class, 'index'])->name('sitemanagement.list');
@@ -149,6 +157,8 @@ Route::prefix('admin')->group(function () {
         Route::patch('/site-inactivate/{id}', [SiteController::class, 'delete'])->name('sitemanagement.delete');
         Route::get('/site-detail/{id}', [SiteController::class, 'siteDetail'])->name('site.detail');
         Route::get('/site-detail/{id}/full-report', [SiteController::class, 'exportFullReport'])->name('site.full-report.export');
+        Route::get('/sales-bill-form/{siteId}', [SalesBillController::class, 'getForm'])->name('salesBill.form');
+        Route::post('/sales-bill-add', [SalesBillController::class, 'store'])->name('salesBill.add');
         Route::get('/site-payment-detail/{id}', [SiteController::class, 'paymentDetail'])->name('site.paymentDetail');
         Route::post('/site-payment-add', [SiteController::class, 'addPayment'])->name('site.payment.add');
         Route::get('/site-payment-history/{id}', [SiteController::class, 'paymentHistory'])->name('site.payment.history');
@@ -156,6 +166,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/site-payment-delete/{id}', [SiteController::class, 'deletePayment'])->name('site.payment.delete');
         Route::get('/site-payment-pdf/{id}', [SiteController::class, 'downloadPaymentPdf'])->name('site.payment.pdf');
         Route::get('/site-payment-whatsapp/{id}', [SiteController::class, 'sendPaymentWhatsapp'])->name('site.payment.whatsapp');
+        Route::get('/site-payment-mail/{id}', [SiteController::class, 'sendPaymentMail'])->name('site.payment.mail');
         Route::get('/site-payment-export/{id}', [SiteController::class, 'exportPaymentHistory'])->name('site.payment.export');
 
         //Attendance
@@ -169,6 +180,8 @@ Route::prefix('admin')->group(function () {
             ->name('update.attendance');
         Route::post('/update-wages', [AttendanceController::class, 'updateWages'])
         ->name('update.wages');
+        Route::post('/update-attendance-wages', [AttendanceController::class, 'updateAttendanceAndWages'])
+            ->name('update.attendance.wages');
 
         // Delete single attendance record
         Route::delete('/attendance-delete/{id}', [AttendanceController::class, 'delete'])->name('attendance.delete');
@@ -192,6 +205,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/add-order', [MaterialController::class, 'materialOrder'])->name('add.order');
         Route::patch('/material-order-update/{id}', [MaterialController::class, 'updateOrder'])->name('material.updateOrder');
         Route::delete('/material-order-delete/{id}', [MaterialController::class, 'deleteOrder'])->name('material.deleteOrder');
+        Route::get('/material-order/{id}/pdf', [MaterialController::class, 'orderPdf'])->name('material.order.pdf');
 
         //Other Utilities
         Route::get('/site-utilities/{id}', [OtherUtilitiesController::class, 'index'])->name('site.utilities');
@@ -210,7 +224,9 @@ Route::prefix('admin')->group(function () {
         Route::get('/subcontractor-detail/{siteId}', [SubcontractorController::class, 'getSubcontractor'])->name('subcontractor.detail');
         Route::get('/subcontractor-petty-cash/{siteId}', [SubcontractorController::class, 'pettyCashPaymentDetail'])->name('subcontractor.pettyCash');
         Route::get('/subcontractor-petty-cash/{siteId}/export', [SubcontractorController::class, 'exportPettyCash'])->name('subcontractor.pettyCash.export');
-        
+        Route::get('/subcontractor-rental-management/{siteId}', [SubcontractorController::class, 'rentalManagementPaymentDetail'])->name('subcontractor.rentalManagement');
+        Route::get('/subcontractor-rental-management/{siteId}/export', [SubcontractorController::class, 'exportRentalManagement'])->name('subcontractor.rentalManagement.export');
+
         Route::get('/subcontractor/{siteId}/{subcontractorType}', [SubcontractorController::class, 'getSubcontractorDetails'])->name('subcontractor.detailList');
         Route::post('/subcontractor/get-data/{siteId}', [SubcontractorController::class, 'getSubcontractorData'])->name('subcontractor.getData');
 

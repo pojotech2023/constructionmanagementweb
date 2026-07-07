@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exports\SubcontractorExport;
 use App\Http\Controllers\Controller;
 use App\Models\Site;
 use App\Models\Subcontractor;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\SubcontractorService;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SubContractorController extends Controller
 {
@@ -309,15 +311,17 @@ class SubContractorController extends Controller
     {
         $services = SubcontractorService::where('subcontractor_id', $subcontractorId)->get();
         $totalAmount = $services->sum('amount');
+        $totalUnits = $services->sum('no_counts');
 
         $paydetail = SubcontractorPayDetail::where('subcontractor_id', $subcontractorId)->first();
-        
+
          $subcontractor = Subcontractor::find($subcontractorId);
 
         return response()->json([
             'response code' => 200,
             'data' => [
                 'total_amount' => $totalAmount,
+                'total_units' => $totalUnits,
                 'pay_detail' => $paydetail,
                 'subcontractor' => $subcontractor
             ],
@@ -383,7 +387,8 @@ class SubContractorController extends Controller
             'subcontractor_id' => 'required|exists:subcontractors,id',
             'payment' => 'required|numeric',
             'date' => 'required|date',
-            'payment_mode' => 'required'
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string'
         ]);
 
          if ($validate->fails()) {
@@ -400,6 +405,7 @@ class SubContractorController extends Controller
             'payment' => $request->payment,
             'date' => $date,
             'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
             'created_by'  => auth('admin')->id(),
         ]);
 
@@ -446,5 +452,301 @@ class SubContractorController extends Controller
         ]);
     }
 
+    //Subcontractor Orders/Service Details
+    public function subcontractorOrders($subcontractorId)
+    {
+        $subcontractor = Subcontractor::findOrFail($subcontractorId);
+
+        $services = SubcontractorService::with('site')
+            ->where('subcontractor_id', $subcontractorId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $orderList = $services->map(function ($service) {
+            return [
+                'id' => $service->id,
+                'date' => $service->date ? Carbon::parse($service->date)->format('d-m-Y') : null,
+                'site_name' => optional($service->site)->site_name,
+                'no_counts' => $service->no_counts,
+                'amount' => $service->amount,
+                'status' => $service->status,
+                'remarks' => $service->remarks,
+            ];
+        });
+
+        return response()->json([
+            'response code' => 200,
+            'status' => true,
+            'data' => [
+                'subcontractor' => $subcontractor,
+                'orders' => $orderList,
+                'total_counts' => $services->sum('no_counts'),
+                'total_amount' => $services->sum('amount'),
+            ],
+            'message' => 'Subcontractor order/service details fetched successfully!.'
+        ]);
+    }
+
+    //Export Subcontractor Payment History (CSV)
+    public function exportPaymentHistory(Request $request, $subcontractorId)
+    {
+        $subcontractor = Subcontractor::findOrFail($subcontractorId);
+        $query = SubcontractorPayment::where('subcontractor_id', $subcontractorId);
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('date', '>=', Carbon::parse($request->from_date)->toDateString());
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('date', '<=', Carbon::parse($request->to_date)->toDateString());
+        }
+
+        $histories = $query->orderBy('date')->orderBy('id')->get();
+        $filename = 'subcontractor_payment_history_' . $subcontractor->id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($histories) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No', 'Date', 'Total Payment', 'Payment Mode', 'Remarks']);
+
+            foreach ($histories as $index => $history) {
+                fputcsv($file, [
+                    $index + 1,
+                    $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                    number_format((float) $history->payment, 2, '.', ''),
+                    $history->payment_mode,
+                    $history->remarks,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function updateService(Request $request, $id)
+    {
+        $service = SubcontractorService::find($id);
+
+        if (!$service) {
+            return response()->json(['status' => false, 'message' => 'Service record not found.'], 404);
+        }
+
+        $validate = Validator::make($request->all(), [
+            'subcontractor_type' => 'required|string',
+            'date'               => 'required',
+            'amount'             => 'required|numeric',
+            'no_counts'          => 'required',
+            'remarks'            => 'nullable|string',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validate->errors()], 422);
+        }
+
+        try {
+            $date = Carbon::createFromFormat('d-m-Y', $request->date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            $date = Carbon::parse($request->date)->toDateString();
+        }
+
+        $oldAmount = (float) $service->amount;
+        $newAmount = (float) $request->amount;
+
+        $service->update([
+            'subcontractor_type' => $request->subcontractor_type,
+            'date'               => $date,
+            'amount'             => $newAmount,
+            'no_counts'          => $request->no_counts,
+            'remarks'            => $request->remarks,
+            'updated_by'         => auth('api')->id(),
+        ]);
+
+        $amountDiff = $newAmount - $oldAmount;
+        if ($amountDiff != 0) {
+            $paydetail = SubcontractorPayDetail::where('subcontractor_id', $service->subcontractor_id)->first();
+            if ($paydetail) {
+                $paydetail->update([
+                    'total_amount'   => $paydetail->total_amount + $amountDiff,
+                    'balance_amount' => $paydetail->balance_amount + $amountDiff,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'response code' => 200,
+            'status'        => true,
+            'message'       => 'SubContractor service updated successfully.',
+            'data'          => $service,
+        ]);
+    }
+
+    public function destroyService($id)
+    {
+        $service = SubcontractorService::find($id);
+
+        if (!$service) {
+            return response()->json(['status' => false, 'message' => 'Service record not found.'], 404);
+        }
+
+        $paydetail = SubcontractorPayDetail::where('subcontractor_id', $service->subcontractor_id)->first();
+        if ($paydetail) {
+            $paydetail->update([
+                'total_amount'   => max(0, $paydetail->total_amount - $service->amount),
+                'balance_amount' => max(0, $paydetail->balance_amount - $service->amount),
+            ]);
+        }
+
+        $service->delete();
+
+        return response()->json([
+            'response code' => 200,
+            'status'        => true,
+            'message'       => 'SubContractor service deleted successfully.',
+        ]);
+    }
+
+    private function getOrCreateWrapperSubcontractor(Site $site, string $emailPrefix, string $label)
+    {
+        $email = $emailPrefix . '.site.' . $site->id . '@local.invalid';
+
+        return Subcontractor::firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => $label . ' - ' . $site->site_name,
+                'subcontractors' => $label,
+                'mobile_no' => '0000000000',
+                'address' => $site->address ?? $site->site_name,
+                'gst' => 'N/A',
+                'created_by' => auth('api')->id(),
+            ]
+        );
+    }
+
+    private function wrapperPaymentDetail($siteId, string $emailPrefix, string $label)
+    {
+        $site = Site::findOrFail($siteId);
+        $subcontractor = $this->getOrCreateWrapperSubcontractor($site, $emailPrefix, $label);
+
+        $paydetail = SubcontractorPayDetail::where('subcontractor_id', $subcontractor->id)->first();
+        $histories = SubcontractorPayment::where('subcontractor_id', $subcontractor->id)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+        $paidAmount = $histories->sum('payment');
+
+        return response()->json([
+            'response code' => 200,
+            'status' => true,
+            'message' => $label . ' payment detail fetched successfully.',
+            'data' => [
+                'subcontractor_id' => $subcontractor->id,
+                'site_id' => $site->id,
+                'site_name' => $site->site_name,
+                'pay_detail' => $paydetail,
+                'payment_history' => $histories,
+                'total_paid_amount' => $paidAmount,
+            ],
+        ]);
+    }
+
+    private function wrapperExport(Request $request, $siteId, string $emailPrefix, string $label, string $fileSlug)
+    {
+        $site = Site::findOrFail($siteId);
+        $email = $emailPrefix . '.site.' . $site->id . '@local.invalid';
+        $subcontractor = Subcontractor::where('email', $email)->firstOrFail();
+
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
+
+        $historyQuery = SubcontractorPayment::where('subcontractor_id', $subcontractor->id);
+
+        if ($fromDate) {
+            $historyQuery->whereDate('date', '>=', Carbon::parse($fromDate)->toDateString());
+        }
+
+        if ($toDate) {
+            $historyQuery->whereDate('date', '<=', Carbon::parse($toDate)->toDateString());
+        }
+
+        $histories = $historyQuery->orderBy('date', 'desc')->orderBy('id', 'desc')->get();
+
+        $filename = $fileSlug . '_' . $site->id . '_' . now()->format('Ymd_His') . '.csv';
+        $filePath = 'exports/' . $filename;
+
+        $csv = "S.No,Date,Payment Mode,Remarks,Payment\n";
+        foreach ($histories as $index => $history) {
+            $csv .= implode(',', [
+                $index + 1,
+                $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                '"' . str_replace('"', '""', $history->payment_mode) . '"',
+                '"' . str_replace('"', '""', (string) $history->remarks) . '"',
+                number_format((float) $history->payment, 2, '.', ''),
+            ]) . "\n";
+        }
+
+        \Illuminate\Support\Facades\Storage::disk('public')->put($filePath, $csv);
+
+        return response()->json([
+            'status' => true,
+            'message' => $label . ' export generated successfully.',
+            'download_url' => asset('storage/' . $filePath),
+        ]);
+    }
+
+    public function pettyCashPaymentDetail($siteId)
+    {
+        return $this->wrapperPaymentDetail($siteId, 'pettycash', 'Petty Cash');
+    }
+
+    public function exportPettyCash(Request $request, $siteId)
+    {
+        return $this->wrapperExport($request, $siteId, 'pettycash', 'Petty Cash', 'petty_cash');
+    }
+
+    public function rentalManagementPaymentDetail($siteId)
+    {
+        return $this->wrapperPaymentDetail($siteId, 'rental', 'Rental Management');
+    }
+
+    public function exportRentalManagement(Request $request, $siteId)
+    {
+        return $this->wrapperExport($request, $siteId, 'rental', 'Rental Management', 'rental_management');
+    }
+
+    public function exportSubcontractor(Request $request)
+    {
+        $request->validate([
+            'site_id' => 'required|exists:sites,id',
+            'month'   => 'nullable|date_format:Y-m',
+        ]);
+
+        $fileName = 'subcontractor_' . $request->site_id . '_' . time() . '.xlsx';
+        $filePath = 'exports/' . $fileName;
+
+        try {
+            Excel::store(
+                new SubcontractorExport($request->site_id, $request->month),
+                $filePath,
+                'public'
+            );
+
+            return response()->json([
+                'status'       => true,
+                'message'      => 'Subcontractor Excel file generated successfully.',
+                'download_url' => asset('storage/' . $filePath),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to generate Excel: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 
 }

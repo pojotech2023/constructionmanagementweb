@@ -3806,3 +3806,860 @@
 #21 C:/Users/divya/laravel_projects/infra360_new/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
 #22 {main}
 "} 
+[2026-07-01 11:45:56] local.ERROR: Quotation Error: Connection could not be established with host "mailpit:1025": stream_socket_client(): php_network_getaddresses: getaddrinfo for mailpit failed: No such host is known.   
+[2026-07-01 11:45:56] local.ERROR: #0 [internal function]: Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream->Symfony\Component\Mailer\Transport\Smtp\Stream\{closure}(2, 'stream_socket_c...', 'C:\\Users\\divya\\...', 157)
+#1 C:\Users\divya\laravel_projects\infra360_new\vendor\symfony\mailer\Transport\Smtp\Stream\SocketStream.php(157): stream_socket_client('mailpit:1025', 0, '', 60.0, 4, Resource id #1011)
+#2 C:\Users\divya\laravel_projects\infra360_new\vendor\symfony\mailer\Transport\Smtp\SmtpTransport.php(264): Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream->initialize()
+#3 C:\Users\divya\laravel_projects\infra360_new\vendor\symfony\mailer\Transport\Smtp\SmtpTransport.php(199): Symfony\Component\Mailer\Transport\Smtp\SmtpTransport->start()
+#4 C:\Users\divya\laravel_projects\infra360_new\vendor\symfony\mailer\Transport\AbstractTransport.php(69): Symfony\Component\Mailer\Transport\Smtp\SmtpTransport->doSend(Object(Symfony\Component\Mailer\SentMessage))
+#5 C:\Users\divya\laravel_projects\infra360_new\vendor\symfony\mailer\Transport\Smtp\SmtpTransport.php(137): Symfony\Component\Mailer\Transport\AbstractTransport->send(Object(Symfony\Component\Mime\Email), Object(Symfony\Component\Mailer\DelayedEnvelope))
+#6 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Mail\Mailer.php(573): Symfony\Component\Mailer\Transport\Smtp\SmtpTransport->send(Object(Symfony\Component\Mime\Email), Object(Symfony\Component\Mailer\DelayedEnvelope))
+#7 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Mail\Mailer.php(335): Illuminate\Mail\Mailer->sendSymfonyMessage(Object(Symfony\Component\Mime\Email))
+#8 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Mail\Mailable.php(205): Illuminate\Mail\Mailer->send('emails.quotatio...', Array, Object(Closure))
+#9 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Support\Traits\Localizable.php(19): Illuminate\Mail\Mailable->Illuminate\Mail\{closure}()
+#10 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Mail\Mailable.php(198): Illuminate\Mail\Mailable->withLocale(NULL, Object(Closure))
+#11 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Mail\Mailer.php(357): Illuminate\Mail\Mailable->send(Object(Illuminate\Mail\Mailer))
+#12 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Mail\Mailer.php(301): Illuminate\Mail\Mailer->sendMailable(Object(App\Mail\QuotationMail))
+#13 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Mail\PendingMail.php(124): Illuminate\Mail\Mailer->send(Object(App\Mail\QuotationMail))
+#14 C:\Users\divya\laravel_projects\infra360_new\app\Http\Controllers\Admin\QuotationController.php(97): Illuminate\Mail\PendingMail->send(Object(App\Mail\QuotationMail))
+#15 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Controller.php(54): App\Http\Controllers\Admin\QuotationController->store(Object(Illuminate\Http\Request))
+#16 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\ControllerDispatcher.php(43): Illuminate\Routing\Controller->callAction('store', Array)
+#17 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Route.php(259): Illuminate\Routing\ControllerDispatcher->dispatch(Object(Illuminate\Routing\Route), Object(App\Http\Controllers\Admin\QuotationController), 'store')
+#18 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Route.php(205): Illuminate\Routing\Route->runController()
+#19 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Router.php(806): Illuminate\Routing\Route->run()
+#20 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(144): Illuminate\Routing\Router->Illuminate\Routing\{closure}(Object(Illuminate\Http\Request))
+#21 C:\Users\divya\laravel_projects\infra360_new\app\Http\Middleware\CheckUserRole.php(29): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#22 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): App\Http\Middleware\CheckUserRole->handle(Object(Illuminate\Http\Request), Object(Closure), 'Admin', 'Supervisor')
+#23 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Middleware\SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#24 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Routing\Middleware\SubstituteBindings->handle(Object(Illuminate\Http\Request), Object(Closure))
+#25 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Auth\Middleware\Authenticate.php(57): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#26 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Auth\Middleware\Authenticate->handle(Object(Illuminate\Http\Request), Object(Closure), 'admin')
+#27 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken.php(78): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#28 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle(Object(Illuminate\Http\Request), Object(Closure))
+#29 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\View\Middleware\ShareErrorsFromSession.php(49): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#30 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\View\Middleware\ShareErrorsFromSession->handle(Object(Illuminate\Http\Request), Object(Closure))
+#31 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Session\Middleware\StartSession.php(121): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#32 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Session\Middleware\StartSession.php(64): Illuminate\Session\Middleware\StartSession->handleStatefulRequest(Object(Illuminate\Http\Request), Object(Illuminate\Session\Store), Object(Closure))
+#33 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Session\Middleware\StartSession->handle(Object(Illuminate\Http\Request), Object(Closure))
+#34 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse.php(37): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#35 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle(Object(Illuminate\Http\Request), Object(Closure))
+#36 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Cookie\Middleware\EncryptCookies.php(67): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#37 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Cookie\Middleware\EncryptCookies->handle(Object(Illuminate\Http\Request), Object(Closure))
+#38 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(119): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#39 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Router.php(805): Illuminate\Pipeline\Pipeline->then(Object(Closure))
+#40 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Router.php(784): Illuminate\Routing\Router->runRouteWithinStack(Object(Illuminate\Routing\Route), Object(Illuminate\Http\Request))
+#41 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Router.php(748): Illuminate\Routing\Router->runRoute(Object(Illuminate\Http\Request), Object(Illuminate\Routing\Route))
+#42 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Routing\Router.php(737): Illuminate\Routing\Router->dispatchToRoute(Object(Illuminate\Http\Request))
+#43 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(200): Illuminate\Routing\Router->dispatch(Object(Illuminate\Http\Request))
+#44 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(144): Illuminate\Foundation\Http\Kernel->Illuminate\Foundation\Http\{closure}(Object(Illuminate\Http\Request))
+#45 C:\Users\divya\laravel_projects\infra360_new\app\Http\Middleware\HandleCors.php(26): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#46 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): App\Http\Middleware\HandleCors->handle(Object(Illuminate\Http\Request), Object(Closure))
+#47 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#48 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle(Object(Illuminate\Http\Request), Object(Closure))
+#49 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle(Object(Illuminate\Http\Request), Object(Closure))
+#50 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#51 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TrimStrings.php(40): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle(Object(Illuminate\Http\Request), Object(Closure))
+#52 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Foundation\Http\Middleware\TrimStrings->handle(Object(Illuminate\Http\Request), Object(Closure))
+#53 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#54 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Foundation\Http\Middleware\ValidatePostSize->handle(Object(Illuminate\Http\Request), Object(Closure))
+#55 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance.php(99): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#56 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle(Object(Illuminate\Http\Request), Object(Closure))
+#57 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Http\Middleware\TrustProxies.php(39): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#58 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(183): Illuminate\Http\Middleware\TrustProxies->handle(Object(Illuminate\Http\Request), Object(Closure))
+#59 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(119): Illuminate\Pipeline\Pipeline->Illuminate\Pipeline\{closure}(Object(Illuminate\Http\Request))
+#60 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(175): Illuminate\Pipeline\Pipeline->then(Object(Closure))
+#61 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter(Object(Illuminate\Http\Request))
+#62 C:\Users\divya\laravel_projects\infra360_new\public\index.php(51): Illuminate\Foundation\Http\Kernel->handle(Object(Illuminate\Http\Request))
+#63 C:\Users\divya\laravel_projects\infra360_new\vendor\laravel\framework\src\Illuminate\Foundation\resources\server.php(16): require_once('C:\\Users\\divya\\...')
+#64 {main}  
+[2026-07-01 15:04:54] local.ERROR: Route [material.order.pdf] not defined. {"view":{"view":"C:\\Users\\divya\\laravel_projects\\infra360_new\\resources\\views\\admin\\menus\\material\\material_details.blade.php","data":{"errors":"<pre class=sf-dump id=sf-dump-1358838396 data-indent-pad=\"  \"><span class=sf-dump-note>Illuminate\\Support\\ViewErrorBag</span> {<a class=sf-dump-ref>#673</a><samp data-depth=1 class=sf-dump-expanded>
+  #<span class=sf-dump-protected title=\"Protected property\">bags</span>: []
+</samp>}
+</pre><script>Sfdump(\"sf-dump-1358838396\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","materials":"<pre class=sf-dump id=sf-dump-890058843 data-indent-pad=\"  \"><span class=sf-dump-note>Illuminate\\Database\\Eloquent\\Collection</span> {<a class=sf-dump-ref>#1373</a><samp data-depth=1 class=sf-dump-expanded>
+  #<span class=sf-dump-protected title=\"Protected property\">items</span>: <span class=sf-dump-note>array:1</span> [<samp data-depth=2 class=sf-dump-compact>
+    <span class=sf-dump-index>0</span> => <span class=\"sf-dump-note sf-dump-ellipsization\" title=\"App\\Models\\MaterialOrder
+\"><span class=\"sf-dump-ellipsis sf-dump-ellipsis-note\">App\\Models</span><span class=\"sf-dump-ellipsis sf-dump-ellipsis-note\">\\</span><span class=\"sf-dump-ellipsis-tail\">MaterialOrder</span></span> {<a class=sf-dump-ref>#1377</a><samp data-depth=3 class=sf-dump-compact>
+      #<span class=sf-dump-protected title=\"Protected property\">connection</span>: \"<span class=sf-dump-str title=\"5 characters\">mysql</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">table</span>: \"<span class=sf-dump-str title=\"15 characters\">material_orders</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">primaryKey</span>: \"<span class=sf-dump-str title=\"2 characters\">id</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">keyType</span>: \"<span class=sf-dump-str title=\"3 characters\">int</span>\"
+      +<span class=sf-dump-public title=\"Public property\">incrementing</span>: <span class=sf-dump-const>true</span>
+      #<span class=sf-dump-protected title=\"Protected property\">with</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">withCount</span>: []
+      +<span class=sf-dump-public title=\"Public property\">preventsLazyLoading</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">perPage</span>: <span class=sf-dump-num>15</span>
+      +<span class=sf-dump-public title=\"Public property\">exists</span>: <span class=sf-dump-const>true</span>
+      +<span class=sf-dump-public title=\"Public property\">wasRecentlyCreated</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">escapeWhenCastingToString</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">attributes</span>: <span class=sf-dump-note>array:16</span> [ &#8230;16]
+      #<span class=sf-dump-protected title=\"Protected property\">original</span>: <span class=sf-dump-note>array:16</span> [ &#8230;16]
+      #<span class=sf-dump-protected title=\"Protected property\">changes</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">casts</span>: <span class=sf-dump-note>array:2</span> [ &#8230;2]
+      #<span class=sf-dump-protected title=\"Protected property\">classCastCache</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">attributeCastCache</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">dateFormat</span>: <span class=sf-dump-const>null</span>
+      #<span class=sf-dump-protected title=\"Protected property\">appends</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">dispatchesEvents</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">observables</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">relations</span>: <span class=sf-dump-note>array:1</span> [ &#8230;1]
+      #<span class=sf-dump-protected title=\"Protected property\">touches</span>: []
+      +<span class=sf-dump-public title=\"Public property\">timestamps</span>: <span class=sf-dump-const>true</span>
+      +<span class=sf-dump-public title=\"Public property\">usesUniqueIds</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">hidden</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">visible</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">fillable</span>: <span class=sf-dump-note>array:13</span> [ &#8230;13]
+      #<span class=sf-dump-protected title=\"Protected property\">guarded</span>: <span class=sf-dump-note>array:1</span> [ &#8230;1]
+    </samp>}
+  </samp>]
+  #<span class=sf-dump-protected title=\"Protected property\">escapeWhenCastingToString</span>: <span class=sf-dump-const>false</span>
+</samp>}
+</pre><script>Sfdump(\"sf-dump-890058843\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","siteId":"<pre class=sf-dump id=sf-dump-1622399413 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"2 characters\">36</span>\"
+</pre><script>Sfdump(\"sf-dump-1622399413\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","siteName":"<pre class=sf-dump id=sf-dump-1696514179 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"15 characters\">Latha Residency</span>\"
+</pre><script>Sfdump(\"sf-dump-1696514179\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","totalAmount":"<pre class=sf-dump id=sf-dump-1576193398 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">1000.00</span>\"
+</pre><script>Sfdump(\"sf-dump-1576193398\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","settledAmount":"<pre class=sf-dump id=sf-dump-172875596 data-indent-pad=\"  \"><span class=sf-dump-num>0</span>
+</pre><script>Sfdump(\"sf-dump-172875596\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","pendingAmount":"<pre class=sf-dump id=sf-dump-425213415 data-indent-pad=\"  \"><span class=sf-dump-num>0</span>
+</pre><script>Sfdump(\"sf-dump-425213415\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","totalUnits":"<pre class=sf-dump id=sf-dump-523056563 data-indent-pad=\"  \"><span class=sf-dump-num>2.0</span>
+</pre><script>Sfdump(\"sf-dump-523056563\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","materialType":"<pre class=sf-dump id=sf-dump-77019910 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"6 characters\">bricks</span>\"
+</pre><script>Sfdump(\"sf-dump-77019910\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedSiteLimit":"<pre class=sf-dump id=sf-dump-798337978 data-indent-pad=\"  \"><span class=sf-dump-num>10</span>
+</pre><script>Sfdump(\"sf-dump-798337978\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedActiveSiteCount":"<pre class=sf-dump id=sf-dump-376836883 data-indent-pad=\"  \"><span class=sf-dump-num>5</span>
+</pre><script>Sfdump(\"sf-dump-376836883\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedRemainingSiteLimit":"<pre class=sf-dump id=sf-dump-1445069089 data-indent-pad=\"  \"><span class=sf-dump-num>5</span>
+</pre><script>Sfdump(\"sf-dump-1445069089\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedCurrentPlanName":"<pre class=sf-dump id=sf-dump-1396193491 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">Starter</span>\"
+</pre><script>Sfdump(\"sf-dump-1396193491\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedCurrentPlanKey":"<pre class=sf-dump id=sf-dump-1858504958 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">starter</span>\"
+</pre><script>Sfdump(\"sf-dump-1858504958\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+"}},"userId":1,"exception":"[object] (Spatie\\LaravelIgnition\\Exceptions\\ViewException(code: 0): Route [material.order.pdf] not defined. at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:477)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php(811): Illuminate/Routing/UrlGenerator->route('material.order....', 29, true)
+#1 C:/Users/divya/laravel_projects/infra360_new/resources/views/admin/menus/material/material_details.blade.php(135): route('material.order....', 29)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//divya//...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(58): Illuminate/Filesystem/Filesystem->getRequire('C://Users//divya//...', Array)
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(72): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//divya//...', Array)
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(207): Illuminate/View/Engines/CompilerEngine->get('C://Users//divya//...', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(190): Illuminate/View/View->getContents()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(159): Illuminate/View/View->renderContents()
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(69): Illuminate/View/View->render()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(35): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(918): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(885): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/CheckUserRole.php(29): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/CheckUserRole->handle(Object(Illuminate/Http/Request), Object(Closure), 'Admin', 'Supervisor')
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(57): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Auth/Middleware/Authenticate->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(78): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(67): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#33 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#34 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(784): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#35 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(748): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#36 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(737): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#37 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#38 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/HandleCors.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(40): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(99): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(39): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/divya/laravel_projects/infra360_new/public/index.php(51): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('C://Users//divya//...')
+#58 {main}
+
+[previous exception] [object] (Symfony\\Component\\Routing\\Exception\\RouteNotFoundException(code: 0): Route [material.order.pdf] not defined. at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:477)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php(811): Illuminate/Routing/UrlGenerator->route('material.order....', 29, true)
+#1 C:/Users/divya/laravel_projects/infra360_new/storage/framework/views/09f0da6cc28e0758ae5b5da0417f1931.php(134): route('material.order....', 29)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//divya//...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(58): Illuminate/Filesystem/Filesystem->getRequire('C://Users//divya//...', Array)
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(72): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//divya//...', Array)
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(207): Illuminate/View/Engines/CompilerEngine->get('C://Users//divya//...', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(190): Illuminate/View/View->getContents()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(159): Illuminate/View/View->renderContents()
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(69): Illuminate/View/View->render()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(35): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(918): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(885): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/CheckUserRole.php(29): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/CheckUserRole->handle(Object(Illuminate/Http/Request), Object(Closure), 'Admin', 'Supervisor')
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(57): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Auth/Middleware/Authenticate->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(78): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(67): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#33 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#34 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(784): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#35 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(748): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#36 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(737): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#37 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#38 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/HandleCors.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(40): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(99): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(39): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/divya/laravel_projects/infra360_new/public/index.php(51): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('C://Users//divya//...')
+#58 {main}
+"} 
+[2026-07-01 15:05:09] local.ERROR: Route [material.order.pdf] not defined. {"view":{"view":"C:\\Users\\divya\\laravel_projects\\infra360_new\\resources\\views\\admin\\menus\\material\\material_details.blade.php","data":{"errors":"<pre class=sf-dump id=sf-dump-65601137 data-indent-pad=\"  \"><span class=sf-dump-note>Illuminate\\Support\\ViewErrorBag</span> {<a class=sf-dump-ref>#663</a><samp data-depth=1 class=sf-dump-expanded>
+  #<span class=sf-dump-protected title=\"Protected property\">bags</span>: []
+</samp>}
+</pre><script>Sfdump(\"sf-dump-65601137\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","materials":"<pre class=sf-dump id=sf-dump-1743666169 data-indent-pad=\"  \"><span class=sf-dump-note>Illuminate\\Database\\Eloquent\\Collection</span> {<a class=sf-dump-ref>#1373</a><samp data-depth=1 class=sf-dump-expanded>
+  #<span class=sf-dump-protected title=\"Protected property\">items</span>: <span class=sf-dump-note>array:1</span> [<samp data-depth=2 class=sf-dump-compact>
+    <span class=sf-dump-index>0</span> => <span class=\"sf-dump-note sf-dump-ellipsization\" title=\"App\\Models\\MaterialOrder
+\"><span class=\"sf-dump-ellipsis sf-dump-ellipsis-note\">App\\Models</span><span class=\"sf-dump-ellipsis sf-dump-ellipsis-note\">\\</span><span class=\"sf-dump-ellipsis-tail\">MaterialOrder</span></span> {<a class=sf-dump-ref>#1377</a><samp data-depth=3 class=sf-dump-compact>
+      #<span class=sf-dump-protected title=\"Protected property\">connection</span>: \"<span class=sf-dump-str title=\"5 characters\">mysql</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">table</span>: \"<span class=sf-dump-str title=\"15 characters\">material_orders</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">primaryKey</span>: \"<span class=sf-dump-str title=\"2 characters\">id</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">keyType</span>: \"<span class=sf-dump-str title=\"3 characters\">int</span>\"
+      +<span class=sf-dump-public title=\"Public property\">incrementing</span>: <span class=sf-dump-const>true</span>
+      #<span class=sf-dump-protected title=\"Protected property\">with</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">withCount</span>: []
+      +<span class=sf-dump-public title=\"Public property\">preventsLazyLoading</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">perPage</span>: <span class=sf-dump-num>15</span>
+      +<span class=sf-dump-public title=\"Public property\">exists</span>: <span class=sf-dump-const>true</span>
+      +<span class=sf-dump-public title=\"Public property\">wasRecentlyCreated</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">escapeWhenCastingToString</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">attributes</span>: <span class=sf-dump-note>array:16</span> [ &#8230;16]
+      #<span class=sf-dump-protected title=\"Protected property\">original</span>: <span class=sf-dump-note>array:16</span> [ &#8230;16]
+      #<span class=sf-dump-protected title=\"Protected property\">changes</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">casts</span>: <span class=sf-dump-note>array:2</span> [ &#8230;2]
+      #<span class=sf-dump-protected title=\"Protected property\">classCastCache</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">attributeCastCache</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">dateFormat</span>: <span class=sf-dump-const>null</span>
+      #<span class=sf-dump-protected title=\"Protected property\">appends</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">dispatchesEvents</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">observables</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">relations</span>: <span class=sf-dump-note>array:1</span> [ &#8230;1]
+      #<span class=sf-dump-protected title=\"Protected property\">touches</span>: []
+      +<span class=sf-dump-public title=\"Public property\">timestamps</span>: <span class=sf-dump-const>true</span>
+      +<span class=sf-dump-public title=\"Public property\">usesUniqueIds</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">hidden</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">visible</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">fillable</span>: <span class=sf-dump-note>array:13</span> [ &#8230;13]
+      #<span class=sf-dump-protected title=\"Protected property\">guarded</span>: <span class=sf-dump-note>array:1</span> [ &#8230;1]
+    </samp>}
+  </samp>]
+  #<span class=sf-dump-protected title=\"Protected property\">escapeWhenCastingToString</span>: <span class=sf-dump-const>false</span>
+</samp>}
+</pre><script>Sfdump(\"sf-dump-1743666169\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","siteId":"<pre class=sf-dump id=sf-dump-1776530436 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"2 characters\">36</span>\"
+</pre><script>Sfdump(\"sf-dump-1776530436\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","siteName":"<pre class=sf-dump id=sf-dump-1232625992 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"15 characters\">Latha Residency</span>\"
+</pre><script>Sfdump(\"sf-dump-1232625992\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","totalAmount":"<pre class=sf-dump id=sf-dump-27170004 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">1000.00</span>\"
+</pre><script>Sfdump(\"sf-dump-27170004\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","settledAmount":"<pre class=sf-dump id=sf-dump-364760295 data-indent-pad=\"  \"><span class=sf-dump-num>0</span>
+</pre><script>Sfdump(\"sf-dump-364760295\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","pendingAmount":"<pre class=sf-dump id=sf-dump-595082927 data-indent-pad=\"  \"><span class=sf-dump-num>0</span>
+</pre><script>Sfdump(\"sf-dump-595082927\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","totalUnits":"<pre class=sf-dump id=sf-dump-1759757405 data-indent-pad=\"  \"><span class=sf-dump-num>2.0</span>
+</pre><script>Sfdump(\"sf-dump-1759757405\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","materialType":"<pre class=sf-dump id=sf-dump-957932841 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"6 characters\">bricks</span>\"
+</pre><script>Sfdump(\"sf-dump-957932841\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedSiteLimit":"<pre class=sf-dump id=sf-dump-142849576 data-indent-pad=\"  \"><span class=sf-dump-num>10</span>
+</pre><script>Sfdump(\"sf-dump-142849576\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedActiveSiteCount":"<pre class=sf-dump id=sf-dump-1524175929 data-indent-pad=\"  \"><span class=sf-dump-num>5</span>
+</pre><script>Sfdump(\"sf-dump-1524175929\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedRemainingSiteLimit":"<pre class=sf-dump id=sf-dump-1465846610 data-indent-pad=\"  \"><span class=sf-dump-num>5</span>
+</pre><script>Sfdump(\"sf-dump-1465846610\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedCurrentPlanName":"<pre class=sf-dump id=sf-dump-55870617 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">Starter</span>\"
+</pre><script>Sfdump(\"sf-dump-55870617\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedCurrentPlanKey":"<pre class=sf-dump id=sf-dump-497895548 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">starter</span>\"
+</pre><script>Sfdump(\"sf-dump-497895548\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+"}},"userId":1,"exception":"[object] (Spatie\\LaravelIgnition\\Exceptions\\ViewException(code: 0): Route [material.order.pdf] not defined. at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:477)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php(811): Illuminate/Routing/UrlGenerator->route('material.order....', 29, true)
+#1 C:/Users/divya/laravel_projects/infra360_new/resources/views/admin/menus/material/material_details.blade.php(135): route('material.order....', 29)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//divya//...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(58): Illuminate/Filesystem/Filesystem->getRequire('C://Users//divya//...', Array)
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(72): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//divya//...', Array)
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(207): Illuminate/View/Engines/CompilerEngine->get('C://Users//divya//...', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(190): Illuminate/View/View->getContents()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(159): Illuminate/View/View->renderContents()
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(69): Illuminate/View/View->render()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(35): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(918): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(885): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/CheckUserRole.php(29): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/CheckUserRole->handle(Object(Illuminate/Http/Request), Object(Closure), 'Admin', 'Supervisor')
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(57): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Auth/Middleware/Authenticate->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(78): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(67): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#33 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#34 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(784): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#35 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(748): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#36 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(737): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#37 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#38 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/HandleCors.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(40): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(99): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(39): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/divya/laravel_projects/infra360_new/public/index.php(51): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('C://Users//divya//...')
+#58 {main}
+
+[previous exception] [object] (Symfony\\Component\\Routing\\Exception\\RouteNotFoundException(code: 0): Route [material.order.pdf] not defined. at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:477)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php(811): Illuminate/Routing/UrlGenerator->route('material.order....', 29, true)
+#1 C:/Users/divya/laravel_projects/infra360_new/storage/framework/views/09f0da6cc28e0758ae5b5da0417f1931.php(134): route('material.order....', 29)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//divya//...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(58): Illuminate/Filesystem/Filesystem->getRequire('C://Users//divya//...', Array)
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(72): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//divya//...', Array)
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(207): Illuminate/View/Engines/CompilerEngine->get('C://Users//divya//...', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(190): Illuminate/View/View->getContents()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(159): Illuminate/View/View->renderContents()
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(69): Illuminate/View/View->render()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(35): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(918): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(885): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/CheckUserRole.php(29): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/CheckUserRole->handle(Object(Illuminate/Http/Request), Object(Closure), 'Admin', 'Supervisor')
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(57): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Auth/Middleware/Authenticate->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(78): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(67): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#33 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#34 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(784): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#35 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(748): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#36 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(737): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#37 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#38 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/HandleCors.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(40): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(99): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(39): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/divya/laravel_projects/infra360_new/public/index.php(51): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('C://Users//divya//...')
+#58 {main}
+"} 
+[2026-07-01 15:05:34] local.ERROR: Route [material.order.pdf] not defined. {"view":{"view":"C:\\Users\\divya\\laravel_projects\\infra360_new\\resources\\views\\admin\\menus\\material\\material_details.blade.php","data":{"errors":"<pre class=sf-dump id=sf-dump-1925264411 data-indent-pad=\"  \"><span class=sf-dump-note>Illuminate\\Support\\ViewErrorBag</span> {<a class=sf-dump-ref>#663</a><samp data-depth=1 class=sf-dump-expanded>
+  #<span class=sf-dump-protected title=\"Protected property\">bags</span>: []
+</samp>}
+</pre><script>Sfdump(\"sf-dump-1925264411\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","materials":"<pre class=sf-dump id=sf-dump-1581872008 data-indent-pad=\"  \"><span class=sf-dump-note>Illuminate\\Database\\Eloquent\\Collection</span> {<a class=sf-dump-ref>#1373</a><samp data-depth=1 class=sf-dump-expanded>
+  #<span class=sf-dump-protected title=\"Protected property\">items</span>: <span class=sf-dump-note>array:1</span> [<samp data-depth=2 class=sf-dump-compact>
+    <span class=sf-dump-index>0</span> => <span class=\"sf-dump-note sf-dump-ellipsization\" title=\"App\\Models\\MaterialOrder
+\"><span class=\"sf-dump-ellipsis sf-dump-ellipsis-note\">App\\Models</span><span class=\"sf-dump-ellipsis sf-dump-ellipsis-note\">\\</span><span class=\"sf-dump-ellipsis-tail\">MaterialOrder</span></span> {<a class=sf-dump-ref>#1377</a><samp data-depth=3 class=sf-dump-compact>
+      #<span class=sf-dump-protected title=\"Protected property\">connection</span>: \"<span class=sf-dump-str title=\"5 characters\">mysql</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">table</span>: \"<span class=sf-dump-str title=\"15 characters\">material_orders</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">primaryKey</span>: \"<span class=sf-dump-str title=\"2 characters\">id</span>\"
+      #<span class=sf-dump-protected title=\"Protected property\">keyType</span>: \"<span class=sf-dump-str title=\"3 characters\">int</span>\"
+      +<span class=sf-dump-public title=\"Public property\">incrementing</span>: <span class=sf-dump-const>true</span>
+      #<span class=sf-dump-protected title=\"Protected property\">with</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">withCount</span>: []
+      +<span class=sf-dump-public title=\"Public property\">preventsLazyLoading</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">perPage</span>: <span class=sf-dump-num>15</span>
+      +<span class=sf-dump-public title=\"Public property\">exists</span>: <span class=sf-dump-const>true</span>
+      +<span class=sf-dump-public title=\"Public property\">wasRecentlyCreated</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">escapeWhenCastingToString</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">attributes</span>: <span class=sf-dump-note>array:16</span> [ &#8230;16]
+      #<span class=sf-dump-protected title=\"Protected property\">original</span>: <span class=sf-dump-note>array:16</span> [ &#8230;16]
+      #<span class=sf-dump-protected title=\"Protected property\">changes</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">casts</span>: <span class=sf-dump-note>array:2</span> [ &#8230;2]
+      #<span class=sf-dump-protected title=\"Protected property\">classCastCache</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">attributeCastCache</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">dateFormat</span>: <span class=sf-dump-const>null</span>
+      #<span class=sf-dump-protected title=\"Protected property\">appends</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">dispatchesEvents</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">observables</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">relations</span>: <span class=sf-dump-note>array:1</span> [ &#8230;1]
+      #<span class=sf-dump-protected title=\"Protected property\">touches</span>: []
+      +<span class=sf-dump-public title=\"Public property\">timestamps</span>: <span class=sf-dump-const>true</span>
+      +<span class=sf-dump-public title=\"Public property\">usesUniqueIds</span>: <span class=sf-dump-const>false</span>
+      #<span class=sf-dump-protected title=\"Protected property\">hidden</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">visible</span>: []
+      #<span class=sf-dump-protected title=\"Protected property\">fillable</span>: <span class=sf-dump-note>array:13</span> [ &#8230;13]
+      #<span class=sf-dump-protected title=\"Protected property\">guarded</span>: <span class=sf-dump-note>array:1</span> [ &#8230;1]
+    </samp>}
+  </samp>]
+  #<span class=sf-dump-protected title=\"Protected property\">escapeWhenCastingToString</span>: <span class=sf-dump-const>false</span>
+</samp>}
+</pre><script>Sfdump(\"sf-dump-1581872008\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","siteId":"<pre class=sf-dump id=sf-dump-1739624063 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"2 characters\">36</span>\"
+</pre><script>Sfdump(\"sf-dump-1739624063\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","siteName":"<pre class=sf-dump id=sf-dump-820208 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"15 characters\">Latha Residency</span>\"
+</pre><script>Sfdump(\"sf-dump-820208\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","totalAmount":"<pre class=sf-dump id=sf-dump-81579285 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">1000.00</span>\"
+</pre><script>Sfdump(\"sf-dump-81579285\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","settledAmount":"<pre class=sf-dump id=sf-dump-502421979 data-indent-pad=\"  \"><span class=sf-dump-num>0</span>
+</pre><script>Sfdump(\"sf-dump-502421979\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","pendingAmount":"<pre class=sf-dump id=sf-dump-853814024 data-indent-pad=\"  \"><span class=sf-dump-num>0</span>
+</pre><script>Sfdump(\"sf-dump-853814024\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","totalUnits":"<pre class=sf-dump id=sf-dump-1139451164 data-indent-pad=\"  \"><span class=sf-dump-num>2.0</span>
+</pre><script>Sfdump(\"sf-dump-1139451164\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","materialType":"<pre class=sf-dump id=sf-dump-534892750 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"6 characters\">bricks</span>\"
+</pre><script>Sfdump(\"sf-dump-534892750\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedSiteLimit":"<pre class=sf-dump id=sf-dump-1003523527 data-indent-pad=\"  \"><span class=sf-dump-num>10</span>
+</pre><script>Sfdump(\"sf-dump-1003523527\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedActiveSiteCount":"<pre class=sf-dump id=sf-dump-1243654800 data-indent-pad=\"  \"><span class=sf-dump-num>5</span>
+</pre><script>Sfdump(\"sf-dump-1243654800\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedRemainingSiteLimit":"<pre class=sf-dump id=sf-dump-352716403 data-indent-pad=\"  \"><span class=sf-dump-num>5</span>
+</pre><script>Sfdump(\"sf-dump-352716403\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedCurrentPlanName":"<pre class=sf-dump id=sf-dump-1380514897 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">Starter</span>\"
+</pre><script>Sfdump(\"sf-dump-1380514897\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+","sharedCurrentPlanKey":"<pre class=sf-dump id=sf-dump-1799793516 data-indent-pad=\"  \">\"<span class=sf-dump-str title=\"7 characters\">starter</span>\"
+</pre><script>Sfdump(\"sf-dump-1799793516\", {\"maxDepth\":3,\"maxStringLength\":160})</script>
+"}},"userId":1,"exception":"[object] (Spatie\\LaravelIgnition\\Exceptions\\ViewException(code: 0): Route [material.order.pdf] not defined. at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:477)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php(811): Illuminate/Routing/UrlGenerator->route('material.order....', 29, true)
+#1 C:/Users/divya/laravel_projects/infra360_new/resources/views/admin/menus/material/material_details.blade.php(135): route('material.order....', 29)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//divya//...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(58): Illuminate/Filesystem/Filesystem->getRequire('C://Users//divya//...', Array)
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(72): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//divya//...', Array)
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(207): Illuminate/View/Engines/CompilerEngine->get('C://Users//divya//...', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(190): Illuminate/View/View->getContents()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(159): Illuminate/View/View->renderContents()
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(69): Illuminate/View/View->render()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(35): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(918): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(885): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/CheckUserRole.php(29): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/CheckUserRole->handle(Object(Illuminate/Http/Request), Object(Closure), 'Admin', 'Supervisor')
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(57): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Auth/Middleware/Authenticate->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(78): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(67): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#33 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#34 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(784): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#35 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(748): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#36 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(737): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#37 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#38 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/HandleCors.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(40): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(99): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(39): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/divya/laravel_projects/infra360_new/public/index.php(51): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('C://Users//divya//...')
+#58 {main}
+
+[previous exception] [object] (Symfony\\Component\\Routing\\Exception\\RouteNotFoundException(code: 0): Route [material.order.pdf] not defined. at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:477)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php(811): Illuminate/Routing/UrlGenerator->route('material.order....', 29, true)
+#1 C:/Users/divya/laravel_projects/infra360_new/storage/framework/views/09f0da6cc28e0758ae5b5da0417f1931.php(134): route('material.order....', 29)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(123): require('C://Users//divya//...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php(124): Illuminate/Filesystem/Filesystem::Illuminate/Filesystem/{closure}()
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php(58): Illuminate/Filesystem/Filesystem->getRequire('C://Users//divya//...', Array)
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php(72): Illuminate/View/Engines/PhpEngine->evaluatePath('C://Users//divya//...', Array)
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(207): Illuminate/View/Engines/CompilerEngine->get('C://Users//divya//...', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(190): Illuminate/View/View->getContents()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/View.php(159): Illuminate/View/View->renderContents()
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(69): Illuminate/View/View->render()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Response.php(35): Illuminate/Http/Response->setContent(Object(Illuminate/View/View))
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(918): Illuminate/Http/Response->__construct(Object(Illuminate/View/View), 200, Array)
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(885): Illuminate/Routing/Router::toResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Routing/Router->prepareResponse(Object(Illuminate/Http/Request), Object(Illuminate/View/View))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Routing/Router->Illuminate/Routing/{closure}(Object(Illuminate/Http/Request))
+#15 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/CheckUserRole.php(29): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/CheckUserRole->handle(Object(Illuminate/Http/Request), Object(Closure), 'Admin', 'Supervisor')
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Routing/Middleware/SubstituteBindings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(57): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Auth/Middleware/Authenticate->handle(Object(Illuminate/Http/Request), Object(Closure), 'admin')
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(78): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/VerifyCsrfToken->handle(Object(Illuminate/Http/Request), Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/View/Middleware/ShareErrorsFromSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate/Session/Middleware/StartSession->handleStatefulRequest(Object(Illuminate/Http/Request), Object(Illuminate/Session/Store), Object(Closure))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Session/Middleware/StartSession->handle(Object(Illuminate/Http/Request), Object(Closure))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse->handle(Object(Illuminate/Http/Request), Object(Closure))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(67): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Cookie/Middleware/EncryptCookies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#33 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(805): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#34 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(784): Illuminate/Routing/Router->runRouteWithinStack(Object(Illuminate/Routing/Route), Object(Illuminate/Http/Request))
+#35 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(748): Illuminate/Routing/Router->runRoute(Object(Illuminate/Http/Request), Object(Illuminate/Routing/Route))
+#36 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Routing/Router.php(737): Illuminate/Routing/Router->dispatchToRoute(Object(Illuminate/Http/Request))
+#37 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate/Routing/Router->dispatch(Object(Illuminate/Http/Request))
+#38 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(144): Illuminate/Foundation/Http/Kernel->Illuminate/Foundation/Http/{closure}(Object(Illuminate/Http/Request))
+#39 C:/Users/divya/laravel_projects/infra360_new/app/Http/Middleware/HandleCors.php(26): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#40 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): App/Http/Middleware/HandleCors->handle(Object(Illuminate/Http/Request), Object(Closure))
+#41 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#42 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#43 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull->handle(Object(Illuminate/Http/Request), Object(Closure))
+#44 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#45 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(40): Illuminate/Foundation/Http/Middleware/TransformsRequest->handle(Object(Illuminate/Http/Request), Object(Closure))
+#46 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/TrimStrings->handle(Object(Illuminate/Http/Request), Object(Closure))
+#47 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ValidatePostSize.php(27): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#48 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/ValidatePostSize->handle(Object(Illuminate/Http/Request), Object(Closure))
+#49 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(99): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#50 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance->handle(Object(Illuminate/Http/Request), Object(Closure))
+#51 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(39): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#52 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(183): Illuminate/Http/Middleware/TrustProxies->handle(Object(Illuminate/Http/Request), Object(Closure))
+#53 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(119): Illuminate/Pipeline/Pipeline->Illuminate/Pipeline/{closure}(Object(Illuminate/Http/Request))
+#54 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate/Pipeline/Pipeline->then(Object(Closure))
+#55 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate/Foundation/Http/Kernel->sendRequestThroughRouter(Object(Illuminate/Http/Request))
+#56 C:/Users/divya/laravel_projects/infra360_new/public/index.php(51): Illuminate/Foundation/Http/Kernel->handle(Object(Illuminate/Http/Request))
+#57 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('C://Users//divya//...')
+#58 {main}
+"} 
+[2026-07-01 15:25:16] local.ERROR: SQLSTATE[HY000]: General error: 1005 Can't create table `pojoinfra`.`sales_bill_details` (errno: 150 "Foreign key constraint is incorrectly formed") (Connection: mysql, SQL: alter table `sales_bill_details` add constraint `sales_bill_details_sales_bill_id_foreign` foreign key (`sales_bill_id`) references `sales_bills` (`id`) on delete cascade) {"exception":"[object] (Illuminate\\Database\\QueryException(code: HY000): SQLSTATE[HY000]: General error: 1005 Can't create table `pojoinfra`.`sales_bill_details` (errno: 150 \"Foreign key constraint is incorrectly formed\") (Connection: mysql, SQL: alter table `sales_bill_details` add constraint `sales_bill_details_sales_bill_id_foreign` foreign key (`sales_bill_id`) references `sales_bills` (`id`) on delete cascade) at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(783): Illuminate/Database/Connection->runQueryCallback('alter table `sa...', Array, Object(Closure))
+#1 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(576): Illuminate/Database/Connection->run('alter table `sa...', Array, Object(Closure))
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php(110): Illuminate/Database/Connection->statement('alter table `sa...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(602): Illuminate/Database/Schema/Blueprint->build(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Schema/Grammars/MySqlGrammar))
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(456): Illuminate/Database/Schema/Builder->build(Object(Illuminate/Database/Schema/Blueprint))
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): Illuminate/Database/Schema/Builder->create('sales_bill_deta...', Object(Closure))
+#6 C:/Users/divya/laravel_projects/infra360_new/database/migrations/2026_07_01_152356_create_sales_bill_details_table.php(14): Illuminate/Support/Facades/Facade::__callStatic('create', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(501): Illuminate/Database/Migrations/Migration@anonymous->up()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(418): Illuminate/Database/Migrations/Migrator->runMethod(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(427): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->runMigration(Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php(37): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(783): Illuminate/Console/View/Components/Task->render('2026_07_01_1523...', Object(Closure))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->write('Illuminate//Cons...', '2026_07_01_1523...', Object(Closure))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(189): Illuminate/Database/Migrations/Migrator->runUp('C://Users//divya//...', 41, false)
+#15 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(132): Illuminate/Database/Migrations/Migrator->runPending(Array, Array)
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(90): Illuminate/Database/Migrations/Migrator->run(Array, Array)
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(641): Illuminate/Database/Console/Migrations/MigrateCommand->Illuminate/Database/Console/Migrations/{closure}()
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(83): Illuminate/Database/Migrations/Migrator->usingConnection(NULL, Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate/Database/Console/Migrations/MigrateCommand->handle()
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate/Container/Container->call(Array)
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Command/Command.php(326): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(1121): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(324): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Database/Console/Migrations/MigrateCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#31 C:/Users/divya/laravel_projects/infra360_new/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#32 {main}
+
+[previous exception] [object] (PDOException(code: HY000): SQLSTATE[HY000]: General error: 1005 Can't create table `pojoinfra`.`sales_bill_details` (errno: 150 \"Foreign key constraint is incorrectly formed\") at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php:587)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(587): PDOStatement->execute()
+#1 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(816): Illuminate/Database/Connection->Illuminate/Database/{closure}('alter table `sa...', Array)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(783): Illuminate/Database/Connection->runQueryCallback('alter table `sa...', Array, Object(Closure))
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(576): Illuminate/Database/Connection->run('alter table `sa...', Array, Object(Closure))
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php(110): Illuminate/Database/Connection->statement('alter table `sa...')
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(602): Illuminate/Database/Schema/Blueprint->build(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Schema/Grammars/MySqlGrammar))
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(456): Illuminate/Database/Schema/Builder->build(Object(Illuminate/Database/Schema/Blueprint))
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): Illuminate/Database/Schema/Builder->create('sales_bill_deta...', Object(Closure))
+#8 C:/Users/divya/laravel_projects/infra360_new/database/migrations/2026_07_01_152356_create_sales_bill_details_table.php(14): Illuminate/Support/Facades/Facade::__callStatic('create', Array)
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(501): Illuminate/Database/Migrations/Migration@anonymous->up()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(418): Illuminate/Database/Migrations/Migrator->runMethod(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(427): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->runMigration(Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php(37): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(783): Illuminate/Console/View/Components/Task->render('2026_07_01_1523...', Object(Closure))
+#15 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->write('Illuminate//Cons...', '2026_07_01_1523...', Object(Closure))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(189): Illuminate/Database/Migrations/Migrator->runUp('C://Users//divya//...', 41, false)
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(132): Illuminate/Database/Migrations/Migrator->runPending(Array, Array)
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(90): Illuminate/Database/Migrations/Migrator->run(Array, Array)
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(641): Illuminate/Database/Console/Migrations/MigrateCommand->Illuminate/Database/Console/Migrations/{closure}()
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(83): Illuminate/Database/Migrations/Migrator->usingConnection(NULL, Object(Closure))
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate/Database/Console/Migrations/MigrateCommand->handle()
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate/Container/Container->call(Array)
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Command/Command.php(326): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(1121): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(324): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Database/Console/Migrations/MigrateCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#33 C:/Users/divya/laravel_projects/infra360_new/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#34 {main}
+"} 
+[2026-07-01 15:25:41] local.ERROR: SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'sales_bill_details' already exists (Connection: mysql, SQL: create table `sales_bill_details` (`id` bigint unsigned not null auto_increment primary key, `sales_bill_id` bigint unsigned not null, `particular` varchar(255) not null, `count` decimal(15, 2) not null default '0', `amount` decimal(15, 2) not null default '0', `created_by` bigint unsigned null, `updated_by` bigint unsigned null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci') {"exception":"[object] (Illuminate\\Database\\QueryException(code: 42S01): SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'sales_bill_details' already exists (Connection: mysql, SQL: create table `sales_bill_details` (`id` bigint unsigned not null auto_increment primary key, `sales_bill_id` bigint unsigned not null, `particular` varchar(255) not null, `count` decimal(15, 2) not null default '0', `amount` decimal(15, 2) not null default '0', `created_by` bigint unsigned null, `updated_by` bigint unsigned null, `created_at` timestamp null, `updated_at` timestamp null) default character set utf8mb4 collate 'utf8mb4_unicode_ci') at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(783): Illuminate/Database/Connection->runQueryCallback('create table `s...', Array, Object(Closure))
+#1 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(576): Illuminate/Database/Connection->run('create table `s...', Array, Object(Closure))
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php(110): Illuminate/Database/Connection->statement('create table `s...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(602): Illuminate/Database/Schema/Blueprint->build(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Schema/Grammars/MySqlGrammar))
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(456): Illuminate/Database/Schema/Builder->build(Object(Illuminate/Database/Schema/Blueprint))
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): Illuminate/Database/Schema/Builder->create('sales_bill_deta...', Object(Closure))
+#6 C:/Users/divya/laravel_projects/infra360_new/database/migrations/2026_07_01_152357_create_sales_bill_details_table.php(14): Illuminate/Support/Facades/Facade::__callStatic('create', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(501): Illuminate/Database/Migrations/Migration@anonymous->up()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(418): Illuminate/Database/Migrations/Migrator->runMethod(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(427): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->runMigration(Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php(37): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(783): Illuminate/Console/View/Components/Task->render('2026_07_01_1523...', Object(Closure))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->write('Illuminate//Cons...', '2026_07_01_1523...', Object(Closure))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(189): Illuminate/Database/Migrations/Migrator->runUp('C://Users//divya//...', 41, false)
+#15 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(132): Illuminate/Database/Migrations/Migrator->runPending(Array, Array)
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(90): Illuminate/Database/Migrations/Migrator->run(Array, Array)
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(641): Illuminate/Database/Console/Migrations/MigrateCommand->Illuminate/Database/Console/Migrations/{closure}()
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(83): Illuminate/Database/Migrations/Migrator->usingConnection(NULL, Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate/Database/Console/Migrations/MigrateCommand->handle()
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate/Container/Container->call(Array)
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Command/Command.php(326): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(1121): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(324): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Database/Console/Migrations/MigrateCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#31 C:/Users/divya/laravel_projects/infra360_new/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#32 {main}
+
+[previous exception] [object] (PDOException(code: 42S01): SQLSTATE[42S01]: Base table or view already exists: 1050 Table 'sales_bill_details' already exists at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php:587)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(587): PDOStatement->execute()
+#1 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(816): Illuminate/Database/Connection->Illuminate/Database/{closure}('create table `s...', Array)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(783): Illuminate/Database/Connection->runQueryCallback('create table `s...', Array, Object(Closure))
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(576): Illuminate/Database/Connection->run('create table `s...', Array, Object(Closure))
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php(110): Illuminate/Database/Connection->statement('create table `s...')
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(602): Illuminate/Database/Schema/Blueprint->build(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Schema/Grammars/MySqlGrammar))
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(456): Illuminate/Database/Schema/Builder->build(Object(Illuminate/Database/Schema/Blueprint))
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): Illuminate/Database/Schema/Builder->create('sales_bill_deta...', Object(Closure))
+#8 C:/Users/divya/laravel_projects/infra360_new/database/migrations/2026_07_01_152357_create_sales_bill_details_table.php(14): Illuminate/Support/Facades/Facade::__callStatic('create', Array)
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(501): Illuminate/Database/Migrations/Migration@anonymous->up()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(418): Illuminate/Database/Migrations/Migrator->runMethod(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(427): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->runMigration(Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php(37): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(783): Illuminate/Console/View/Components/Task->render('2026_07_01_1523...', Object(Closure))
+#15 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->write('Illuminate//Cons...', '2026_07_01_1523...', Object(Closure))
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(189): Illuminate/Database/Migrations/Migrator->runUp('C://Users//divya//...', 41, false)
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(132): Illuminate/Database/Migrations/Migrator->runPending(Array, Array)
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(90): Illuminate/Database/Migrations/Migrator->run(Array, Array)
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(641): Illuminate/Database/Console/Migrations/MigrateCommand->Illuminate/Database/Console/Migrations/{closure}()
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(83): Illuminate/Database/Migrations/Migrator->usingConnection(NULL, Object(Closure))
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate/Database/Console/Migrations/MigrateCommand->handle()
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate/Container/Container->call(Array)
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Command/Command.php(326): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(1121): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(324): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Database/Console/Migrations/MigrateCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#31 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#32 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#33 C:/Users/divya/laravel_projects/infra360_new/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#34 {main}
+"} 
+[2026-07-02 18:44:09] local.ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'marriage_date' in 'customers' (Connection: mysql, SQL: ALTER TABLE customers MODIFY marriage_date DATE NULL) {"exception":"[object] (Illuminate\\Database\\QueryException(code: 42S22): SQLSTATE[42S22]: Column not found: 1054 Unknown column 'marriage_date' in 'customers' (Connection: mysql, SQL: ALTER TABLE customers MODIFY marriage_date DATE NULL) at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php:829)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(783): Illuminate/Database/Connection->runQueryCallback('ALTER TABLE cus...', Array, Object(Closure))
+#1 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(576): Illuminate/Database/Connection->run('ALTER TABLE cus...', Array, Object(Closure))
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php(509): Illuminate/Database/Connection->statement('ALTER TABLE cus...')
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): Illuminate/Database/DatabaseManager->__call('statement', Array)
+#4 C:/Users/divya/laravel_projects/infra360_new/database/migrations/2026_07_02_184309_make_sites_and_customers_columns_nullable_for_site_create.php(21): Illuminate/Support/Facades/Facade::__callStatic('statement', Array)
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(501): Illuminate/Database/Migrations/Migration@anonymous->up()
+#6 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(418): Illuminate/Database/Migrations/Migrator->runMethod(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(427): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->runMigration(Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php(37): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(783): Illuminate/Console/View/Components/Task->render('2026_07_02_1843...', Object(Closure))
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->write('Illuminate//Cons...', '2026_07_02_1843...', Object(Closure))
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(189): Illuminate/Database/Migrations/Migrator->runUp('C://Users//divya//...', 44, false)
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(132): Illuminate/Database/Migrations/Migrator->runPending(Array, Array)
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(90): Illuminate/Database/Migrations/Migrator->run(Array, Array)
+#15 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(641): Illuminate/Database/Console/Migrations/MigrateCommand->Illuminate/Database/Console/Migrations/{closure}()
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(83): Illuminate/Database/Migrations/Migrator->usingConnection(NULL, Object(Closure))
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate/Database/Console/Migrations/MigrateCommand->handle()
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate/Container/Container->call(Array)
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Command/Command.php(326): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(1121): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(324): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Database/Console/Migrations/MigrateCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#29 C:/Users/divya/laravel_projects/infra360_new/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#30 {main}
+
+[previous exception] [object] (PDOException(code: 42S22): SQLSTATE[42S22]: Column not found: 1054 Unknown column 'marriage_date' in 'customers' at C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php:587)
+[stacktrace]
+#0 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(587): PDOStatement->execute()
+#1 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(816): Illuminate/Database/Connection->Illuminate/Database/{closure}('ALTER TABLE cus...', Array)
+#2 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(783): Illuminate/Database/Connection->runQueryCallback('ALTER TABLE cus...', Array, Object(Closure))
+#3 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Connection.php(576): Illuminate/Database/Connection->run('ALTER TABLE cus...', Array, Object(Closure))
+#4 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php(509): Illuminate/Database/Connection->statement('ALTER TABLE cus...')
+#5 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php(355): Illuminate/Database/DatabaseManager->__call('statement', Array)
+#6 C:/Users/divya/laravel_projects/infra360_new/database/migrations/2026_07_02_184309_make_sites_and_customers_columns_nullable_for_site_create.php(21): Illuminate/Support/Facades/Facade::__callStatic('statement', Array)
+#7 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(501): Illuminate/Database/Migrations/Migration@anonymous->up()
+#8 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(418): Illuminate/Database/Migrations/Migrator->runMethod(Object(Illuminate/Database/MySqlConnection), Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#9 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(427): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#10 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->runMigration(Object(Illuminate/Database/Migrations/Migration@anonymous), 'up')
+#11 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php(37): Illuminate/Database/Migrations/Migrator->Illuminate/Database/Migrations/{closure}()
+#12 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(783): Illuminate/Console/View/Components/Task->render('2026_07_02_1843...', Object(Closure))
+#13 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(224): Illuminate/Database/Migrations/Migrator->write('Illuminate//Cons...', '2026_07_02_1843...', Object(Closure))
+#14 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(189): Illuminate/Database/Migrations/Migrator->runUp('C://Users//divya//...', 44, false)
+#15 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(132): Illuminate/Database/Migrations/Migrator->runPending(Array, Array)
+#16 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(90): Illuminate/Database/Migrations/Migrator->run(Array, Array)
+#17 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(641): Illuminate/Database/Console/Migrations/MigrateCommand->Illuminate/Database/Console/Migrations/{closure}()
+#18 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php(83): Illuminate/Database/Migrations/Migrator->usingConnection(NULL, Object(Closure))
+#19 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate/Database/Console/Migrations/MigrateCommand->handle()
+#20 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate/Container/BoundMethod::Illuminate/Container/{closure}()
+#21 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate/Container/Util::unwrapIfClosure(Object(Closure))
+#22 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate/Container/BoundMethod::callBoundMethod(Object(Illuminate/Foundation/Application), Array, Object(Closure))
+#23 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate/Container/BoundMethod::call(Object(Illuminate/Foundation/Application), Array, Array, NULL)
+#24 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(211): Illuminate/Container/Container->call(Array)
+#25 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Command/Command.php(326): Illuminate/Console/Command->execute(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#26 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Console/Command.php(180): Symfony/Component/Console/Command/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Illuminate/Console/OutputStyle))
+#27 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(1121): Illuminate/Console/Command->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#28 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(324): Symfony/Component/Console/Application->doRunCommand(Object(Illuminate/Database/Console/Migrations/MigrateCommand), Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#29 C:/Users/divya/laravel_projects/infra360_new/vendor/symfony/console/Application.php(175): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#30 C:/Users/divya/laravel_projects/infra360_new/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(201): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#31 C:/Users/divya/laravel_projects/infra360_new/artisan(35): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#32 {main}
+"} 

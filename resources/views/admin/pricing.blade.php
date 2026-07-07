@@ -123,6 +123,23 @@
             line-height: 1.35;
         }
 
+        .feature-item.inherited-feature {
+            background-color: rgba(17, 132, 167, 0.1);
+            border-radius: 6px;
+            padding: 6px 8px;
+            margin-left: -8px;
+            margin-right: -8px;
+        }
+
+        .feature-item.inherited-feature .feature-text {
+            font-weight: 600;
+            color: #1184a7;
+        }
+
+        .feature-item.inherited-feature .tick-icon {
+            background-color: #1184a7;
+        }
+
         @media (max-width: 767px) {
             .plan-card {
                 margin-bottom: 20px;
@@ -183,55 +200,47 @@
             yearly: '4,999',
             sites: '5 Sites',
             desc: 'Essential tools for small projects and daily site management.',
-            features: ['Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Profile', 'Settings'],
+            features: ['Admin Panel - Web', 'Dashboard', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Payment Status', 'Purchase / Sales Bill', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Order Summary', 'Customer Payment Summary', 'Profile', 'Settings'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
             title: 'Starter',
             yearly: '9,999',
             sites: '10 Sites',
-            desc: 'Adds quotation workflows for growing teams.',
-            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Profile', 'Settings'],
+            desc: 'Everything in Basic, plus quotation workflows for growing teams.',
+            features: ['Everything in Basic Plan', 'Quotation Generator', 'Quotation Share Via Email, WA', 'Payment Receipt Via Email, WA', 'Order Summary Report'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
-            title: 'Advanced',
+            title: 'Advance',
             yearly: '14,999',
             sites: '15 Sites',
-            desc: 'Adds attendance exports and property management.',
-            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Profile', 'Settings'],
-            supportLink: 'https://wa.me/918072515050'
-        },
-        {
-            title: 'Advanced Plus',
-            yearly: '21,999',
-            sites: '20 Sites',
-            desc: 'Adds supervisor apps and checklist support.',
-            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
+            desc: 'Everything in Basic, Starter, plus reminders and mobile access.',
+            features: ['Everything in Basic, Starter Plan', 'Customer Wishes Reminder', 'Admin Mobile App', 'Full Report Download'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
             title: 'Professional',
-            yearly: '25,000',
-            sites: '25 Sites',
-            desc: 'Adds admin mobile access for larger operations.',
-            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
+            yearly: '21,999',
+            sites: '20 Sites',
+            desc: 'Everything in Basic, Starter, Advance, plus supervisor tools.',
+            features: ['Everything in Basic, Starter, Advance Plan', 'Supervisor Management', 'Supervisor Mobile App'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
             title: 'Business',
             yearly: '29,999',
             sites: '30 Sites',
-            desc: 'Expanded capacity for bigger construction teams.',
-            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Check List (50 nos)', 'Profile', 'Settings'],
+            desc: 'Everything in Basic, Starter, Advance, Professional, plus drawings and client tools.',
+            features: ['Everything in Basic, Starter, Advance, Professional Plan', 'Drawings', 'Check List (50 Nos)', 'Client Ticket Creation', 'Client Mobile App'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
             title: 'Business Elite',
-            yearly: '38,999',
-            sites: '35 Sites',
-            desc: 'Full suite with Admin, Supervisor and Client app, drawings, and tickets.',
-            features: ['Quotation Generator', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'All Report Excel Download', 'Real Estate Property Management', 'Supervisor Management', 'Supervisor Mobile App', 'Admin Mobile App', 'Client Mobile App', 'Client Ticket Creation', 'Drawings', 'Check List (50 nos)', 'Profile', 'Settings'],
+            custom: true,
+            sites: 'Custom Sites',
+            desc: 'Fully customized plan tailored to your organization.',
+            features: ['Customization', 'Contact Support for plan changes'],
             supportLink: 'https://wa.me/918072515050'
         }
     ];
@@ -241,19 +250,30 @@
         container.innerHTML = '';
 
         plans.forEach(plan => {
-            const featuresHTML = [`${plan.sites}`].concat(plan.features).map(feature =>
-                `<li class="mb-2 feature-item"><span class="tick-icon">&#10004;</span><span class="feature-text">${feature}</span></li>`
-            ).join('');
+            const inheritedFeatures = plan.features.filter(feature => feature.startsWith('Everything in'));
+            const ownFeatures = plan.features.filter(feature => !feature.startsWith('Everything in'));
+            const orderedFeatures = inheritedFeatures.concat([`${plan.sites}`], ownFeatures);
+
+            const featuresHTML = orderedFeatures.map(feature => {
+                const isInherited = feature.startsWith('Everything in');
+                const itemClass = isInherited ? 'mb-2 feature-item inherited-feature' : 'mb-2 feature-item';
+                return `<li class="${itemClass}"><span class="tick-icon">&#10004;</span><span class="feature-text">${feature}</span></li>`;
+            }).join('');
 
             const footerButton = `<div class="plan-actions"><a href="${plan.supportLink || 'https://wa.me/918072515050'}" target="_blank" class="btn btn-primary w-100">Contact Support</a></div>`;
+
+            const priceHTML = plan.custom
+                ? `<div class="price">Custom Pricing</div>`
+                : `<div class="price">Rs. ${plan.yearly}/-</div>`;
+            const priceNote = plan.custom ? 'Contact us for a quote' : 'Yearly plan';
 
             container.innerHTML += `
                 <div class="col-lg-3 col-md-6 col-sm-12 mb-4 d-flex">
                     <div class="plan-card w-100">
                         <h5>${plan.title}</h5>
                         <p>${plan.desc}</p>
-                        <div class="price">Rs. ${plan.yearly}/-</div>
-                        <p class="price-note">Yearly plan</p>
+                        ${priceHTML}
+                        <p class="price-note">${priceNote}</p>
                         <ul class="list-unstyled mt-3 text-start">
                             ${featuresHTML}
                         </ul>

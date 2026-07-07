@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exports\MaterialExport;
 use App\Http\Controllers\Controller;
 use App\Models\MaterialOrder;
 use App\Models\MaterialPayment;
@@ -12,6 +13,9 @@ use App\Models\VendorPayDetail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
 {
@@ -223,6 +227,7 @@ public function materialRequest(Request $request)
         'date' => 'required',
         'quantity' => 'required|numeric',
         'price' => 'required|numeric',
+        'gst' => 'nullable|numeric',
         'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // ✅ optional file
         'category_name' => 'nullable|string', // ✅ not stored but shown in response
     ]);
@@ -261,6 +266,7 @@ public function materialRequest(Request $request)
         'quantity' => $request->quantity,
         'unit' => $request->unit,
         'price' => $request->price,
+        'gst' => $request->gst,
         'available_unit_count' => $request->available_unit_count,
         'image_url' => $imageUrl, // ✅ store image URL
         'created_by' => auth('api')->id(),
@@ -312,7 +318,153 @@ public function materialRequest(Request $request)
         ],
     ]);
 }
-public function index()
+public function exportMaterial(Request $request)
+    {
+        $request->validate([
+            'site_id'       => 'required|exists:sites,id',
+            'material_type' => 'nullable|string',
+            'month'         => 'nullable|date_format:Y-m',
+        ]);
+
+        $fileName = 'material_' . $request->site_id . '_' . time() . '.xlsx';
+        $filePath = 'exports/' . $fileName;
+
+        try {
+            Excel::store(
+                new MaterialExport($request->site_id, $request->material_type, $request->month),
+                $filePath,
+                'public'
+            );
+
+            return response()->json([
+                'status'       => true,
+                'message'      => 'Material Excel file generated successfully.',
+                'download_url' => asset('storage/' . $filePath),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to generate Excel: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateMaterial(Request $request, $id)
+    {
+        $order = MaterialOrder::find($id);
+
+        if (!$order) {
+            return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
+        }
+
+        $validate = Validator::make($request->all(), [
+            'material_type' => 'required|string',
+            'date'          => 'required',
+            'quantity'      => 'required|numeric',
+            'price'         => 'required|numeric',
+            'unit'          => 'nullable|string',
+            'remarks'       => 'nullable|string',
+            'attachment'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validate->errors()], 422);
+        }
+
+        try {
+            $date = Carbon::createFromFormat('d-m-Y', $request->date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            $date = Carbon::parse($request->date)->toDateString();
+        }
+
+        $oldPrice = (float) $order->price;
+        $newPrice = (float) $request->price;
+
+        if ($request->hasFile('attachment')) {
+            $order->image_url = asset('storage/' . $request->file('attachment')->store('material_attachments', 'public'));
+        }
+
+        $order->update([
+            'material_type' => $request->material_type,
+            'date'          => $date,
+            'quantity'      => $request->quantity,
+            'price'         => $newPrice,
+            'unit'          => $request->unit,
+            'updated_by'    => auth('api')->id(),
+        ]);
+
+        // Adjust vendor pay detail for price difference
+        $priceDiff = $newPrice - $oldPrice;
+        if ($priceDiff != 0 && $order->vendor_id) {
+            $paydetail = VendorPayDetail::where('vendor_id', $order->vendor_id)->first();
+            if ($paydetail) {
+                $paydetail->update([
+                    'total_unit_price' => $paydetail->total_unit_price + $priceDiff,
+                    'balance_amount'   => $paydetail->balance_amount + $priceDiff,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'response_code' => 200,
+            'status'        => true,
+            'message'       => 'Material order updated successfully.',
+            'data'          => $order,
+        ]);
+    }
+
+    public function destroyMaterial($id)
+    {
+        $order = MaterialOrder::find($id);
+
+        if (!$order) {
+            return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
+        }
+
+        // Reverse vendor pay detail
+        if ($order->vendor_id) {
+            $paydetail = VendorPayDetail::where('vendor_id', $order->vendor_id)->first();
+            if ($paydetail) {
+                $paydetail->update([
+                    'total_units'      => max(0, $paydetail->total_units - $order->quantity),
+                    'total_unit_price' => max(0, $paydetail->total_unit_price - $order->price),
+                    'balance_amount'   => max(0, $paydetail->balance_amount - $order->price),
+                ]);
+            }
+        }
+
+        $order->delete();
+
+        return response()->json([
+            'response_code' => 200,
+            'status'        => true,
+            'message'       => 'Material order deleted successfully.',
+        ]);
+    }
+
+    public function orderPdf($id)
+    {
+        $order = MaterialOrder::with('vendor')->find($id);
+
+        if (!$order) {
+            return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
+        }
+
+        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order'));
+        $pdfPath = 'material_orders/material_order_' . $order->id . '.pdf';
+        Storage::disk('public')->put($pdfPath, $pdf->output());
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'message' => 'Purchase invoice generated successfully.',
+            'data' => [
+                'pdf_url' => asset('storage/' . $pdfPath),
+            ],
+        ]);
+    }
+
+    public function index()
     {
         $materials = [
             [

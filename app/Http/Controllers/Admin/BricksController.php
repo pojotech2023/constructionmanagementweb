@@ -12,42 +12,54 @@ use Illuminate\Http\Request;
 
 class BricksController extends Controller
 {
-  public function index($siteId)
+  public function index(Request $request, $siteId)
   {
-    $currentMonth = now()->month;
-    $currentYear = now()->year;
+    $month = $request->query('month') ?: Carbon::now()->format('Y-m');
+    $week = (int) $request->query('week');
+
+    $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+    $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+    $startDate = $startOfMonth->copy();
+    $endDate = $endOfMonth->copy();
+
+    if ($week >= 1 && $week <= 4) {
+      $startDate = $startOfMonth->copy()->addDays(($week - 1) * 7);
+      $endDate = $startDate->copy()->addDays(6);
+
+      if ($endDate->gt($endOfMonth)) {
+        $endDate = $endOfMonth;
+      }
+    } else {
+      $week = null;
+    }
 
     // Bricks orders list
     $bricks = MaterialOrder::with('vendor')
       ->where('site_id', $siteId)
-      ->whereMonth('date', $currentMonth)
-      ->whereYear('date', $currentYear)
+      ->whereBetween('date', [$startDate, $endDate])
       ->get();
 
     // Site Name
     $site = Site::find($siteId);
     $siteName = $site ? $site->site_name : 'Unknown Site';
 
-    // This month total unit count from MaterialOrder
+    // Selected month total unit count from MaterialOrder
     $totalUnits = MaterialOrder::where('site_id', $siteId)
-      ->whereMonth('date', $currentMonth)
-      ->whereYear('date', $currentYear)
+      ->whereBetween('date', [$startDate, $endDate])
       ->sum('quantity');
 
-    // This month amount summary from MaterialPayment
+    // Selected month amount summary from MaterialPayment
     $totalAmount = MaterialOrder::where('site_id', $siteId)
-      ->whereMonth('date', $currentMonth)
-      ->whereYear('date', $currentYear)
+      ->whereBetween('date', [$startDate, $endDate])
       ->sum('price');
 
     $settledAmount = MaterialPayment::where('site_id', $siteId)
-      ->whereMonth('date', $currentMonth)
-      ->whereYear('date', $currentYear)
+      ->whereBetween('date', [$startDate, $endDate])
       ->sum('settled_amount');
 
     $pendingAmount = MaterialPayment::where('site_id', $siteId)
-      ->whereMonth('date', $currentMonth)
-      ->whereYear('date', $currentYear)
+      ->whereBetween('date', [$startDate, $endDate])
       ->sum('pending_amount');
 
     return view('admin.menus.bricks.bricks_details', compact(
@@ -57,7 +69,9 @@ class BricksController extends Controller
       'totalAmount',
       'settledAmount',
       'pendingAmount',
-      'totalUnits'
+      'totalUnits',
+      'month',
+      'week'
     ));
   }
 

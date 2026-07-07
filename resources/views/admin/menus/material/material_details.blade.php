@@ -47,28 +47,25 @@
                             <div class="row mb-2 align-items-end pb-3"
                                 style="border-bottom: 1px solid rgb(235, 236, 236) !important;">
                                 <div class="col-12 col-md-3">
-                                    <input type="month" id="monthPicker" class="form-control">
+                                    <input type="month" id="monthPicker" class="form-control"
+                                           value="{{ $month }}">
                                 </div>
 
                                 <div class="col-12">
                                     <div class="row justify-content-center align-items-center" id="weekFilterRow">
                                         <div class="col-auto mb-2">
-                                            <span class="badge badge-secondary week-reset-btn active">
+                                            <span class="badge badge-secondary week-reset-btn {{ empty($week) ? 'active' : '' }}">
                                                 Full Month
                                             </span>
                                         </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="1">Week 1</span>
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="2">Week 2</span>
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="3">Week 3</span>
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <span class="badge badge-black week-btn" data-week="4">Week 4</span>
-                                        </div>
+                                        @foreach ([1, 2, 3, 4] as $weekNumber)
+                                            <div class="col-auto mb-2">
+                                                <span class="badge badge-black week-btn {{ (string) $week === (string) $weekNumber ? 'active' : '' }}"
+                                                      data-week="{{ $weekNumber }}">
+                                                    Week {{ $weekNumber }}
+                                                </span>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
@@ -116,6 +113,7 @@
                                                 <th>Quantity</th>
                                                 <th>Vendor</th>
                                                 <th>Price</th>
+                                                <th>GST</th>
                                                 <th style="width:10%">Action</th>
                                                 {{-- <th>Available</th> --}}
                                             </tr>
@@ -128,6 +126,7 @@
                                                     <td>{{ $brick->quantity }}</td>
                                                     <td>{{ $brick->vendor->name }}</td>
                                                     <td>{{ $brick->price }}</td>
+                                                    <td>{{ $brick->gst ?? '-' }}</td>
                                                     <td>
                                                         <div class="form-button-action">
                                                             <button type="button" class="btn btn-link btn-primary btn-sm editOrderBtn"
@@ -135,6 +134,7 @@
                                                                 data-date="{{ $brick->date }}"
                                                                 data-quantity="{{ $brick->quantity }}"
                                                                 data-price="{{ $brick->price }}"
+                                                                data-gst="{{ $brick->gst }}"
                                                                 data-bs-toggle="modal" data-bs-target="#editOrderModal">
                                                                 <i class="fa fa-edit"></i>
                                                             </button>
@@ -142,6 +142,9 @@
                                                                 data-id="{{ $brick->id }}" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
                                                                 <i class="fa fa-times"></i>
                                                             </button>
+                                                            <a href="{{ route('material.order.pdf', $brick->id) }}" class="btn btn-secondary btn-sm" target="_blank">
+                                                                <i class="fa fa-file-pdf"></i> PDF
+                                                            </a>
                                                         </div>
                                                     </td>
                                                     {{-- <td>{{ $brick->available_unit_count }}</td> --}}
@@ -204,6 +207,10 @@
                                         <div class="mb-3">
                                             <label class="form-label">Price</label>
                                             <input type="number" step="0.01" name="price" id="edit_order_price" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">GST</label>
+                                            <input type="number" step="0.01" name="gst" id="edit_order_gst" class="form-control">
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -301,134 +308,48 @@
             const monthPicker = document.getElementById('monthPicker');
             const weekButtons = document.querySelectorAll('.week-btn');
             const weekResetButton = document.querySelector('.week-reset-btn');
-            const spinner = document.getElementById('loadingSpinner');
-            const tableBody = document.getElementById('bricksTableBody');
+            const materialBaseUrl = @json(route('material', ['siteId' => $siteId, 'materialType' => $materialType]));
 
-            let selectedWeek = 0;
+            let currentSelectedMonth = monthPicker.value;
 
-            // Set default month
-            const currentMonth = new Date().toISOString().slice(0, 7);
-            monthPicker.value = currentMonth;
-
-            function setActiveWeekButton(activeButton) {
-                weekButtons.forEach(btn => btn.classList.remove('active'));
-                if (weekResetButton) {
-                    weekResetButton.classList.toggle('active', !activeButton);
+            // Month change => reload page with selected month
+            monthPicker.addEventListener('change', function() {
+                currentSelectedMonth = this.value;
+                if (currentSelectedMonth) {
+                    window.location.href = `${materialBaseUrl}?month=${currentSelectedMonth}`;
                 }
-                if (activeButton) {
-                    activeButton.classList.add('active');
-                }
-            }
+            });
 
-            // When week button clicked
-            weekButtons.forEach((button) => {
-                button.addEventListener('click', function() {
+            // Week button click => reload page with month + week
+            weekButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
                     const wasActive = this.classList.contains('active');
+                    const selectedWeek = this.getAttribute('data-week');
 
                     if (wasActive) {
-                        selectedWeek = 0;
-                        setActiveWeekButton(null);
-                    } else {
-                        selectedWeek = Number(this.getAttribute('data-week')) || 0;
-                        setActiveWeekButton(this);
+                        window.location.href = `${materialBaseUrl}?month=${currentSelectedMonth}`;
+                        return;
                     }
 
-                    fetchData();
+                    if (currentSelectedMonth && selectedWeek) {
+                        window.location.href =
+                            `${materialBaseUrl}?month=${currentSelectedMonth}&week=${selectedWeek}`;
+                    }
                 });
             });
 
             if (weekResetButton) {
                 weekResetButton.addEventListener('click', function() {
-                    selectedWeek = 0;
-                    setActiveWeekButton(null);
-                    fetchData();
+                    if (currentSelectedMonth) {
+                        window.location.href = `${materialBaseUrl}?month=${currentSelectedMonth}`;
+                    }
                 });
             }
-
-            // When month changed
-            monthPicker.addEventListener('change', function() {
-                selectedWeek = 0;
-                setActiveWeekButton(null);
-                fetchData();
-            });
-
-            function fetchData() {
-                spinner.classList.remove('d-none');
-
-                fetch(`{{ route('material.getData', ['siteId' => $siteId]) }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            monthYear: monthPicker.value,
-                            week: selectedWeek,
-                            material_type: '{{ $materialType }}'
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        spinner.classList.add('d-none');
-
-                        // Update table
-                        tableBody.innerHTML = '';
-                        data.bricks.forEach((item, index) => {
-                            const displayDate = formatDisplayDate(item.date);
-                            tableBody.innerHTML += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${displayDate}</td>
-                                <td>${item.quantity}</td>
-                                <td>${item.vendor ? item.vendor.name : ''}</td>
-                                <td>${item.price}</td>
-                                <td>
-                                    <div class="form-button-action">
-                                        <button type="button" class="btn btn-link btn-primary btn-sm editOrderBtn"
-                                            data-id="${item.id}"
-                                            data-date="${item.date}"
-                                            data-quantity="${item.quantity}"
-                                            data-price="${item.price}"
-                                            data-bs-toggle="modal" data-bs-target="#editOrderModal">
-                                            <i class="fa fa-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-link btn-danger btn-sm deleteOrderBtn"
-                                            data-id="${item.id}" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>`;
-                        });
-
-                        // Update totals
-                        document.getElementById('totalUnits').textContent = `${data.totalUnits} Units`;
-                        document.getElementById('totalAmount').textContent = data.totalAmount;
-                        document.getElementById('settledAmount').textContent = data.settledAmount;
-                        document.getElementById('pendingAmount').textContent = data.pendingAmount;
-                    })
-                    .catch(error => {
-                        spinner.classList.add('d-none');
-                        console.error('Error fetching material data:', error);
-                    });
-            }
-
-            // Initial fetch
-            fetchData();
 
             function toIsoDate(dateValue) {
                 if (!dateValue) return '';
                 const parts = dateValue.split('-');
                 if (parts.length === 3 && parts[0].length === 2) {
-                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-                }
-                return dateValue;
-            }
-
-            function formatDisplayDate(dateValue) {
-                if (!dateValue) return '-';
-                const parts = dateValue.split('-');
-                if (parts.length === 3 && parts[0].length === 4) {
                     return `${parts[2]}-${parts[1]}-${parts[0]}`;
                 }
                 return dateValue;
@@ -444,11 +365,13 @@
                     const date = editBtn.getAttribute('data-date');
                     const quantity = editBtn.getAttribute('data-quantity');
                     const price = editBtn.getAttribute('data-price');
+                    const gst = editBtn.getAttribute('data-gst');
                     const form = document.getElementById('editOrderForm');
                     form.action = '/admin/material-order-update/' + id;
                     document.getElementById('edit_order_date').value = toIsoDate(date);
                     document.getElementById('edit_order_quantity').value = quantity;
                     document.getElementById('edit_order_price').value = price;
+                    document.getElementById('edit_order_gst').value = gst || '';
                 }
 
                 if (delBtn) {

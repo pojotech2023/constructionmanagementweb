@@ -67,8 +67,11 @@
                 <div class="row">
                     <div class="col-12 col-md-8">
                         @foreach ($sites as $site)
-                            <div class="card mt-3 site-card" data-route="{{ route('site.detail', $site->id) }}"
-                                onclick="redirectToLeadDetails(event, this)">
+                            <div class="card mt-3 site-card"
+                                @if ($sharedMenuVisibility['site_detail'] ?? true)
+                                    data-route="{{ route('site.detail', $site->id) }}"
+                                    onclick="redirectToLeadDetails(event, this)"
+                                @endif>
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-6 d-flex align-items-center">

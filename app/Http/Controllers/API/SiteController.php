@@ -2,12 +2,21 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Exports\SiteReportExport;
 use App\Http\Controllers\Controller;
+use App\Services\SiteExpenseCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use App\Models\Site;
 use App\Models\Customer;
 use App\Models\SitePayment;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SitePaymentMail;
+use Carbon\Carbon;
 
 class SiteController extends Controller
 {
@@ -60,18 +69,18 @@ class SiteController extends Controller
     $validator = Validator::make($request->all(), [
         'site_name'      => 'required|string',
         'site_img'       => 'nullable|image|mimes:jpg,jpeg,png,webp',
-        'location'       => 'required|string',
-        'flat_area'      => 'required|string',
-        'built_up_area'  => 'required|string',
-        'duration'       => 'required|string',
-        'supervisor_id'  => 'required|exists:users,id',
+        'location'       => 'nullable|string',
+        'flat_area'      => 'nullable|string',
+        'built_up_area'  => 'nullable|string',
+        'duration'       => 'nullable|string',
+        'supervisor_id'  => 'nullable|exists:users,id',
 
-        'name'           => 'required|string',
-        'mobile_no'      => 'required|numeric|digits:10',
-        'email'          => 'required|email|unique:customers,email',
-        'dob'            => 'required|date',
-        'address'        => 'required|string',
-        
+        'name'           => 'nullable|string',
+        'mobile_no'      => 'nullable|numeric|digits:10',
+        'email'          => 'nullable|email|unique:customers,email',
+        'dob'            => 'nullable|date',
+        'address'        => 'nullable|string',
+
     ]);
 
     if ($validator->fails()) {
@@ -219,11 +228,15 @@ public function destroy($id)
     return response()->json(['status' => true,'message' => 'Deleted Successfully!']);
 }
 
-  public function siteview()
+  public function siteview(SiteExpenseCalculator $expenseCalculator)
 {
-    $sites = Site::with(['customer', 'supervisor']) // load both relations
+    $sites = Site::with(['customer', 'supervisor'])
         ->where('is_inactive', 0)
         ->get();
+
+    $sites->each(function ($site) use ($expenseCalculator) {
+        $site->expense = $expenseCalculator->total((int) $site->id);
+    });
 
     return response()->json([
         'status' => true,
@@ -231,6 +244,14 @@ public function destroy($id)
         'message' => 'Active sites fetched successfully.',
         'data' => $sites
     ]);
+}
+
+public function exportFullReport(SiteExpenseCalculator $expenseCalculator, $id)
+{
+    $site = Site::findOrFail($id);
+    $filename = Str::slug($site->site_name) . '-full-report-' . now()->format('Y-m-d') . '.xlsx';
+
+    return Excel::download(new SiteReportExport($site), $filename);
 }
 
 public function addPayment(Request $request)
@@ -285,6 +306,171 @@ public function paymentHistory($siteId)
         'status' => true,
         'message' => 'Site payment history fetched successfully!.',
         'data' => $histories,
+    ]);
+}
+
+public function exportPaymentHistory(Request $request, $siteId)
+{
+    $site = Site::findOrFail($siteId);
+    $query = SitePayment::where('site_id', $siteId);
+
+    if ($request->filled('from_date')) {
+        $query->whereDate('date', '>=', Carbon::parse($request->from_date)->toDateString());
+    }
+
+    if ($request->filled('to_date')) {
+        $query->whereDate('date', '<=', Carbon::parse($request->to_date)->toDateString());
+    }
+
+    $histories = $query->orderBy('date')->orderBy('id')->get();
+    $filename = 'site_payment_history_' . $site->id . '_' . now()->format('Ymd_His') . '.csv';
+
+    $headers = [
+        'Content-Type' => 'text/csv',
+        'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+    ];
+
+    $callback = function () use ($histories) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, ['S.No', 'Date', 'Payment', 'Payment Mode', 'Remarks']);
+
+        foreach ($histories as $index => $history) {
+            fputcsv($file, [
+                $index + 1,
+                $history->date ? Carbon::parse($history->date)->format('d-m-Y') : '',
+                number_format((float) $history->payment, 2, '.', ''),
+                $history->payment_mode,
+                $history->remarks,
+            ]);
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
+
+private function buildPaymentPdf(SitePayment $payment)
+{
+    $site = $payment->site;
+    $budgetAmount = (float) (optional($site)->budget_amount ?? 0);
+    $totalPaid = (float) SitePayment::where('site_id', $payment->site_id)->sum('payment');
+    $balanceAmount = max($budgetAmount - $totalPaid, 0);
+
+    $pdf = Pdf::loadView('admin.helper.site_payment_pdf', compact(
+        'payment',
+        'budgetAmount',
+        'totalPaid',
+        'balanceAmount'
+    ));
+
+    $pdfPath = 'site_payments/site_payment_' . $payment->id . '.pdf';
+    Storage::disk('public')->put($pdfPath, $pdf->output());
+
+    return [$pdf, asset('storage/' . $pdfPath)];
+}
+
+public function downloadPaymentPdf($id)
+{
+    $payment = SitePayment::with('site')->find($id);
+
+    if (!$payment) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Payment not found.',
+        ], 404);
+    }
+
+    [, $pdfUrl] = $this->buildPaymentPdf($payment);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Site payment PDF generated successfully.',
+        'data' => [
+            'pdf_url' => $pdfUrl,
+        ],
+    ]);
+}
+
+public function sendPaymentWhatsapp($id)
+{
+    $payment = SitePayment::with('site')->find($id);
+
+    if (!$payment) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Payment not found.',
+        ], 404);
+    }
+
+    $siteName = optional($payment->site)->site_name ?? 'Site';
+    [, $pdfUrl] = $this->buildPaymentPdf($payment);
+
+    $customer = Customer::where('site_id', $payment->site_id)
+        ->where('is_inactive', 0)
+        ->orderBy('id')
+        ->first();
+    $customerMobile = $customer ? preg_replace('/\D+/', '', $customer->mobile_no) : '';
+
+    if (strlen($customerMobile) === 10) {
+        $customerMobile = '91' . $customerMobile;
+    }
+
+    $message = "Site Payment History\n"
+        . "Site: {$siteName}\n"
+        . "Date: " . Carbon::parse($payment->date)->format('d-m-Y') . "\n"
+        . "Payment: " . number_format((float) $payment->payment, 2) . "\n"
+        . "Payment Mode: {$payment->payment_mode}\n"
+        . "PDF: {$pdfUrl}";
+
+    $whatsappUrl = $customerMobile
+        ? 'https://wa.me/' . $customerMobile . '?text=' . urlencode($message)
+        : 'https://wa.me/?text=' . urlencode($message);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'WhatsApp link generated successfully.',
+        'data' => [
+            'whatsapp_url' => $whatsappUrl,
+            'pdf_url' => $pdfUrl,
+        ],
+    ]);
+}
+
+public function sendPaymentMail($id)
+{
+    $payment = SitePayment::with('site')->find($id);
+
+    if (!$payment) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Payment not found.',
+        ], 404);
+    }
+
+    $customer = Customer::where('site_id', $payment->site_id)
+        ->where('is_inactive', 0)
+        ->orderBy('id')
+        ->first();
+
+    if (!$customer || !$customer->email) {
+        return response()->json([
+            'status' => false,
+            'message' => 'No customer email found for this site.',
+        ], 422);
+    }
+
+    [$pdf, $pdfUrl] = $this->buildPaymentPdf($payment);
+
+    Mail::to($customer->email)->send(new SitePaymentMail($payment, $pdf->output()));
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Payment receipt emailed successfully.',
+        'data' => [
+            'pdf_url' => $pdfUrl,
+            'mail_sent' => true,
+        ],
     ]);
 }
 

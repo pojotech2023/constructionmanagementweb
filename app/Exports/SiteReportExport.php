@@ -7,6 +7,8 @@ use App\Models\MaterialOrder;
 use App\Models\OtherUtilities;
 use App\Models\OtherUtilitiesSub;
 use App\Models\Site;
+use App\Models\Subcontractor;
+use App\Models\SubcontractorPayment;
 use App\Models\SubcontractorService;
 use App\Models\Wages;
 use Carbon\Carbon;
@@ -104,6 +106,41 @@ class SiteReportExport implements FromArray, WithEvents, WithTitle
                 (int) $service->no_counts,
                 $service->remarks ?: '-',
                 (float) $service->amount,
+            ];
+        }
+
+        // Petty Cash and Rental Management payments are tracked as subcontractor
+        // payments against a sentinel "wrapper" subcontractor per site — fold
+        // them into the same Subcontractor Report table instead of a separate one.
+        $pettyCashSubcontractor = Subcontractor::where('email', 'pettycash.site.' . $this->site->id . '@local.invalid')->first();
+        $pettyCashPayments = $pettyCashSubcontractor
+            ? SubcontractorPayment::where('subcontractor_id', $pettyCashSubcontractor->id)->orderBy('date')->get()
+            : collect();
+        foreach ($pettyCashPayments as $payment) {
+            $subcontractorTotal += (float) $payment->payment;
+            $serviceRows[] = [
+                Carbon::parse($payment->date)->format('d-m-Y'),
+                'Petty Cash',
+                $this->site->site_name,
+                '-',
+                $payment->remarks ?: '-',
+                (float) $payment->payment,
+            ];
+        }
+
+        $rentalSubcontractor = Subcontractor::where('email', 'rental.site.' . $this->site->id . '@local.invalid')->first();
+        $rentalPayments = $rentalSubcontractor
+            ? SubcontractorPayment::where('subcontractor_id', $rentalSubcontractor->id)->orderBy('date')->get()
+            : collect();
+        foreach ($rentalPayments as $payment) {
+            $subcontractorTotal += (float) $payment->payment;
+            $serviceRows[] = [
+                Carbon::parse($payment->date)->format('d-m-Y'),
+                'Rental Management',
+                $this->site->site_name,
+                '-',
+                $payment->remarks ?: '-',
+                (float) $payment->payment,
             ];
         }
 

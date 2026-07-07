@@ -56,7 +56,7 @@
                                 <label for="email" class="col-sm-4 col-form-label fw-bold">Email</label>
                                 <div class="col-sm-8">
                                     <input type="email" id="email" name="email" class="form-control"
-                                        value="{{ old('email', $user->email) }}" placeholder="Enter email">
+                                        value="{{ old('email', $user->email) }}" placeholder="Enter email" readonly>
                                     @error('email')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -96,7 +96,7 @@
                         <!-- Right side: profile image -->
                         <div class="col-md-4 text-center">
                             <label class="fw-bold mb-2 d-block">Profile Image</label>
-                            <img src="{{ $user->image ? asset('storage/' . $user->image) : asset('images/logo/logo.jpeg') }}"
+                            <img src="{{ $user->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->image) ? asset('storage/' . $user->image) : asset('images/logo/logo.jpeg') }}"
                                 alt="Profile Image" id="imagePreview" class="img-thumbnail mb-3"
                                 style="max-width: 200px; height: auto;">
 

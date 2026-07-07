@@ -51,7 +51,7 @@
                         <button class="btn btn-success mb-2" id="addButton" data-bs-toggle="modal" data-bs-target="#addModal">
                             <i class="fa fa-plus"></i> Add Payment
                         </button>
-                        <button type="button" class="btn btn-success mb-2" data-bs-toggle="modal" data-bs-target="#pettyCashExportModal">
+                        <button type="button" class="btn btn-success mb-2" data-bs-toggle="modal" data-bs-target="#exportHistoryModal">
                             Export
                         </button>
                     @else
@@ -422,13 +422,13 @@
     </div>
 
     @isset($siteId)
-        <!-- Export Petty Cash Modal -->
-        <div class="modal fade" id="pettyCashExportModal" tabindex="-1" aria-hidden="true">
+        <!-- Export History Modal -->
+        <div class="modal fade" id="exportHistoryModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <form method="GET" action="{{ route('subcontractor.pettyCash.export', ['siteId' => $siteId]) }}" class="js-export-modal-form">
+                    <form method="GET" action="{{ $exportRoute ?? route('subcontractor.pettyCash.export', ['siteId' => $siteId]) }}" class="js-export-modal-form">
                         <div class="modal-header">
-                            <h5 class="modal-title">Export Petty Cash</h5>
+                            <h5 class="modal-title">{{ $exportModalTitle ?? 'Export Petty Cash' }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">

@@ -47,10 +47,10 @@
                     <h2>{{ $site->site_name }}</h2>
                     <p>Track every stage, task update, media submission, and approval status for this site.</p>
                 </div>
-                <div class="hero-action">
-                    <i class="fa fa-check-square"></i>
-                    <span>Quality Progress</span>
-                </div>
+                <a href="{{ route('checklist-create') }}" class="hero-action">
+                    <i class="fa fa-plus"></i>
+                    <span>Add Checklist</span>
+                </a>
             </div>
 
             <div class="checklist-board">
@@ -275,6 +275,14 @@
             font-weight: 800;
             box-shadow: 0 10px 22px rgba(36, 107, 254, 0.24);
             flex: 0 0 auto;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .hero-action:hover {
+            color: #fff;
+            text-decoration: none;
+            opacity: 0.92;
         }
 
         .checklist-board {
