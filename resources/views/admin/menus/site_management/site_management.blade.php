@@ -75,7 +75,7 @@
                                 <div class="card-header">
                                     <div class="row">
                                         <div class="col-6 d-flex align-items-center">
-                                            <h6 class="card-title mb-0">Site ID: {{ $site->id }}</h6>
+                                            <h6 class="card-title mb-0">Site ID: {{ $site->display_no }}</h6>
                                             <span class="op-7 ms-3 fw-normal">
                                                 {{ \Carbon\Carbon::parse($site->created_at)->format('M, d Y h:i A') }}
                                             </span>

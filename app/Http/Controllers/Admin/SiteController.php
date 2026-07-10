@@ -48,7 +48,13 @@ class SiteController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $sites->each(function ($site) use ($expenseCalculator) {
+        $displayNumbers = Site::orderBy('id')->pluck('id')
+            ->values()
+            ->flip()
+            ->map(fn ($index) => $index + 1);
+
+        $sites->each(function ($site) use ($expenseCalculator, $displayNumbers) {
+            $site->display_no = $displayNumbers[$site->id];
             $expenses = $expenseCalculator->breakdown((int) $site->id);
             $site->attendance_expense = $expenses['attendance'];
             $site->material_expense = $expenses['materials'];
