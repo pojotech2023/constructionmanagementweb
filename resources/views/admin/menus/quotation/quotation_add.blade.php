@@ -195,9 +195,13 @@ $(document).ready(function () {
         downloadLink.remove();
     }
 
-    function runQuotationAction(action, response) {
+    function runQuotationAction(action, response, whatsappWindow) {
         if (action === 'whatsapp' && response.whatsapp_url) {
-            window.open(response.whatsapp_url, '_blank');
+            if (whatsappWindow) {
+                whatsappWindow.location.href = response.whatsapp_url;
+            } else {
+                window.open(response.whatsapp_url, '_blank');
+            }
         }
 
         if (action === 'download' && response.pdf_url) {
@@ -215,15 +219,22 @@ $(document).ready(function () {
             return;
         }
 
+        // Open the WhatsApp tab synchronously (inside the click handler) so browsers
+        // don't treat it as a blocked popup once the AJAX response comes back later.
+        let whatsappWindow = null;
+        if (action === 'whatsapp') {
+            whatsappWindow = window.open('', '_blank');
+        }
+
         if (action !== 'mail' && !quotationDirty && cachedQuotationLinks) {
-            runQuotationAction(action, cachedQuotationLinks);
+            runQuotationAction(action, cachedQuotationLinks, whatsappWindow);
             return;
         }
 
         $('#loadingSpinner').removeClass('d-none');
 
         const form = $('#quotationForm');
-        const formData = form.serialize();
+        const formData = form.serialize() + '&action=' + encodeURIComponent(action);
 
         $.ajax({
             url: form.attr('action'),
@@ -235,11 +246,16 @@ $(document).ready(function () {
                 if (response.status === 'success') {
                     cachedQuotationLinks = response;
                     quotationDirty = false;
-                    runQuotationAction(action, response);
+                    runQuotationAction(action, response, whatsappWindow);
+                } else if (whatsappWindow) {
+                    whatsappWindow.close();
                 }
             },
             error: function (xhr) {
                 $('#loadingSpinner').addClass('d-none');
+                if (whatsappWindow) {
+                    whatsappWindow.close();
+                }
                 if (xhr.status === 422) {
                     let errors = xhr.responseJSON.errors;
                     let message = Object.values(errors).map(e => e[0]).join("\n");

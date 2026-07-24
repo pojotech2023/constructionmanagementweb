@@ -20,6 +20,33 @@ class QuotationController extends Controller
         return view('admin.menus.quotation.quotation_add');
     }
 
+    public function history(Request $request)
+    {
+        $mobileNo = $request->query('mobile_no');
+        $quotations = collect();
+        $searched = false;
+
+        if ($mobileNo) {
+            $validate = Validator::make(['mobile_no' => $mobileNo], [
+                'mobile_no' => 'required|digits:10',
+            ]);
+
+            if ($validate->fails()) {
+                return redirect()->route('quotation.history')
+                    ->withErrors($validate)
+                    ->withInput();
+            }
+
+            $searched = true;
+            $quotations = Quotation::where('mobile_no', $mobileNo)
+                ->orderBy('date', 'desc')
+                ->orderBy('id', 'desc')
+                ->get();
+        }
+
+        return view('admin.menus.quotation.quotation_history', compact('quotations', 'mobileNo', 'searched'));
+    }
+
 
     public function store(Request $request)
 {
@@ -93,7 +120,7 @@ class QuotationController extends Controller
         $whatsappLink = "https://wa.me/91{$quotation->mobile_no}?text=$message";
 
         $mailSent = false;
-        if ($request->filled('email')) {
+        if ($request->input('action') === 'mail' && $request->filled('email')) {
             Mail::to($request->email)->send(new QuotationMail($quotation, $pdf->output()));
             $mailSent = true;
         }

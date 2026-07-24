@@ -291,6 +291,7 @@ Route::prefix('admin')->group(function () {
         //Quotation
         Route::get('/quotation-form', [QuotationController::class, 'getForm'])->name('quotation.form');
         Route::post('/quotation-add', [QuotationController::class, 'store'])->name('quotation.add');
+        Route::get('/quotation-history', [QuotationController::class, 'history'])->name('quotation.history');
 
         //Profile setting
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile');

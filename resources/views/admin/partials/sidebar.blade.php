@@ -54,11 +54,26 @@
                 </li>--}}
 
                 @if ($sharedMenuVisibility['generate_quotation'] ?? true)
-                 <li class="nav-item {{ request()->routeIs('quotation.*') ? 'active' : '' }}">
-                    <a href="{{ route('quotation.form') }}" class="collapsed" aria-expanded="false">
-                       <i class="fa-solid fa-file"></i>
-                       <p>Generate Quotation</p>
+                <li class="nav-item {{ request()->routeIs('quotation.*') ? 'active' : '' }}">
+                    <a data-bs-toggle="collapse" href="#quotationmenu">
+                        <i class="fa-solid fa-file"></i>
+                        <p>Quotation</p>
+                        <span class="caret"></span>
                     </a>
+                    <div class="collapse {{ request()->routeIs('quotation.*') ? 'show' : '' }}" id="quotationmenu">
+                        <ul class="nav nav-collapse">
+                            <li>
+                                <a href="{{ route('quotation.form') }}" class="collapsed" aria-expanded="false">
+                                    <span class="sub-item">Generate Quotation</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('quotation.history') }}">
+                                    <span class="sub-item">Quotation History</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 @endif
 
