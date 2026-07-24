@@ -21,6 +21,7 @@ use App\Services\SiteExpenseCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -110,9 +111,15 @@ public function store(Request $request)
         'supervisor_id'  => 'nullable|exists:users,id',
 
         // Customer fields
+        'customer_type'       => 'nullable|in:new,existing',
+        'existing_customer_id'=> 'nullable|exists:customers,id',
         'name'           => 'nullable|string',
         'mobile_no'      => 'nullable|numeric|digits:10',
-        'email'          => 'nullable|email|unique:customers,email',
+        'email'          => [
+            'nullable',
+            'email',
+            Rule::unique('customers', 'email')->ignore($request->existing_customer_id),
+        ],
         'dob'            => 'nullable|date',
         'address'        => 'nullable|string',
     ]);

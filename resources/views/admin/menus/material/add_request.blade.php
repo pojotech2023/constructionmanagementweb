@@ -384,6 +384,8 @@ $(document).ready(function() {
 
 function loadUnitField(materialType) {
     let html = '';
+    let unitOptions = '<option value="">Select Unit</option>' +
+        `@foreach ($sharedUnits as $unitOption)<option value="{{ $unitOption }}">{{ $unitOption }}</option>@endforeach`;
 
     switch (materialType) {
 
@@ -407,16 +409,7 @@ function loadUnitField(materialType) {
                     <label class="fw-bold">Unit</label>
                 </div>
                 <div class="col-md-4">
-                     <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="Units">Units</option>
-                        <option value="Kg">Kg</option>
-                         <option value="Ton">Ton</option>
-                         <option value="Size">Size</option>
-                        <option value="Inch">Inch</option>
-                        <option value="Dia">Dia</option>
-                         <option value="no">no</option>
-                    </select>
+                     <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
             break;
@@ -427,15 +420,7 @@ function loadUnitField(materialType) {
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="Units">Units</option>
-                        <option value="Kg">Kg</option>
-                         <option value="Ton">Ton</option>
-                         <option value="Size">Size</option>
-                        <option value="Inch">Inch</option>
-                        <option value="Dia">Dia</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
             break;
@@ -461,11 +446,7 @@ function loadUnitField(materialType) {
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="In Bags">In Bags</option>
-                       
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
             break;
@@ -476,10 +457,7 @@ function loadUnitField(materialType) {
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="M Cube">M Cube</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
             break;
@@ -490,16 +468,7 @@ function loadUnitField(materialType) {
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="CFT">CFT</option>
-                        <option value="Tons">Tons</option>
-                        <option value="20mm">20mm</option>
-                        <option value="40mm">40mm</option>
-                        <option value="m sand">m sand</option>
-                        <option value="p sand">p sand</option>
-
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
             break;
@@ -510,20 +479,7 @@ function loadUnitField(materialType) {
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="Load">Load</option>
-                        <option value="Pack">Pack</option>
-                        <option value="Ltr">Ltr</option>
-                        <option value="Kg">Kg</option>
-                        <option value="Pieces">Pieces</option>
-                        <option value="M Cube">M Cube</option>
-                        <option value="CFT">CFT</option>
-                        <option value="Unit">Unit</option>
-                        <option value="Bag">Bag</option>
-                        <option value="Tons">Tons</option>
-                        <option value="Numbers">Numbers</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
             break;
@@ -533,20 +489,7 @@ function loadUnitField(materialType) {
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="Load">Load</option>
-                        <option value="Pack">Pack</option>
-                        <option value="Ltr">Ltr</option>
-                        <option value="Kg">Kg</option>
-                        <option value="Pieces">Pieces</option>
-                        <option value="M Cube">M Cube</option>
-                        <option value="CFT">CFT</option>
-                        <option value="Unit">Unit</option>
-                        <option value="Bag">Bag</option>
-                        <option value="Tons">Tons</option>
-                        <option value="Numbers">Numbers</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
     }

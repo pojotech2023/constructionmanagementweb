@@ -24,7 +24,32 @@ class MaterialRequest extends Model
         'items',
         'price',
         'date_of_delivery',
+        'admin_remark',
+        'reviewed_at',
+        'source',
     ];
+
+    protected $casts = [
+        'reviewed_at' => 'datetime',
+    ];
+
+    public const STATUS_PENDING = 0;
+    public const STATUS_APPROVED = 1;
+    public const STATUS_REJECTED = 2;
+
+    public const STATUS_LABELS = [
+        self::STATUS_PENDING => 'Pending',
+        self::STATUS_APPROVED => 'Approved',
+        self::STATUS_REJECTED => 'Rejected',
+    ];
+
+    public const SOURCE_ADMIN = 'admin';
+    public const SOURCE_SUPERVISOR = 'supervisor';
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? 'Pending';
+    }
 
     public function site()
     {

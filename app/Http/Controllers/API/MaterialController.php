@@ -110,7 +110,7 @@ public function materialData(Request $request, $siteId, $materialType)
 
 public function materialRequest(Request $request)
 {
-    $role = auth('api')->user()->role_name ?? null;  // admin / supervisor
+    $role = auth('api')->user()->roles->first()->role_name ?? null;  // Admin / Supervisor
 
     // Dynamic validation rule
     $vendorRule = ($role === 'Admin') ? 'required|exists:vendors,id' : 'nullable|exists:vendors,id';
@@ -184,6 +184,9 @@ public function materialRequest(Request $request)
         'remarks'            => $request->remarks,
         'image_url'          => $imageUrl,
         'created_by'         => auth('api')->id(),
+        'source'             => strtolower((string) $role) === 'supervisor'
+            ? MaterialRequest::SOURCE_SUPERVISOR
+            : MaterialRequest::SOURCE_ADMIN,
     ]);
 
     // Site details
@@ -216,6 +219,37 @@ public function materialRequest(Request $request)
         ],
     ]);
 }
+
+    // Supervisor: view the status of material requests they submitted for a site
+    public function myRequests($siteId)
+    {
+        $requests = MaterialRequest::where('site_id', $siteId)
+            ->where('created_by', auth('api')->id())
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($req) {
+                return [
+                    'id' => $req->id,
+                    'material_type' => $req->material_type,
+                    'items' => $req->items,
+                    'quantity' => $req->quantity,
+                    'unit' => $req->unit,
+                    'date_of_delivery' => $req->date_of_delivery,
+                    'remarks' => $req->remarks,
+                    'status' => $req->status,
+                    'status_label' => $req->status_label,
+                    'admin_remark' => $req->admin_remark,
+                    'reviewed_at' => $req->reviewed_at,
+                    'created_at' => $req->created_at,
+                ];
+            });
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'data' => $requests,
+        ]);
+    }
 
 
   public function materialOrder(Request $request)

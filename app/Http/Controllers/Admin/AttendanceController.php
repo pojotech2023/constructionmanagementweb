@@ -101,6 +101,37 @@ class AttendanceController extends Controller
 
         $allCategories = array_keys($allCategories);
 
+        // Map of date => check-in/check-out photo & time (first found for that date)
+        $dayPhotos = [];
+        foreach ($wages as $wage) {
+            $wageDate = Carbon::parse($wage->date)->toDateString();
+
+            if (!isset($dayPhotos[$wageDate])) {
+                $dayPhotos[$wageDate] = [
+                    'check_in_photo' => null,
+                    'check_in_time' => null,
+                    'check_out_photo' => null,
+                    'check_out_time' => null,
+                ];
+            }
+
+            if (!$dayPhotos[$wageDate]['check_in_photo'] && $wage->check_in_photo) {
+                $dayPhotos[$wageDate]['check_in_photo'] = $wage->check_in_photo;
+            }
+
+            if (!$dayPhotos[$wageDate]['check_in_time'] && $wage->check_in_time) {
+                $dayPhotos[$wageDate]['check_in_time'] = $wage->check_in_time;
+            }
+
+            if (!$dayPhotos[$wageDate]['check_out_photo'] && $wage->check_out_photo) {
+                $dayPhotos[$wageDate]['check_out_photo'] = $wage->check_out_photo;
+            }
+
+            if (!$dayPhotos[$wageDate]['check_out_time'] && $wage->check_out_time) {
+                $dayPhotos[$wageDate]['check_out_time'] = $wage->check_out_time;
+            }
+        }
+
         return view('admin.menus.attendance.attendance_management', compact(
             'siteName',
             'siteId',
@@ -117,7 +148,8 @@ class AttendanceController extends Controller
             'groupedByDate',
             'allCategories',
             'totalWeeks',
-            'availableWeeks'
+            'availableWeeks',
+            'dayPhotos'
         ));
     }
 
@@ -155,6 +187,8 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             $validate = Validator::make($request->all(), [
                 'site_id' => 'required|exists:sites,id',
                 'date' => 'nullable|date',
+                'time' => 'nullable|date_format:H:i',
+                'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
                 'rows' => 'array',
                 'rows.*.category' => 'required|string',
                 'rows.*.amount' => 'nullable|numeric',
@@ -163,6 +197,11 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
 
             if ($validate->fails()) {
                 return redirect()->back()->withErrors($validate)->withInput();
+            }
+
+            $checkInPhoto = null;
+            if ($request->hasFile('photo')) {
+                $checkInPhoto = $request->file('photo')->store('wages_checkin', 'public');
             }
 
             $redirectMonth = null;
@@ -178,6 +217,8 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
                         'category' => $row['category'],
                         'amount' => $row['amount'],
                         'date' => $date ?? Carbon::now()->toDateString(),
+                        'check_in_time' => $request->time,
+                        'check_in_photo' => $checkInPhoto,
                         'created_by' => auth('admin')->id(),
                     ]);
                 }
@@ -203,6 +244,8 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
         $validate = Validator::make($request->all(), [
             'site_id'  => 'required|exists:sites,id',
             'date'     => 'required|date',
+            'time'     => 'nullable|date_format:H:i',
+            'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'amount_Mason' => 'nullable|numeric',
             'amount_Helper' => 'nullable|numeric',
             'amount_Fitter' => 'nullable|numeric',
@@ -211,6 +254,11 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
 
         if ($validate->fails()) {
             return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+        $checkInPhoto = null;
+        if ($request->hasFile('photo')) {
+            $checkInPhoto = $request->file('photo')->store('wages_checkin', 'public');
         }
 
         $categories = [
@@ -227,6 +275,8 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
                     'category'   => $category,
                     'amount'     => $request->$amountField,
                     'date'       => $request->date,
+                    'check_in_time' => $request->time,
+                    'check_in_photo' => $checkInPhoto,
                     'created_by' => auth('admin')->id(),
                 ]);
             }
@@ -336,7 +386,11 @@ if ($wages->isEmpty()) {
     // Provide the variable name your view expects
     $siteId = $site_id;
 
-    return view('admin.menus.attendance.edit', compact('attendance', 'wages', 'siteId', 'date', 'categories'));
+    $checkOut = Wages::where('site_id', $site_id)
+        ->where('date', $date)
+        ->first();
+
+    return view('admin.menus.attendance.edit', compact('attendance', 'wages', 'siteId', 'date', 'categories', 'checkOut'));
 }
 
 
@@ -447,6 +501,15 @@ public function updateWages(Request $request)
 
 public function updateAttendanceAndWages(Request $request)
 {
+    $validate = Validator::make($request->all(), [
+        'time'  => 'nullable|date_format:H:i',
+        'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+    ]);
+
+    if ($validate->fails()) {
+        return redirect()->back()->withErrors($validate)->withInput();
+    }
+
     $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
 
     foreach ($categories as $cat) {
@@ -521,6 +584,23 @@ public function updateAttendanceAndWages(Request $request)
                 ]
             );
         }
+    }
+
+    // Check-out time & photo apply to all wage entries recorded for this site/date
+    if ($request->filled('time') || $request->hasFile('photo')) {
+        $checkOutUpdate = [];
+
+        if ($request->filled('time')) {
+            $checkOutUpdate['check_out_time'] = $request->time;
+        }
+
+        if ($request->hasFile('photo')) {
+            $checkOutUpdate['check_out_photo'] = $request->file('photo')->store('wages_checkout', 'public');
+        }
+
+        Wages::where('site_id', $request->site_id)
+            ->where('date', $request->date)
+            ->update($checkOutUpdate);
     }
 
     return redirect()->route('attendance', [

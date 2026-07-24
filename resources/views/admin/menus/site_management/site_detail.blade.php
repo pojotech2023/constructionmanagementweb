@@ -137,6 +137,32 @@
                     </div>
                 </div>
                 @endif
+                @if ($sharedMenuVisibility['purchase_bill'] ?? true)
+                <div class="col-6 col-sm-4 col-lg-2">
+                    <div class="card h-100 w-100 site-card" data-route="{{ route('purchaseBill.form', $site->id) }}" onclick="redirectToDetails(event, this)">
+                        <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                            <div class="h1">
+                                <img src="{{ asset('images/sri/po.png') }}" class="w-100">
+                            </div>
+                            <div class="text-muted">Purchase Bill</div>
+                        </div>
+
+                    </div>
+                </div>
+                @endif
+                @if ($sharedMenuVisibility['material_estimation'] ?? true)
+                <div class="col-6 col-sm-4 col-lg-2">
+                    <div class="card h-100 w-100 site-card" data-route="{{ route('materialEstimation.form', $site->id) }}" onclick="redirectToDetails(event, this)">
+                        <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                            <div class="h1">
+                                <img src="{{ asset('images/sri/estimate.png') }}" class="w-100">
+                            </div>
+                            <div class="text-muted">Material Estimation Request</div>
+                        </div>
+
+                    </div>
+                </div>
+                @endif
         </div>
     </div>
 

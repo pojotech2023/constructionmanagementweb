@@ -25,6 +25,32 @@ class SupervisorCreationController extends Controller
         return view('admin.menus.supervisor.user_create', compact('supervisors', 'modules'));
     }
 
+    public function locations()
+    {
+        $supervisors = User::whereHas('roles', function ($query) {
+            $query->where('role_name', 'Supervisor');
+        })->get();
+
+        $supervisorsForMap = $supervisors->map(function ($supervisor) {
+            return [
+                'name' => $supervisor->name,
+                'mobile_no' => $supervisor->mobile_no,
+                'lat' => $supervisor->latitude,
+                'lng' => $supervisor->longitude,
+                'updated' => $supervisor->location_updated_at ? $supervisor->location_updated_at->diffForHumans() : null,
+            ];
+        })->values();
+
+        return view('admin.menus.supervisor.locations', compact('supervisors', 'supervisorsForMap'));
+    }
+
+    public function location($id)
+    {
+        $supervisor = User::findOrFail($id);
+
+        return view('admin.menus.supervisor.location', compact('supervisor'));
+    }
+
     public function store(Request $request)
     {
         //dd($request->all());
@@ -149,6 +175,8 @@ class SupervisorCreationController extends Controller
                     'view_subcontractor'     => ['label' => 'SubContractor',        'parent' => 'view_site'],
                     'view_payment_status'    => ['label' => 'Payment Status',       'parent' => 'view_site'],
                     'view_sales_bill'        => ['label' => 'Sales Bill',           'parent' => 'view_site'],
+                    'view_purchase_bill'     => ['label' => 'Purchase Bill',        'parent' => 'view_site'],
+                    'view_material_estimation' => ['label' => 'Material Estimation Request', 'parent' => 'view_site'],
                     'view_checklist'         => ['label' => 'Checklist',            'parent' => 'view_site'],
                     'view_tickets'           => ['label' => 'Tickets',              'parent' => 'view_site'],
                     'view_drawing'           => ['label' => 'Drawing',              'parent' => 'view_site'],

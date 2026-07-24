@@ -137,6 +137,15 @@
                 </li>
                 @endif
 
+                @if ($sharedMenuVisibility['unit_master'] ?? true)
+                <li class="nav-item {{ request()->routeIs('unit.*') ? 'active' : '' }}">
+                    <a href="{{ route('unit.list') }}" class="collapsed" aria-expanded="false">
+                        <i class="bi bi-rulers"></i>
+                        <p>Unit Master</p>
+                    </a>
+                </li>
+                @endif
+
                 @if (session('role_name') == 'Admin')
                 <li class="nav-item {{ request()->routeIs('admin.control.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.control.index') }}" class="collapsed" aria-expanded="false">

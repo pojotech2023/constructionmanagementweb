@@ -74,13 +74,16 @@ class Setting extends Model
         'tickets' => 'Tickets',
         'drawing' => 'Drawing',
         'sales_bill' => 'Sales Bill',
+        'purchase_bill' => 'Purchase Bill',
+        'material_estimation' => 'Material Estimation Request',
+        'unit_master' => 'Unit Master',
     ];
 
     // Sub-items nested under a parent menu on the Admin Control screen.
     public const MENU_CHILDREN = [
         'site_management' => [
             'site_detail', 'export', 'attendance', 'materials',
-            'subcontractor_detail', 'payment_status', 'checklist', 'tickets', 'drawing', 'sales_bill',
+            'subcontractor_detail', 'payment_status', 'checklist', 'tickets', 'drawing', 'sales_bill', 'purchase_bill', 'material_estimation',
         ],
     ];
 
@@ -126,6 +129,37 @@ class Setting extends Model
         }
 
         self::setValue(self::MENU_VISIBILITY_KEY, json_encode($data));
+    }
+
+    public const HIDDEN_MATERIAL_TYPES_KEY = 'hidden_material_types';
+    public const HIDDEN_SUBCONTRACTOR_TYPES_KEY = 'hidden_subcontractor_types';
+
+    public static function getHiddenMaterialTypes(): array
+    {
+        return json_decode((string) self::getValue(self::HIDDEN_MATERIAL_TYPES_KEY, '[]'), true) ?: [];
+    }
+
+    public static function hideMaterialType(string $slug): void
+    {
+        $hidden = self::getHiddenMaterialTypes();
+        if (!in_array($slug, $hidden, true)) {
+            $hidden[] = $slug;
+        }
+        self::setValue(self::HIDDEN_MATERIAL_TYPES_KEY, json_encode($hidden));
+    }
+
+    public static function getHiddenSubcontractorTypes(): array
+    {
+        return json_decode((string) self::getValue(self::HIDDEN_SUBCONTRACTOR_TYPES_KEY, '[]'), true) ?: [];
+    }
+
+    public static function hideSubcontractorType(string $slug): void
+    {
+        $hidden = self::getHiddenSubcontractorTypes();
+        if (!in_array($slug, $hidden, true)) {
+            $hidden[] = $slug;
+        }
+        self::setValue(self::HIDDEN_SUBCONTRACTOR_TYPES_KEY, json_encode($hidden));
     }
 
     public static function getCurrentPlan(): array

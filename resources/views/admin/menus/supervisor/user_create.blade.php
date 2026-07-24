@@ -31,10 +31,15 @@
                                     </div>
                                 </form> --}}
                             </div>
-                            <button class="btn btn-primary btn-round ms-auto" id="addButton" data-bs-toggle="modal"
-                                data-bs-target="#addModal">
-                                <i class="fa fa-plus"></i> Add Supervisor
-                            </button>
+                            <div class="ms-auto d-flex align-items-center gap-2">
+                                <a href="{{ route('supervisor.locations') }}" class="btn btn-info btn-round">
+                                    <i class="fa fa-map-marked-alt"></i> View All Locations
+                                </a>
+                                <button class="btn btn-primary btn-round" id="addButton" data-bs-toggle="modal"
+                                    data-bs-target="#addModal">
+                                    <i class="fa fa-plus"></i> Add Supervisor
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Blade alert for success -->
@@ -87,6 +92,12 @@
                                                                 class="btn btn-link btn-success"
                                                                 title="Permissions">
                                                                 <i class="fa fa-key"></i>
+                                                            </a>
+                                                            <!-- Location Button -->
+                                                            <a href="{{ route('supervisor.location', $supervisor->id) }}"
+                                                                class="btn btn-link btn-info"
+                                                                title="View Location">
+                                                                <i class="fa fa-map-marker-alt"></i>
                                                             </a>
                                                             <!-- Delete Button -->
                                                             <button type="button"

@@ -25,7 +25,10 @@ class User extends Authenticatable
         'password',
         'image',
         'created_by',
-        'updated_by'
+        'updated_by',
+        'latitude',
+        'longitude',
+        'location_updated_at',
     ];
 
     /**
@@ -46,6 +49,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'location_updated_at' => 'datetime',
     ];
 
     public function roles()

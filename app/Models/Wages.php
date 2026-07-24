@@ -14,6 +14,10 @@ class Wages extends Model
         'category',
         'amount',
         'date',
+        'check_in_time',
+        'check_in_photo',
+        'check_out_time',
+        'check_out_photo',
         'created_by',
         'updated_by'
     ];

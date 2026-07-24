@@ -10,15 +10,20 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeviceTokenController;
 use App\Http\Controllers\Admin\Material\SandController;
 use App\Http\Controllers\Admin\MaterialController;
+use App\Http\Controllers\Admin\MaterialTypeController;
+use App\Http\Controllers\Admin\SubcontractorTypeController;
 use App\Http\Controllers\Admin\OtherUtilitiesController;
 use App\Http\Controllers\Admin\OtherUtilitiesSubController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\SalesBillController;
+use App\Http\Controllers\Admin\PurchaseBillController;
+use App\Http\Controllers\Admin\MaterialEstimationRequestController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\SubcontractorController;
 use App\Http\Controllers\Admin\SupervisorCreationController;
+use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\API\TicketController;
 use App\Http\Controllers\ChecklistController;
@@ -99,6 +104,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/customer-edit/{id}', [CustomerController::class, 'edit'])->name('customer.edit');
         Route::patch('/customer-update/{id}', [CustomerController::class, 'update'])->name('customer.update');
         Route::delete('/customer-delete/{id}', [CustomerController::class, 'delete'])->name('customer.delete');
+        Route::get('/customer-lookup', [CustomerController::class, 'lookupByMobile'])->name('customer.lookup');
 
         //Vendor Management
         Route::get('/vendor-management', [VendorController::class, 'index'])->name('vendor.list');
@@ -141,11 +147,19 @@ Route::prefix('admin')->group(function () {
         Route::delete('/supervisor-delete/{id}', [SupervisorCreationController::class, 'delete'])->name('supervisor.delete');
         Route::get('/supervisor-permissions/{id}', [SupervisorCreationController::class, 'getPermissions'])->name('supervisor.permissions.get');
         Route::post('/supervisor-permissions/{id}', [SupervisorCreationController::class, 'savePermissions'])->name('supervisor.permissions.save');
+        Route::get('/supervisor-locations', [SupervisorCreationController::class, 'locations'])->name('supervisor.locations');
+        Route::get('/supervisor-location/{id}', [SupervisorCreationController::class, 'location'])->name('supervisor.location');
 
         //Admin Control (sidebar / feature visibility toggles)
         Route::middleware(['checkUserRole:Admin'])->group(function () {
             Route::get('/admin-control', [AdminControlController::class, 'index'])->name('admin.control.index');
             Route::post('/admin-control', [AdminControlController::class, 'update'])->name('admin.control.update');
+
+            //Unit Master
+            Route::get('/unit-master', [UnitController::class, 'index'])->name('unit.list');
+            Route::post('/unit-add', [UnitController::class, 'store'])->name('unit.add');
+            Route::patch('/unit-update/{id}', [UnitController::class, 'update'])->name('unit.update');
+            Route::delete('/unit-delete/{id}', [UnitController::class, 'delete'])->name('unit.delete');
         });
 
         //Site Management
@@ -159,6 +173,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/site-detail/{id}/full-report', [SiteController::class, 'exportFullReport'])->name('site.full-report.export');
         Route::get('/sales-bill-form/{siteId}', [SalesBillController::class, 'getForm'])->name('salesBill.form');
         Route::post('/sales-bill-add', [SalesBillController::class, 'store'])->name('salesBill.add');
+        Route::get('/purchase-bill-form/{siteId}', [PurchaseBillController::class, 'getForm'])->name('purchaseBill.form');
+        Route::post('/purchase-bill-add', [PurchaseBillController::class, 'store'])->name('purchaseBill.add');
+        Route::get('/material-estimation-form/{siteId}', [MaterialEstimationRequestController::class, 'getForm'])->name('materialEstimation.form');
+        Route::post('/material-estimation-add', [MaterialEstimationRequestController::class, 'store'])->name('materialEstimation.add');
+        Route::patch('/material-estimation-update/{id}', [MaterialEstimationRequestController::class, 'update'])->name('materialEstimation.update');
+        Route::delete('/material-estimation-delete/{id}', [MaterialEstimationRequestController::class, 'delete'])->name('materialEstimation.delete');
         Route::get('/site-payment-detail/{id}', [SiteController::class, 'paymentDetail'])->name('site.paymentDetail');
         Route::post('/site-payment-add', [SiteController::class, 'addPayment'])->name('site.payment.add');
         Route::get('/site-payment-history/{id}', [SiteController::class, 'paymentHistory'])->name('site.payment.history');
@@ -200,12 +220,24 @@ Route::prefix('admin')->group(function () {
 
         Route::get('/material-requestForm/{siteId}/{materialType}', [MaterialController::class, 'getRequestForm'])->name('material.requestForm');
         Route::post('/request-order', [MaterialController::class, 'materialRequest'])->name('add.request');
+        Route::get('/material-request-list/{siteId}', [MaterialController::class, 'requestList'])->name('material.requestList');
+        Route::patch('/material-request-status/{id}', [MaterialController::class, 'updateRequestStatus'])->name('material.request.updateStatus');
 
         Route::get('/material-orderForm/{siteId}/{materialType}', [MaterialController::class, 'getOrderForm'])->name('material.orderForm');
         Route::post('/add-order', [MaterialController::class, 'materialOrder'])->name('add.order');
         Route::patch('/material-order-update/{id}', [MaterialController::class, 'updateOrder'])->name('material.updateOrder');
         Route::delete('/material-order-delete/{id}', [MaterialController::class, 'deleteOrder'])->name('material.deleteOrder');
         Route::get('/material-order/{id}/pdf', [MaterialController::class, 'orderPdf'])->name('material.order.pdf');
+
+        //Material Types (dynamic material categories)
+        Route::post('/material-type-add', [MaterialTypeController::class, 'store'])->name('materialType.add');
+        Route::delete('/material-type-delete/{id}', [MaterialTypeController::class, 'delete'])->name('materialType.delete');
+        Route::delete('/material-type-hide/{slug}', [MaterialTypeController::class, 'hideFixed'])->name('materialType.hideFixed');
+
+        //Subcontractor Types (dynamic subcontractor categories)
+        Route::post('/subcontractor-type-add', [SubcontractorTypeController::class, 'store'])->name('subcontractorType.add');
+        Route::delete('/subcontractor-type-delete/{id}', [SubcontractorTypeController::class, 'delete'])->name('subcontractorType.delete');
+        Route::delete('/subcontractor-type-hide/{slug}', [SubcontractorTypeController::class, 'hideFixed'])->name('subcontractorType.hideFixed');
 
         //Other Utilities
         Route::get('/site-utilities/{id}', [OtherUtilitiesController::class, 'index'])->name('site.utilities');

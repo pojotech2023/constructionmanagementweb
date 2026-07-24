@@ -59,17 +59,18 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
                 $order->price,
                 $order->vendor->name ?? '-',
                 $order->remarks ?? '-',
+                $order->image_url ?? '-',
             ];
         }
 
-        $this->rows[] = ['', '', '', 'Grand Total (₹)', $this->grandTotal, ''];
+        $this->rows[] = ['', '', '', 'Grand Total (₹)', $this->grandTotal, '', ''];
 
         return new Collection($this->rows);
     }
 
     public function headings(): array
     {
-        return ['Date', 'Material Type', 'Quantity', 'Price (₹)', 'Vendor', 'Remarks'];
+        return ['Date', 'Material Type', 'Quantity', 'Price (₹)', 'Vendor', 'Remarks', 'Image Link'];
     }
 
     public function map($row): array
@@ -83,22 +84,22 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                $sheet->mergeCells('A1:F1');
+                $sheet->mergeCells('A1:G1');
                 $sheet->setCellValue('A1', 'Material Report - ' . $this->siteName);
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
                 $sheet->getRowDimension(1)->setRowHeight(25);
 
-                $sheet->getStyle('A3:F3')->getFont()->setBold(true);
-                $sheet->getStyle('A3:F3')->getAlignment()->setHorizontal('center');
-                $sheet->getStyle('A3:F3')->getFill()
+                $sheet->getStyle('A3:G3')->getFont()->setBold(true);
+                $sheet->getStyle('A3:G3')->getAlignment()->setHorizontal('center');
+                $sheet->getStyle('A3:G3')->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('FFE5E5E5');
 
                 $highestRow = $sheet->getHighestRow();
                 $sheet->getStyle("D{$highestRow}:E{$highestRow}")->getFont()->setBold(true);
 
-                foreach (range('A', 'F') as $col) {
+                foreach (range('A', 'G') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
             },

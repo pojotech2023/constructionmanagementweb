@@ -140,6 +140,13 @@
             ⬇️ Download
         </a>
 
+        <!-- WhatsApp Share Button -->
+        <a href="#" class="btn btn-sm btn-success whatsappShareBtn"
+           data-url="{{ asset('storage/' . $drawing->file_path) }}"
+           data-name="{{ $drawing->file_name }}" title="Share on WhatsApp">
+            📤 WhatsApp
+        </a>
+
         <!-- Delete Button -->
         <form action="{{ route('drawings.destroy', $drawing->id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
             @csrf
@@ -168,6 +175,21 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', function (e) {
+                const shareBtn = e.target.closest('.whatsappShareBtn');
+                if (!shareBtn) return;
+
+                e.preventDefault();
+                const url = shareBtn.getAttribute('data-url');
+                const name = shareBtn.getAttribute('data-name') || 'Drawing';
+                const message = `Drawing: ${name}\n${url}`;
+                const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(message);
+                window.open(whatsappUrl, '_blank');
+            });
+        });
+    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

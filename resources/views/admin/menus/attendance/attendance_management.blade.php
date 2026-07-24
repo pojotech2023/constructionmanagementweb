@@ -124,11 +124,13 @@
                                     <th>{{ ucfirst($cat) }}</th>
                                 @endforeach
                                 <th>Total (₹)</th>
+                                <th class="text-center">Photos</th>
                                 <th class="text-center attendance-action-column">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($groupedByDate as $day)
+                                @php $photos = $dayPhotos[$day['date']] ?? null; @endphp
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($day['date'])->format('d-m-Y') }}</td>
                                     @foreach ($allCategories as $cat)
@@ -136,6 +138,37 @@
                                     @endforeach
                                     <td>
                                         ₹{{ $day['total'] }}
+                                    </td>
+                                    <td class="text-center">
+                                        @if ($photos && $photos['check_in_photo'])
+                                            <div class="attendance-photo-cell">
+                                                <a href="{{ asset('storage/' . $photos['check_in_photo']) }}" target="_blank" title="Check-in photo">
+                                                    <img src="{{ asset('storage/' . $photos['check_in_photo']) }}" class="attendance-photo-thumb" alt="Check-in">
+                                                </a>
+                                                @if ($photos['check_in_time'])
+                                                    <div class="attendance-photo-time">In: {{ \Carbon\Carbon::parse($photos['check_in_time'])->format('h:i A') }}</div>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        @if ($photos && $photos['check_out_photo'])
+                                            <div class="attendance-photo-cell">
+                                                <a href="{{ asset('storage/' . $photos['check_out_photo']) }}" target="_blank" title="Check-out photo">
+                                                    <img src="{{ asset('storage/' . $photos['check_out_photo']) }}" class="attendance-photo-thumb" alt="Check-out">
+                                                </a>
+                                                @if ($photos['check_out_time'])
+                                                    <div class="attendance-photo-time">Out: {{ \Carbon\Carbon::parse($photos['check_out_time'])->format('h:i A') }}</div>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        @if ($photos && !$photos['check_in_photo'] && $photos['check_in_time'])
+                                            <div class="attendance-photo-time">In: {{ \Carbon\Carbon::parse($photos['check_in_time'])->format('h:i A') }}</div>
+                                        @endif
+                                        @if ($photos && !$photos['check_out_photo'] && $photos['check_out_time'])
+                                            <div class="attendance-photo-time">Out: {{ \Carbon\Carbon::parse($photos['check_out_time'])->format('h:i A') }}</div>
+                                        @endif
+                                        @if (!$photos || (!$photos['check_in_photo'] && !$photos['check_out_photo'] && !$photos['check_in_time'] && !$photos['check_out_time']))
+                                            <span class="text-muted">--</span>
+                                        @endif
                                     </td>
                                     <td class="text-center attendance-action-column">
                                         <div class="attendance-action-group">
@@ -174,6 +207,37 @@
 
                 {{-- DAILY VIEW --}}
                 @else
+                @php $dailyPhotos = !empty($date) ? ($dayPhotos[$date] ?? null) : null; @endphp
+                @if ($dailyPhotos && ($dailyPhotos['check_in_photo'] || $dailyPhotos['check_out_photo'] || $dailyPhotos['check_in_time'] || $dailyPhotos['check_out_time']))
+                    <div class="d-flex gap-4 mb-3">
+                        @if ($dailyPhotos['check_in_photo'] || $dailyPhotos['check_in_time'])
+                            <div class="text-center">
+                                <div class="small text-muted mb-1">Check-in</div>
+                                @if ($dailyPhotos['check_in_photo'])
+                                    <a href="{{ asset('storage/' . $dailyPhotos['check_in_photo']) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $dailyPhotos['check_in_photo']) }}" class="attendance-photo-thumb-lg" alt="Check-in">
+                                    </a>
+                                @endif
+                                @if ($dailyPhotos['check_in_time'])
+                                    <div class="attendance-photo-time">{{ \Carbon\Carbon::parse($dailyPhotos['check_in_time'])->format('h:i A') }}</div>
+                                @endif
+                            </div>
+                        @endif
+                        @if ($dailyPhotos['check_out_photo'] || $dailyPhotos['check_out_time'])
+                            <div class="text-center">
+                                <div class="small text-muted mb-1">Check-out</div>
+                                @if ($dailyPhotos['check_out_photo'])
+                                    <a href="{{ asset('storage/' . $dailyPhotos['check_out_photo']) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $dailyPhotos['check_out_photo']) }}" class="attendance-photo-thumb-lg" alt="Check-out">
+                                    </a>
+                                @endif
+                                @if ($dailyPhotos['check_out_time'])
+                                    <div class="attendance-photo-time">{{ \Carbon\Carbon::parse($dailyPhotos['check_out_time'])->format('h:i A') }}</div>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                @endif
                 <div class="row">
                     @foreach ($attendances as $attendance)
                         @php
@@ -634,6 +698,37 @@
 
 .attendance-grand-total-card h3 {
     font-size: 24px;
+}
+
+.attendance-photo-thumb {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    margin: 0 2px;
+}
+
+.attendance-photo-thumb-lg {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.attendance-photo-cell {
+    display: inline-block;
+    text-align: center;
+    margin: 0 4px;
+    vertical-align: top;
+}
+
+.attendance-photo-time {
+    font-size: 11px;
+    color: #475569;
+    margin-top: 2px;
+    white-space: nowrap;
 }
 
     </style>

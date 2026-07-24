@@ -100,6 +100,16 @@
                         </div>
                     </div>
 
+                    <hr class="mt-3 mb-3">
+
+                    <div class="row mt-2">
+                        <div class="col-md-2 fw-bold">Terms &amp; Conditions</div>
+                        <div class="col-md-8">
+                            <textarea name="terms_conditions" class="form-control" rows="4" placeholder="Enter terms &amp; conditions to include in the PDF (optional)">{{ old('terms_conditions') }}</textarea>
+                            @error('terms_conditions') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
                     <div class="row align-items-center mt-4 g-3 sales-bill-action-row">
                         <div class="col-md-4 text-start">
                             <button type="button" class="btn btn-primary sales-bill-action-btn" id="whatsappButton">Send WhatsApp</button>
@@ -184,7 +194,7 @@ $(document).ready(function () {
         $('#loadingSpinner').removeClass('d-none');
 
         const form = $('#salesBillForm');
-        const formData = form.serialize();
+        const formData = form.serialize() + '&action=' + encodeURIComponent(action);
 
         $.ajax({
             url: form.attr('action'),

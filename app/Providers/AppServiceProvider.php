@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\MaterialType;
 use App\Models\Setting;
 use App\Models\Site;
+use App\Models\SubcontractorType;
+use App\Models\Unit;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,6 +38,11 @@ class AppServiceProvider extends ServiceProvider
                 'sharedCurrentPlanName' => $currentPlan['name'],
                 'sharedCurrentPlanKey' => $currentPlan['key'],
                 'sharedMenuVisibility' => Setting::getMenuVisibility(),
+                'sharedUnits' => Unit::orderBy('name')->pluck('name'),
+                'sharedMaterialTypes' => MaterialType::orderBy('name')->get(),
+                'sharedSubcontractorTypes' => SubcontractorType::orderBy('name')->get(),
+                'sharedHiddenMaterialTypes' => Setting::getHiddenMaterialTypes(),
+                'sharedHiddenSubcontractorTypes' => Setting::getHiddenSubcontractorTypes(),
             ]);
         });
     }

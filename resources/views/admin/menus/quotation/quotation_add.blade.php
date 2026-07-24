@@ -113,12 +113,9 @@
                                 </div>
                                 <div class="col-md-2">
                                     <select name="unit[]" class="form-control unit">
-                                        <option value="sqft" {{ $item[3] == 'sqft' ? 'selected' : '' }}>sqft</option>
-                                        <option value="Cft" {{ $item[3] == 'Cft' ? 'selected' : '' }}>Cft</option>
-                                        <option value="Lit" {{ $item[3] == 'Lit' ? 'selected' : '' }}>Lit</option>
-                                        <option value="Nos" {{ $item[3] == 'Nos' ? 'selected' : '' }}>Nos</option>
-                                        <option value="Rft" {{ $item[3] == 'Rft' ? 'selected' : '' }}>Rft</option>
-                                        <option value="Ls" {{ $item[3] == 'Ls' ? 'selected' : '' }}>Ls</option>
+                                        @foreach ($sharedUnits as $unitOption)
+                                            <option value="{{ $unitOption }}" {{ $item[3] == $unitOption ? 'selected' : '' }}>{{ $unitOption }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-2">
@@ -283,12 +280,9 @@ $(document).ready(function () {
     </div>
     <div class="col-md-2">
         <select name="unit[]" class="form-control unit">
-            <option value="sqft">sqft</option>
-            <option value="Cft">Cft</option>
-            <option value="Lit">Lit</option>
-            <option value="Nos">Nos</option>
-            <option value="Rft">Rft</option>
-            <option value="Ls">Ls</option>
+            @foreach ($sharedUnits as $unitOption)
+                <option value="{{ $unitOption }}">{{ $unitOption }}</option>
+            @endforeach
         </select>
     </div>
     <div class="col-md-2">

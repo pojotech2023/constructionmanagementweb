@@ -27,6 +27,7 @@
       "item": [
         { "name": "Send Notification", "request": { "method": "POST", "auth": {"type": "noauth"}, "url": "{{base_url}}/send-notification" } },
         { "name": "Save Device Token", "request": { "method": "POST", "url": "{{base_url}}/save-device-token" } },
+        { "name": "Save Location (Supervisor GPS)", "request": { "method": "POST", "url": "{{base_url}}/save-location", "body": {"mode": "urlencoded", "urlencoded": [{"key":"latitude","value":""},{"key":"longitude","value":""}]} } },
         { "name": "Test", "request": { "method": "GET", "auth": {"type": "noauth"}, "url": "{{base_url}}/test" } }
       ]
     },
@@ -85,6 +86,7 @@
         { "name": "Material Detail (Site)", "request": { "method": "GET", "url": "{{base_url}}/material-detail/:siteId" } },
         { "name": "Material Data (Bricks/Sand List)", "request": { "method": "POST", "url": "{{base_url}}/material/:siteId/:materialType" } },
         { "name": "Material Request (Add Request)", "request": { "method": "POST", "url": "{{base_url}}/request-order" } },
+        { "name": "My Material Requests (Supervisor status view)", "request": { "method": "GET", "url": "{{base_url}}/my-material-requests/:siteId" } },
         { "name": "Add Material Order", "request": { "method": "POST", "url": "{{base_url}}/add-order" } },
         { "name": "Materials Unit List", "request": { "method": "GET", "url": "{{base_url}}/materials-unit" } },
         { "name": "Material Export", "request": { "method": "GET", "url": "{{base_url}}/material-export" } },
@@ -100,8 +102,12 @@
         { "name": "Add Utility", "request": { "method": "POST", "url": "{{base_url}}/utilities-add" } },
         { "name": "Update Utility", "request": { "method": "POST", "url": "{{base_url}}/update-utility/:id" } },
         { "name": "Delete Utility", "request": { "method": "DELETE", "url": "{{base_url}}/utility-delete/:id" } },
+        { "name": "Export Utilities", "request": { "method": "GET", "url": "{{base_url}}/site-utilities/:id/export" } },
         { "name": "Site Sub-Utilities List", "request": { "method": "GET", "url": "{{base_url}}/site-subutilities/:id" } },
-        { "name": "Add Sub-Utility", "request": { "method": "POST", "url": "{{base_url}}/subutilities-add" } }
+        { "name": "Add Sub-Utility", "request": { "method": "POST", "url": "{{base_url}}/subutilities-add" } },
+        { "name": "Update Sub-Utility", "request": { "method": "POST", "url": "{{base_url}}/update-subutility/:id" } },
+        { "name": "Delete Sub-Utility", "request": { "method": "DELETE", "url": "{{base_url}}/subutility-delete/:id" } },
+        { "name": "Export Sub-Utilities", "request": { "method": "GET", "url": "{{base_url}}/site-subutilities/:id/export" } }
       ]
     },
     {
@@ -147,6 +153,7 @@
         { "name": "Update Supervisor", "request": { "method": "POST", "url": "{{base_url}}/supervisor-update" } },
         { "name": "Delete Supervisor", "request": { "method": "DELETE", "url": "{{base_url}}/supervisor-delete/:id" } },
         { "name": "Get Supervisor Permissions", "request": { "method": "GET", "url": "{{base_url}}/supervisor-permissions/:id" } },
+        { "name": "Get Supervisor Sites", "request": { "method": "GET", "url": "{{base_url}}/supervisor-sites/:id" } },
         { "name": "Supervisor Checklist (Site)", "request": { "method": "GET", "auth": {"type": "noauth"}, "url": "{{base_url}}/supervisor/checklists/:siteId" } }
       ]
     },
@@ -206,6 +213,7 @@
       "name": "Checklist",
       "item": [
         { "name": "Admin Update Task", "request": { "method": "POST", "url": "{{base_url}}/admin/task/update" } },
+        { "name": "Add Checklist", "request": { "method": "POST", "url": "{{base_url}}/checklist-add" } },
         { "name": "Get Checklist For Site", "request": { "method": "GET", "auth": {"type": "noauth"}, "url": "{{base_url}}/checklists/:siteId" } },
         { "name": "Store Task Media", "request": { "method": "POST", "auth": {"type": "noauth"}, "url": "{{base_url}}/task-media/store" } },
         { "name": "Admin/Supervisor Remarks (Task Media)", "request": { "method": "GET", "auth": {"type": "noauth"}, "url": "{{base_url}}/checklist-admin-supervisor-remarks" } }

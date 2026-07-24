@@ -18,6 +18,7 @@ class SalesBill extends Model
         'date',
         'location',
         'total_amount',
+        'terms_conditions',
         'created_by',
         'updated_by',
     ];

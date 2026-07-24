@@ -31,8 +31,10 @@
                         </li>
                     </ul>
                 </div>
-                
-                
+
+                <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addSubcontractorTypeModal">
+                    <i class="fa fa-plus me-1"></i> Add SubContractor
+                </button>
             </div>
             <div class="row">
                 <!-- Blade alert for success -->
@@ -44,10 +46,12 @@
                     {{ session()->forget('success') }} {{-- Clear session --}}
                 @endif
 
+                @unless(in_array('plumber', $sharedHiddenSubcontractorTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <div class="card h-100 w-100  site-card"
+                    <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'plumber']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="plumber" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/plumber.jpg') }}" class="w-75">
@@ -58,10 +62,13 @@
                         </div>
                     </div>
                 </div>
+@endunless
+                @unless(in_array('electrician', $sharedHiddenSubcontractorTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <div class="card h-100 w-100 site-card"
+                    <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'electrician']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="electrician" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/electrician.webp') }}" class="w-75">
@@ -72,11 +79,14 @@
                         </div>
                     </div>
                 </div>
+@endunless
 
+                @unless(in_array('painter', $sharedHiddenSubcontractorTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <div class="card h-100 w-100 site-card"
+                    <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'painter']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="painter" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/painting.jpg') }}" class="w-75">
@@ -87,10 +97,13 @@
                         </div>
                     </div>
                 </div>
+@endunless
+                @unless(in_array('welder', $sharedHiddenSubcontractorTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <div class="card h-100 w-100 site-card"
+                    <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'welder']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="welder" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/welding.jpg') }}" class="w-75">
@@ -101,11 +114,14 @@
                         </div>
                     </div>
                 </div>
+@endunless
 
+                @unless(in_array('tileslayer', $sharedHiddenSubcontractorTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <div class="card h-100 w-100 site-card"
+                    <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'tileslayer']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="tileslayer" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/tileslayer.jpg') }}" class="w-75">
@@ -117,10 +133,13 @@
                         </div>
                     </div>
                 </div>
+@endunless
+                @unless(in_array('granitelayer', $sharedHiddenSubcontractorTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <div class="card h-100 w-100 site-card"
+                    <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'granitelayer']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="granitelayer" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1">
                                 <img src="{{ asset('images/sri/granitelayer.jpeg') }}" class="w-75">
@@ -131,12 +150,15 @@
                         </div>
                     </div>
                 </div>
+@endunless
 
                 <div class="row mt-5">
+                    @unless(in_array('sswelder', $sharedHiddenSubcontractorTypes))
                     <div class="col-6 col-sm-4 col-lg-2">
-                        <div class="card h-100 w-100 site-card"
+                        <div class="card h-100 w-100 site-card position-relative"
                             data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'sswelder']) }}"
                             onclick="redirectToDetails(event, this)">
+                            <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="sswelder" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                             <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                 <div class="h1 m-0">
                                     <img src="{{ asset('images/sri/welding.jpg') }}" class="w-75">
@@ -147,10 +169,13 @@
                             </div>
                         </div>
                     </div>
+@endunless
+                    @unless(in_array('carpenter', $sharedHiddenSubcontractorTypes))
                     <div class="col-6 col-sm-4 col-lg-2">
-                        <div class="card h-100 w-100 site-card"
+                        <div class="card h-100 w-100 site-card position-relative"
                             data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'carpenter']) }}"
                             onclick="redirectToDetails(event, this)">
+                            <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="carpenter" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                             <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                 <div class="h1 m-0">
                                     <img src="{{ asset('images/sri/carpenter.jpg') }}" class="w-75">
@@ -161,10 +186,13 @@
                             </div>
                         </div>
                     </div>
+@endunless
+                    @unless(in_array('centeringworks', $sharedHiddenSubcontractorTypes))
                     <div class="col-6 col-sm-4 col-lg-2">
-                        <div class="card h-100 w-100 site-card"
+                        <div class="card h-100 w-100 site-card position-relative"
                             data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'centeringworks']) }}"
                             onclick="redirectToDetails(event, this)">
+                            <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="centeringworks" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                             <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                 <div class="h1 m-0">
                                     <img src="{{ asset('images/sri/tiles.jpg') }}" class="w-75">
@@ -175,10 +203,13 @@
                             </div>
                         </div>
                     </div>
+@endunless
+                    @unless(in_array('masonworks', $sharedHiddenSubcontractorTypes))
                     <div class="col-6 col-sm-4 col-lg-2">
-                        <div class="card h-100 w-100 site-card"
+                        <div class="card h-100 w-100 site-card position-relative"
                             data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'masonworks']) }}"
                             onclick="redirectToDetails(event, this)">
+                            <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="masonworks" data-module="subcontractor" title="Remove from grid"><i class="fa fa-times"></i></button>
                             <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                 <div class="h1 m-0">
                                     <img src="{{ asset('images/sri/masonworks.jpg') }}" class="w-75">
@@ -189,6 +220,7 @@
                             </div>
                         </div>
                     </div>
+@endunless
                     <div class="col-6 col-sm-4 col-lg-2">
                         <div class="card h-100 w-100 site-card"
                             data-route="{{ route('subcontractor.pettyCash', ['siteId' => $site->id]) }}"
@@ -215,11 +247,34 @@
                             </div>
                         </div>
                     </div>
+
+                    @foreach ($sharedSubcontractorTypes as $subcontractorType)
+                        <div class="col-6 col-sm-4 col-lg-2">
+                            <div class="card h-100 w-100 site-card position-relative"
+                                data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => $subcontractorType->slug]) }}"
+                                onclick="redirectToDetails(event, this)">
+                                <button type="button"
+                                    class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 deleteSubcontractorTypeBtn"
+                                    style="z-index: 2;" data-id="{{ $subcontractorType->id }}"
+                                    title="Remove subcontractor type">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                                <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                    <div class="h1 m-0">
+                                        <img src="{{ asset('storage/' . $subcontractorType->image) }}" class="w-75">
+                                    </div>
+                                    <div class="text-muted">{{ $subcontractorType->name }}</div>
+                                    <div class="text-success fw-bold">Total Amount -
+                                        {{ $subcontractors[$subcontractorType->slug]['totalAmounts'] ?? 0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
 
-                <div class="row justify-content-center mt-4" id="addButton" data-bs-toggle="modal"
-                    data-bs-target="#addModal" data-site-id="{{ $site->id }}" style="cursor: pointer;">
-                    <div class="col-12 col-md-8 col-lg-6">
+                <div class="row justify-content-center mt-4 g-3">
+                    <div class="col-12 col-md-4 col-lg-3" id="addButton" data-bs-toggle="modal"
+                        data-bs-target="#addModal" data-site-id="{{ $site->id }}" style="cursor: pointer;">
                         <div class="card border border-primary shadow" style="min-height: 140px;">
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -233,6 +288,89 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Subcontractor Type Modal -->
+        <div class="modal fade" id="addSubcontractorTypeModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="{{ route('subcontractorType.add') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add SubContractor Type</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="subcontractorTypeName">SubContractor Name</label>
+                                <input type="text" name="name" id="subcontractorTypeName" class="form-control"
+                                    placeholder="e.g. Flooring" required>
+                                @error('name')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="form-group mt-3">
+                                <label for="subcontractorTypeImage">Image</label>
+                                <input type="file" name="image" id="subcontractorTypeImage" class="form-control"
+                                    accept=".jpg,.jpeg,.png,.webp" required>
+                                @error('image')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remove Fixed Subcontractor Card Confirm Modal -->
+        <div class="modal fade" id="removeFixedSubcontractorModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Remove</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to remove this card from the grid? This only hides the card; existing records remain and it can be brought back by an admin later.
+                    </div>
+                    <div class="modal-footer">
+                        <form id="removeFixedSubcontractorForm" action="" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Yes, Remove</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Subcontractor Type Confirm Modal -->
+        <div class="modal fade" id="deleteSubcontractorTypeModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to remove this subcontractor type? Existing records under it will remain.
+                    </div>
+                    <div class="modal-footer">
+                        <form id="deleteSubcontractorTypeForm" action="" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Yes, Remove</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -377,6 +515,28 @@
                         successAlert.classList.remove("show");
                     }, 500);
                 }
+
+                // Delete a dynamically-added subcontractor type
+                document.querySelectorAll('.deleteSubcontractorTypeBtn').forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const id = this.getAttribute('data-id');
+                        const action = "{{ route('subcontractorType.delete', ':id') }}".replace(':id', id);
+                        document.getElementById('deleteSubcontractorTypeForm').setAttribute('action', action);
+                        new bootstrap.Modal(document.getElementById('deleteSubcontractorTypeModal')).show();
+                    });
+                });
+
+                // Remove a fixed (built-in) subcontractor card from the grid
+                document.querySelectorAll('.fixedRemoveBtn').forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const slug = this.getAttribute('data-slug');
+                        const action = "{{ route('subcontractorType.hideFixed', ':slug') }}".replace(':slug', slug);
+                        document.getElementById('removeFixedSubcontractorForm').setAttribute('action', action);
+                        new bootstrap.Modal(document.getElementById('removeFixedSubcontractorModal')).show();
+                    });
+                });
             });
         </script>
         <style>

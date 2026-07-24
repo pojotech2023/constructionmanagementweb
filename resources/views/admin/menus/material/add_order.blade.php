@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-10 d-flex justify-content-center">
-                <h3 class="pb-4 mt-3 mb-0">Add {{ ucfirst($materialType) }} Order</h3>
+                <h3 class="pb-4 mt-3 mb-0">Inward {{ ucfirst($materialType) }} Order</h3>
             </div>
             
         </div>
@@ -185,10 +185,26 @@
                             </div>
                         </div>
 
+                        <div class="row align-items-center mt-5">
+                            <div class="col-lg-2">
+                                <div class="form-group">
+                                    <label for="attachment">Upload Image</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <input type="file" name="attachment" id="attachment" class="form-control" accept="image/*,.pdf">
+                                </div>
+                                @error('attachment')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
                         <div class="row justify-content-center mt-4">
                             <div class="col-lg-4">
                                 <div class="form-group text-center">
-                                    <button type="submit" class="btn btn-primary w-100">Add Order</button>
+                                    <button type="submit" class="btn btn-primary w-100">Inward Order</button>
                                 </div>
                             </div>
                         </div>
@@ -348,6 +364,8 @@
 
         function loadUnitField(materialType) {
             let html = '';
+            let unitOptions = '<option value="">Select Unit</option>' +
+                `@foreach ($sharedUnits as $unitOption)<option value="{{ $unitOption }}">{{ $unitOption }}</option>@endforeach`;
 
             switch (materialType) {
                 case 'bricks':
@@ -369,13 +387,7 @@
                     <label class="fw-bold">Inch</label>
                 </div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="4">4</option>
-                        <option value="6">6</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
                     break;
@@ -385,15 +397,7 @@
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                       <option value="">Select Unit</option>
-                        <option value="Units">Units</option>
-                        <option value="Kg">Kg</option>
-                         <option value="Ton">Ton</option>
-                         <option value="Size">Size</option>
-                        <option value="Inch">Inch</option>
-                        <option value="Dia">Dia</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
                     break;
@@ -401,15 +405,7 @@
                 case 'electricalwire':
                 case 'plumber':
                 case 'painting':
-                    html = `
-            <div class="row align-items-center mt-5">
-                <div class="col-lg-2">
-                    <label class="fw-bold">File Attachment</label>
-                </div>
-                <div class="col-md-4">
-                    <input type="file" name="attachment" id="attachment" class="form-control">
-                </div>
-            </div>`;
+                    html = '';
                     break;
 
                 case 'rmc':
@@ -417,10 +413,7 @@
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="M Cube">M Cube</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
                     break;
@@ -430,15 +423,7 @@
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="CFT">CFT</option>
-                        <option value="Tons">Tons</option>
-                        <option value="20mm">20mm</option>
-                        <option value="40mm">40mm</option>
-                         <option value="m sand">m sand</option>
-                        <option value="p sand">p sand</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
                     break;
@@ -448,10 +433,7 @@
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="In Bags">In Bags</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
                     break;
@@ -461,20 +443,7 @@
             <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="Load">Load</option>
-                        <option value="Pack">Pack</option>
-                        <option value="Ltr">Ltr</option>
-                        <option value="Kg">Kg</option>
-                        <option value="Pieces">Pieces</option>
-                        <option value="M Cube">M Cube</option>
-                        <option value="CFT">CFT</option>
-                        <option value="Unit">Unit</option>
-                        <option value="Bag">Bag</option>
-                        <option value="Tons">Tons</option>
-                        <option value="Numbers">Numbers</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
                     break;
@@ -483,20 +452,7 @@
                     html = ` <div class="row align-items-center mt-5">
                 <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
                 <div class="col-md-4">
-                    <select class="form-select" name="unit" id="unit">
-                        <option value="">Select Unit</option>
-                        <option value="Load">Load</option>
-                        <option value="Pack">Pack</option>
-                        <option value="Ltr">Ltr</option>
-                        <option value="Kg">Kg</option>
-                        <option value="Pieces">Pieces</option>
-                        <option value="M Cube">M Cube</option>
-                        <option value="CFT">CFT</option>
-                        <option value="Unit">Unit</option>
-                        <option value="Bag">Bag</option>
-                        <option value="Tons">Tons</option>
-                        <option value="Numbers">Numbers</option>
-                    </select>
+                    <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
             }

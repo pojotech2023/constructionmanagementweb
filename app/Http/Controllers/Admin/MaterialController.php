@@ -220,7 +220,7 @@ class MaterialController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $columns = ['Date', 'Quantity', 'Vendor', 'Price', 'Material Type'];
+        $columns = ['Date', 'Quantity', 'Vendor', 'Price', 'Material Type', 'Image Link'];
 
         $callback = function () use ($materials, $columns) {
             $file = fopen('php://output', 'w');
@@ -232,6 +232,7 @@ class MaterialController extends Controller
                     optional($m->vendor)->name,
                     $m->price,
                     $m->material_type,
+                    $m->image_url ?? '',
                 ]);
             }
             fclose($file);
@@ -292,6 +293,7 @@ public function materialRequest(Request $request)
         'price'             => $request->price,
         'items'             =>$request->items,
         'created_by'          => auth('admin')->id(),
+        'source'              => MaterialRequest::SOURCE_ADMIN,
     ]);
 
     // ✅ WhatsApp message (full info even if not stored)
@@ -322,6 +324,45 @@ public function materialRequest(Request $request)
     ]);
 }
 
+    // View all material requests submitted for a site (supervisor mobile submissions included)
+    public function requestList($siteId)
+    {
+        $site = Site::findOrFail($siteId);
+
+        $requests = MaterialRequest::with('vendor')
+            ->where('site_id', $siteId)
+            ->where('source', MaterialRequest::SOURCE_SUPERVISOR)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.menus.material.request_list', compact('site', 'requests'));
+    }
+
+    // Approve or reject a supervisor-submitted material request
+    public function updateRequestStatus(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'status' => 'required|in:approved,rejected',
+            'admin_remark' => 'nullable|string',
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+        $materialRequest = MaterialRequest::findOrFail($id);
+
+        $materialRequest->update([
+            'status' => $request->status === 'approved'
+                ? MaterialRequest::STATUS_APPROVED
+                : MaterialRequest::STATUS_REJECTED,
+            'admin_remark' => $request->status === 'rejected' ? $request->admin_remark : null,
+            'reviewed_at' => now(),
+            'updated_by' => auth('admin')->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Request ' . $request->status . ' successfully.');
+    }
 
     // Material get order form
     public function getOrderForm($siteId, $materialType)
@@ -487,6 +528,7 @@ public function materialRequest(Request $request)
             'quantity' => 'required|numeric',
             'price' => 'required|numeric',
             'gst' => 'nullable|numeric',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         if ($validate->fails()) {
@@ -494,12 +536,20 @@ public function materialRequest(Request $request)
         }
 
         $order = MaterialOrder::findOrFail($id);
-        $order->update([
+
+        $updateData = [
             'date' => $request->date,
             'quantity' => $request->quantity,
             'price' => $request->price,
             'gst' => $request->gst,
-        ]);
+        ];
+
+        if ($request->hasFile('attachment')) {
+            $path = $request->file('attachment')->store('material_attachments', 'public');
+            $updateData['image_url'] = asset('storage/' . $path);
+        }
+
+        $order->update($updateData);
 
         return redirect()->back()->with('success', 'Material order updated successfully.');
     }

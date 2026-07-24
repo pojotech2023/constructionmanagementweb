@@ -82,17 +82,26 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
             $total = $attendance->count * $amount;
             $this->grandTotal += $total;
 
+            $dayWage = Wages::where('site_id', $attendance->site_id)
+                ->where('date', $attendance->date)
+                ->first();
+
+            $checkInPhoto = $dayWage && $dayWage->check_in_photo ? asset('storage/' . $dayWage->check_in_photo) : '-';
+            $checkOutPhoto = $dayWage && $dayWage->check_out_photo ? asset('storage/' . $dayWage->check_out_photo) : '-';
+
             $this->rows[] = [
                 Carbon::parse($attendance->date)->format('d-m-Y'),
                 ucfirst($attendance->category),
                 $attendance->count,
                 $amount,
                 $total,
+                $checkInPhoto,
+                $checkOutPhoto,
             ];
         }
 
         // Add grand total row
-        $this->rows[] = ['', '', '', 'Grand Total (₹)', $this->grandTotal];
+        $this->rows[] = ['', '', '', 'Grand Total (₹)', $this->grandTotal, '', ''];
 
         return new Collection($this->rows);
     }
@@ -105,6 +114,8 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
             'Count',
             'Wage (₹)',
             'Total Amount (₹)',
+            'Check-in Photo Link',
+            'Check-out Photo Link',
         ];
     }
 
@@ -120,7 +131,7 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
                 $sheet = $event->sheet->getDelegate();
 
                 // 1️⃣ Merge and center the site name title in the first row
-                $sheet->mergeCells('A1:E1');
+                $sheet->mergeCells('A1:G1');
                 $sheet->setCellValue('A1', 'Attendance Details - ' . $this->siteName);
 
                 // Apply styling for the title
@@ -132,9 +143,9 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
                 $sheet->getRowDimension(1)->setRowHeight(25);
 
                 // 2️⃣ Style header row
-                $sheet->getStyle('A3:E3')->getFont()->setBold(true);
-                $sheet->getStyle('A3:E3')->getAlignment()->setHorizontal('center');
-                $sheet->getStyle('A3:E3')->getFill()
+                $sheet->getStyle('A3:G3')->getFont()->setBold(true);
+                $sheet->getStyle('A3:G3')->getAlignment()->setHorizontal('center');
+                $sheet->getStyle('A3:G3')->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('FFE5E5E5'); // light gray
 
@@ -144,7 +155,7 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
                 $sheet->getStyle("D{$highestRow}:E{$highestRow}")->getAlignment()->setHorizontal('right');
 
                 // 4️⃣ Auto-size all columns
-                foreach (range('A', 'E') as $col) {
+                foreach (range('A', 'G') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
             },

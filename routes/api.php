@@ -8,6 +8,7 @@ use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\DeviceTokenController;
 use App\Http\Controllers\API\GenerateQuotationController;
+use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\MaterialController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OtherUtilitiesController;
@@ -58,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
   //Device Token Store
   Route::post('/save-device-token', [DeviceTokenController::class, 'store']);
 
+  //Supervisor Location (mobile app reports current GPS position)
+  Route::post('/save-location', [LocationController::class, 'store']);
+
   //Sites
   Route::get('/site-management', [SiteController::class, 'index']);
  
@@ -83,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/material-detail/{siteId}', [MaterialController::class, 'getMaterial']); //material quantity & vlaues
   Route::post('/material/{siteId}/{materialType}', [MaterialController::class, 'materialData']); //bricks, sand list
   Route::post('/request-order', [MaterialController::class, 'materialRequest']); //add request
+  Route::get('/my-material-requests/{siteId}', [MaterialController::class, 'myRequests']); //supervisor: view own request statuses
   Route::post('/add-order', [MaterialController::class, 'materialOrder']);    // add order
   Route::get('/materials-unit', [MaterialController::class, 'index']);
   Route::get('/material-export', [MaterialController::class, 'exportMaterial']);

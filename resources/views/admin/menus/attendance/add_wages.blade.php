@@ -24,19 +24,26 @@
                         {{ session()->forget('success') }}
                     @endif
 
-                    <form id="requestForm" action="{{ route('add.wages') }}" method="POST" class="container">
+                    <form id="requestForm" action="{{ route('add.wages') }}" method="POST" class="container" enctype="multipart/form-data">
                         @csrf
 
                         <input type="hidden" name="site_id" value="{{ $siteId }}">
 
-                        <!-- Single Date for all rows -->
+                        <!-- Single Date & Check-in Time for all rows -->
                         <div class="row mt-3">
                             <div class="col-md-12 text-end">
-                                <div class="form-group">
+                                <div class="form-group d-inline-block me-3">
                                     <label for="todayDate" class="fw-bold">Date</label>
                                     <input type="date" id="todayDate" class="form-control w-auto d-inline-block" name="date" value="{{ old('date') }}" required>
                                 </div>
+                                <div class="form-group d-inline-block">
+                                    <label for="checkInTime" class="fw-bold">Time (Check-in)</label>
+                                    <input type="time" id="checkInTime" class="form-control w-auto d-inline-block" name="time" value="{{ old('time') }}">
+                                </div>
                                 @error('date')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                                @error('time')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -91,6 +98,19 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Upload Photo -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="checkInPhoto" class="fw-bold">Upload Photo (Check-in)</label>
+                                    <input type="file" id="checkInPhoto" name="photo" class="form-control" accept="image/*">
+                                </div>
+                                @error('photo')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         <!-- Submit -->

@@ -232,6 +232,48 @@
                                         </div>
                                     </div>
 
+                                    <!-- New / Existing Customer -->
+                                    <div class="row align-items-center mt-5">
+                                        <div class="col-lg-2">
+                                            <div class="form-group">
+                                                <label>Customer Type</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-10">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="customer_type"
+                                                    id="customer_type_new" value="new" checked>
+                                                <label class="form-check-label" for="customer_type_new">New Customer</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="customer_type"
+                                                    id="customer_type_existing" value="existing">
+                                                <label class="form-check-label" for="customer_type_existing">Existing Customer</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Existing Customer Lookup -->
+                                    <div class="row align-items-center mt-3 d-none" id="existingCustomerLookup">
+                                        <div class="col-lg-2">
+                                            <div class="form-group">
+                                                <label for="lookup_mobile_no">Search by Mobile Number</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="form-group d-flex">
+                                                <input type="text" id="lookup_mobile_no" class="form-control"
+                                                    maxlength="10" minlength="10" pattern="\d{10}"
+                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
+                                                    placeholder="Enter 10 digit mobile number">
+                                                <button type="button" id="lookupCustomerBtn" class="btn btn-primary ms-2">Search</button>
+                                            </div>
+                                            <div id="lookupCustomerMsg" class="mt-1"></div>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" name="existing_customer_id" id="existing_customer_id" value="{{ old('existing_customer_id') }}">
+
                                     <!-- Name & Mobile -->
                                     <div class="row align-items-center mt-5">
                                         <div class="col-lg-2">
@@ -241,7 +283,7 @@
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" name="name" class="form-control" value="{{ old('name') }}">
+                                                <input type="text" name="name" id="customer_name" class="form-control" value="{{ old('name') }}">
                                             </div>
                                             @error('name')
                                                 <div class="text-danger">{{ $message }}</div>
@@ -275,7 +317,7 @@
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" name="email" class="form-control" value="{{ old('email') }}">
+                                                <input type="text" name="email" id="customer_email" class="form-control" value="{{ old('email') }}">
                                             </div>
                                             @error('email')
                                                 <div class="text-danger">{{ $message }}</div>
@@ -290,7 +332,7 @@
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="date" name="dob" id="dob"
+                                                <input type="date" name="dob" id="customer_dob"
                                                     class="form-control" value="{{ old('dob') }}">
                                             </div>
                                             @error('dob')
@@ -357,6 +399,81 @@
             const siteForm = document.getElementById('siteForm');
             const saveButton = document.getElementById("saveButton");
             const spinner = document.getElementById("loadingSpinner");
+
+            // New / Existing customer toggle
+            const customerTypeRadios = document.querySelectorAll('input[name="customer_type"]');
+            const existingLookupRow = document.getElementById('existingCustomerLookup');
+            const lookupMobileInput = document.getElementById('lookup_mobile_no');
+            const lookupBtn = document.getElementById('lookupCustomerBtn');
+            const lookupMsg = document.getElementById('lookupCustomerMsg');
+            const existingCustomerId = document.getElementById('existing_customer_id');
+
+            const nameInput = document.getElementById('customer_name');
+            const mobileInput = document.getElementById('mobile_no');
+            const emailInput = document.getElementById('customer_email');
+            const dobInput = document.getElementById('customer_dob');
+            const addressInput = document.getElementById('address');
+
+            function setCustomerFieldsReadonly(readonly) {
+                [nameInput, mobileInput, emailInput, dobInput, addressInput].forEach(function(el) {
+                    if (!el) return;
+                    el.readOnly = readonly;
+                });
+            }
+
+            customerTypeRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'existing') {
+                        existingLookupRow.classList.remove('d-none');
+                        setCustomerFieldsReadonly(true);
+                    } else {
+                        existingLookupRow.classList.add('d-none');
+                        setCustomerFieldsReadonly(false);
+                        existingCustomerId.value = '';
+                        lookupMsg.innerHTML = '';
+                        [nameInput, mobileInput, emailInput, dobInput, addressInput].forEach(function(el) {
+                            if (el) el.value = '';
+                        });
+                    }
+                });
+            });
+
+            if (lookupBtn) {
+                lookupBtn.addEventListener('click', function() {
+                    const mobile = lookupMobileInput.value.trim();
+                    if (mobile.length !== 10) {
+                        lookupMsg.innerHTML = '<span class="text-danger">Enter a valid 10 digit mobile number.</span>';
+                        return;
+                    }
+
+                    lookupMsg.innerHTML = 'Searching...';
+
+                    fetch(`{{ route('customer.lookup') }}?mobile_no=${mobile}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'found') {
+                                const c = data.customer;
+                                nameInput.value = c.name ?? '';
+                                mobileInput.value = c.mobile_no ?? '';
+                                emailInput.value = c.email ?? '';
+                                dobInput.value = c.dob ?? '';
+                                addressInput.value = c.address ?? '';
+                                existingCustomerId.value = c.id;
+                                lookupMsg.innerHTML = '<span class="text-success">Customer found and details loaded.</span>';
+                            } else {
+                                existingCustomerId.value = '';
+                                lookupMsg.innerHTML = '<span class="text-danger">' + (data.message || 'No customer found.') + '</span>';
+                            }
+                        })
+                        .catch(() => {
+                            lookupMsg.innerHTML = '<span class="text-danger">Something went wrong. Please try again.</span>';
+                        });
+                });
+            }
 
             //Show Spinner and Disable Form on Submit
             siteForm.addEventListener("submit", function() {

@@ -37,6 +37,8 @@ class SalesBillController extends Controller
             'mobile_no' => 'required',
             'location' => 'required',
             'email' => 'nullable|email',
+            'terms_conditions' => 'nullable|string',
+            'action' => 'nullable|in:whatsapp,download,mail',
             'particular' => 'required|array',
             'count' => 'required|array',
             'amount' => 'required|array',
@@ -57,6 +59,7 @@ class SalesBillController extends Controller
                 'mobile_no' => $request->mobile_no,
                 'location' => $request->location,
                 'email' => $request->email,
+                'terms_conditions' => $request->terms_conditions,
                 'created_by' => auth('admin')->id(),
             ]);
 
@@ -89,7 +92,7 @@ class SalesBillController extends Controller
             $whatsappLink = "https://wa.me/91{$salesBill->mobile_no}?text=$message";
 
             $mailSent = false;
-            if ($request->filled('email')) {
+            if ($request->input('action') === 'mail' && $request->filled('email')) {
                 Mail::to($request->email)->send(new SalesBillMail($salesBill, $pdf->output()));
                 $mailSent = true;
             }

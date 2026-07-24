@@ -1,0 +1,111 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Mail\PurchaseBillMail;
+use App\Models\PurchaseBill;
+use App\Models\PurchaseBillDetail;
+use App\Models\Site;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+class PurchaseBillController extends Controller
+{
+    public function getForm($siteId)
+    {
+        $site = Site::findOrFail($siteId);
+
+        return view('admin.menus.purchase_bill.purchase_bill_add', compact('site'));
+    }
+
+    public function store(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'site_id' => 'required|exists:sites,id',
+            'name' => 'required',
+            'subject' => 'required',
+            'date' => 'required|date',
+            'mobile_no' => 'required',
+            'location' => 'required',
+            'email' => 'nullable|email',
+            'terms_conditions' => 'nullable|string',
+            'action' => 'nullable|in:whatsapp,download,mail',
+            'particular' => 'required|array',
+            'count' => 'required|array',
+            'amount' => 'required|array',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['errors' => $validate->errors()], 422);
+        }
+
+        try {
+            $site = Site::findOrFail($request->site_id);
+
+            $purchaseBill = PurchaseBill::create([
+                'site_id' => $site->id,
+                'name' => $request->name,
+                'subject' => $request->subject,
+                'date' => $request->date,
+                'mobile_no' => $request->mobile_no,
+                'location' => $request->location,
+                'email' => $request->email,
+                'terms_conditions' => $request->terms_conditions,
+                'created_by' => auth('admin')->id(),
+            ]);
+
+            $totalAmount = 0;
+
+            foreach ($request->particular as $index => $particular) {
+                $count = $request->count[$index];
+                $amount = $request->amount[$index];
+                $totalAmount += (float) $amount;
+
+                PurchaseBillDetail::create([
+                    'purchase_bill_id' => $purchaseBill->id,
+                    'particular' => $particular,
+                    'count' => $count,
+                    'amount' => $amount,
+                    'created_by' => auth('admin')->id(),
+                ]);
+            }
+
+            $purchaseBill->update(['total_amount' => $totalAmount]);
+            $purchaseBill->load('details');
+
+            $pdf = Pdf::loadView('admin.helper.pdf_purchase_bill', ['data' => $purchaseBill, 'site' => $site]);
+
+            $pdfPath = 'purchase_bills/purchase_bill_' . $purchaseBill->id . '.pdf';
+            Storage::disk('public')->put($pdfPath, $pdf->output());
+
+            $pdfUrl = asset('storage/' . $pdfPath);
+            $message = urlencode("Hi {$purchaseBill->name}, your purchase bill is ready. Download here: $pdfUrl");
+            $whatsappLink = "https://wa.me/91{$purchaseBill->mobile_no}?text=$message";
+
+            $mailSent = false;
+            if ($request->input('action') === 'mail' && $request->filled('email')) {
+                Mail::to($request->email)->send(new PurchaseBillMail($purchaseBill, $pdf->output()));
+                $mailSent = true;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'whatsapp_url' => $whatsappLink,
+                'pdf_url' => $pdfUrl,
+                'mail_sent' => $mailSent,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Purchase Bill Error: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

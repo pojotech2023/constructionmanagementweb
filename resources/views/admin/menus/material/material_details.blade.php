@@ -82,7 +82,7 @@
         <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
             <a href="{{ route('material.requestForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-info w-100 w-md-auto">Request</a>
 
-            <a href="{{ route('material.orderForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-primary w-100 w-md-auto">Add Order</a>
+            <a href="{{ route('material.orderForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-primary w-100 w-md-auto">Inward Order</a>
 
             <button type="button" class="btn btn-success w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#materialExportModal">Export</button>
         </div>
@@ -114,6 +114,7 @@
                                                 <th>Vendor</th>
                                                 <th>Price</th>
                                                 <th>GST</th>
+                                                <th>Image</th>
                                                 <th style="width:10%">Action</th>
                                                 {{-- <th>Available</th> --}}
                                             </tr>
@@ -128,6 +129,21 @@
                                                     <td>{{ $brick->price }}</td>
                                                     <td>{{ $brick->gst ?? '-' }}</td>
                                                     <td>
+                                                        @if ($brick->image_url)
+                                                            @if (str_ends_with(strtolower($brick->image_url), '.pdf'))
+                                                                <a href="{{ $brick->image_url }}" target="_blank" title="View attachment">
+                                                                    <i class="fa fa-file-pdf"></i> View
+                                                                </a>
+                                                            @else
+                                                                <a href="{{ $brick->image_url }}" target="_blank" title="View image">
+                                                                    <img src="{{ $brick->image_url }}" class="material-photo-thumb" alt="Order image">
+                                                                </a>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
                                                         <div class="form-button-action">
                                                             <button type="button" class="btn btn-link btn-primary btn-sm editOrderBtn"
                                                                 data-id="{{ $brick->id }}"
@@ -135,6 +151,7 @@
                                                                 data-quantity="{{ $brick->quantity }}"
                                                                 data-price="{{ $brick->price }}"
                                                                 data-gst="{{ $brick->gst }}"
+                                                                data-image="{{ $brick->image_url }}"
                                                                 data-bs-toggle="modal" data-bs-target="#editOrderModal">
                                                                 <i class="fa fa-edit"></i>
                                                             </button>
@@ -211,6 +228,11 @@
                                         <div class="mb-3">
                                             <label class="form-label">GST</label>
                                             <input type="number" step="0.01" name="gst" id="edit_order_gst" class="form-control">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Image</label>
+                                            <div id="edit_order_current_image" class="mb-2"></div>
+                                            <input type="file" name="attachment" id="edit_order_attachment" class="form-control" accept="image/*,.pdf">
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -366,12 +388,25 @@
                     const quantity = editBtn.getAttribute('data-quantity');
                     const price = editBtn.getAttribute('data-price');
                     const gst = editBtn.getAttribute('data-gst');
+                    const image = editBtn.getAttribute('data-image');
                     const form = document.getElementById('editOrderForm');
                     form.action = '/admin/material-order-update/' + id;
                     document.getElementById('edit_order_date').value = toIsoDate(date);
                     document.getElementById('edit_order_quantity').value = quantity;
                     document.getElementById('edit_order_price').value = price;
                     document.getElementById('edit_order_gst').value = gst || '';
+                    document.getElementById('edit_order_attachment').value = '';
+
+                    const currentImageDiv = document.getElementById('edit_order_current_image');
+                    if (image) {
+                        if (image.toLowerCase().endsWith('.pdf')) {
+                            currentImageDiv.innerHTML = '<a href="' + image + '" target="_blank"><i class="fa fa-file-pdf"></i> View current attachment</a>';
+                        } else {
+                            currentImageDiv.innerHTML = '<a href="' + image + '" target="_blank"><img src="' + image + '" class="material-photo-thumb" alt="Current image"></a>';
+                        }
+                    } else {
+                        currentImageDiv.innerHTML = '<span class="text-muted">No image uploaded</span>';
+                    }
                 }
 
                 if (delBtn) {
@@ -400,6 +435,14 @@
         .week-reset-btn.active {
             background: #198754;
             color: #fff;
+        }
+
+        .material-photo-thumb {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
         }
     </style>
 @endsection
