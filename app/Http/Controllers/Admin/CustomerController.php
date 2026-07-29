@@ -53,7 +53,7 @@ class CustomerController extends Controller
             'site_id'       => 'required|exists:sites,id',
             'name'          => 'required|string',
             'mobile_no'     => 'required|numeric|digits:10',
-            'email'         => 'required|email|unique:customers,email,' . $id,
+            'email'         => 'required|email',
             'dob'           => 'required',
             'address'       => 'required|string'
         ]);

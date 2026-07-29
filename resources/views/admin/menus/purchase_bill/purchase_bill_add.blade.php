@@ -35,7 +35,10 @@
                     <div class="row mt-4">
                         <div class="col-md-2 fw-bold">Mobile No</div>
                         <div class="col-md-4">
-                            <input type="text" name="mobile_no" id="vendor_mobile" class="form-control" placeholder="Mobile Number" value="{{ old('mobile_no') }}">
+                            <input type="text" name="mobile_no" id="vendor_mobile" class="form-control" placeholder="Mobile Number"
+                                maxlength="10" minlength="10" pattern="\d{10}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
+                                value="{{ old('mobile_no') }}">
                             @error('mobile_no') <div class="text-danger">{{ $message }}</div> @enderror
                         </div>
                     </div>
@@ -98,6 +101,7 @@
                     <div class="row justify-content-end">
                         <div class="col-md-6 text-end">
                             <h5 class="text-primary">Total: ₹ <span id="grandTotal" class="text-dark">0.00</span></h5>
+                            <small id="grandTotal_words" class="form-text text-muted"></small>
                         </div>
                     </div>
 
@@ -328,6 +332,7 @@ function updateGrandTotal() {
         total += parseFloat($(this).val()) || 0;
     });
     $('#grandTotal').text(total.toFixed(2));
+    $('#grandTotal_words').text(numberToWordsIndian(total));
 }
 </script>
 

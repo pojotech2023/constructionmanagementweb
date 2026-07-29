@@ -57,7 +57,8 @@
                             <div class="col-lg-4">
                                 <div class="form-group">
                                     <input type="text" id="vendor_mobile" name="vendor_mobile" class="form-control"
-                                        placeholder="Mobile Number">
+                                        placeholder="Mobile Number" maxlength="10" minlength="10" pattern="\d{10}"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                                 </div>
                                 @error('vendor_mobile')
                                     <div class="text-danger">{{ $message }}</div>
@@ -150,7 +151,9 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <input type="text" class="form-control" name="amount" id="amount"
-                                        placeholder="Enter amount">
+                                        placeholder="Enter amount"
+                                        oninput="document.getElementById('amount_words').innerText = numberToWordsIndian(this.value);">
+                                    <small id="amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('amount')
                                     <div class="text-danger">{{ $message }}</div>

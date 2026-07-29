@@ -115,7 +115,8 @@
                             </div>
                             <div class="col-lg-9">
                                 <input id="payment_amount" name="payment" type="text" class="form-control"
-                                    oninput="this.value = this.value.replace(/[^0-9.]/g, '');">
+                                    oninput="this.value = this.value.replace(/[^0-9.]/g, ''); document.getElementById('payment_amount_words').innerText = numberToWordsIndian(this.value);">
+                                <small id="payment_amount_words" class="form-text text-muted"></small>
                             </div>
                         </div>
 

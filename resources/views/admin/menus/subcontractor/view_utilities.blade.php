@@ -148,7 +148,9 @@
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label class="form-label">Amount</label>
-                                    <input type="number" step="0.01" name="amount" id="edit_amount" class="form-control" required>
+                                    <input type="number" step="0.01" name="amount" id="edit_amount" class="form-control" required
+                                        oninput="document.getElementById('edit_amount_words').innerText = numberToWordsIndian(this.value);">
+                                    <small id="edit_amount_words" class="form-text text-muted"></small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Date</label>

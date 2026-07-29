@@ -223,7 +223,9 @@
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Price</label>
-                                            <input type="number" step="0.01" name="price" id="edit_order_price" class="form-control" required>
+                                            <input type="number" step="0.01" name="price" id="edit_order_price" class="form-control" required
+                                                oninput="document.getElementById('edit_order_price_words').innerText = numberToWordsIndian(this.value);">
+                                            <small id="edit_order_price_words" class="form-text text-muted"></small>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">GST</label>

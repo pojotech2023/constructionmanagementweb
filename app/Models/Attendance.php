@@ -14,6 +14,8 @@ class Attendance extends Model
         'category',
         'count',
         'date',
+        'time',
+        'image_url',
         'created_by',
         'updated_by'
     ];

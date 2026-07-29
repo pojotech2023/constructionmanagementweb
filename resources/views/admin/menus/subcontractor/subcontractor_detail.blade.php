@@ -403,7 +403,9 @@
                                 </div>
                                 <div class="col-lg-10">
                                     <input id="amount" name="amount" type="number" class="form-control no-arrow" min="0" step="0.01"
-                                        placeholder="Enter Amount" />
+                                        placeholder="Enter Amount"
+                                        oninput="document.getElementById('utility_amount_words').innerText = numberToWordsIndian(this.value);" />
+                                    <small id="utility_amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('amount')
                                     <div class="text-danger">{{ $message }}</div>

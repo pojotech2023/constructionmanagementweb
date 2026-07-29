@@ -16,7 +16,9 @@
 
             <div class="form-group">
                 <label for="mobile_no">Mobile Number</label>
-                <input type="text" name="mobile_no" id="mobile_no" class="form-control" placeholder="Enter your mobile number">
+                <input type="text" name="mobile_no" id="mobile_no" class="form-control" placeholder="Enter your mobile number"
+                    maxlength="10" minlength="10" pattern="\d{10}"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
             </div>
 
             <button type="button" onclick="login()" class="btn btn-primary btn-block">Login</button>

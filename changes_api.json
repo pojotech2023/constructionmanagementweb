@@ -1,0 +1,51 @@
+{
+  "attendance_time_images": [
+    { "method": "POST", "endpoint": "/api/add-attendance", "description": "Add attendance with time and image", "body_fields": ["site_id", "date", "time", "image", "count_mason", "count_helper", "count_fitter", "count_Centring_Helper"] },
+    { "method": "POST", "endpoint": "/api/attendance/update", "description": "Update attendance with time and image", "body_fields": ["site_id", "date", "time", "image", "count_mason", "count_helper", "count_fitter", "count_Centring_Helper"] },
+    { "method": "POST", "endpoint": "/api/update-attendance-wages", "description": "Update attendance and wages together with time and image", "body_fields": ["site_id", "date", "time", "image"] }
+  ],
+  "material_add_view_delete_inward_image": [
+    { "method": "POST", "endpoint": "/api/add-order", "description": "Add material (inward order) with image attachment", "body_fields": ["site_id", "vendor_id", "material_type", "date", "quantity", "price", "gst", "attachment"] },
+    { "method": "GET", "endpoint": "/api/my-material-requests/{siteId}", "description": "View material requests submitted for a site" },
+    { "method": "DELETE", "endpoint": "/api/material-delete/{id}", "description": "Delete material (inward order)" }
+  ],
+  "subcontractor_add_delete": [
+    { "method": "POST", "endpoint": "/api/subcontractor-add", "description": "Add subcontractor", "body_fields": ["name", "subcontractors", "mobile_no", "email", "address", "gst"] },
+    { "method": "DELETE", "endpoint": "/api/subcontractor-delete/{id}", "description": "Delete subcontractor" }
+  ],
+  "drawing_whatsapp_sharing": [
+    { "method": "POST", "endpoint": "/api/drawings/{id}/whatsapp", "description": "Generate WhatsApp share link for a drawing", "body_fields": ["mobile_no"] }
+  ],
+  "sales_bill_terms_conditions": [
+    { "method": "POST", "endpoint": "/api/sales-bill-add", "description": "Add sales bill, now accepts terms_conditions", "body_fields": ["site_id", "name", "subject", "date", "mobile_no", "location", "email", "terms_conditions", "particular", "count", "amount"] }
+  ],
+  "purchase_bill_full_api": [
+    { "method": "GET", "endpoint": "/api/purchase-bill-form/{siteId}", "description": "Get purchase bill form details for a site" },
+    { "method": "GET", "endpoint": "/api/purchase-bills/{siteId}", "description": "List purchase bills for a site" },
+    { "method": "POST", "endpoint": "/api/purchase-bill-add", "description": "Add purchase bill (generates PDF, WhatsApp link, optional email)", "body_fields": ["site_id", "name", "subject", "date", "mobile_no", "location", "email", "terms_conditions", "particular", "count", "amount"] },
+    { "method": "GET", "endpoint": "/api/purchase-bill/{id}", "description": "Get a single purchase bill with details" },
+    { "method": "PATCH", "endpoint": "/api/purchase-bill-update/{id}", "description": "Update purchase bill" },
+    { "method": "DELETE", "endpoint": "/api/purchase-bill-delete/{id}", "description": "Delete purchase bill" }
+  ],
+  "material_estimation_full_api": [
+    { "method": "GET", "endpoint": "/api/material-estimation-form/{siteId}", "description": "List material estimation requests for a site" },
+    { "method": "POST", "endpoint": "/api/material-estimation-add", "description": "Add material estimation request(s)", "body_fields": ["site_id", "particular[]", "unit[]", "date[]"] },
+    { "method": "GET", "endpoint": "/api/material-estimation/{id}", "description": "Get a single material estimation request" },
+    { "method": "PATCH", "endpoint": "/api/material-estimation-update/{id}", "description": "Update material estimation request" },
+    { "method": "DELETE", "endpoint": "/api/material-estimation-delete/{id}", "description": "Delete material estimation request" }
+  ],
+  "quotation_history_api": [
+    { "method": "GET", "endpoint": "/api/quotation-history", "description": "Search quotation history by mobile number", "query_params": ["mobile_no"] }
+  ],
+  "supervisor_location_apis": [
+    { "method": "POST", "endpoint": "/api/save-location", "description": "Supervisor reports their current GPS location (used by supervisor creation/mobile app)", "body_fields": ["latitude", "longitude"] },
+    { "method": "GET", "endpoint": "/api/supervisor-location/{id}", "description": "Get latest location for one specific supervisor" },
+    { "method": "GET", "endpoint": "/api/supervisor-locations", "description": "Get latest location for all supervisors" }
+  ],
+  "unit_master_add_edit_delete": [
+    { "method": "GET", "endpoint": "/api/unit-master", "description": "List units" },
+    { "method": "POST", "endpoint": "/api/unit-add", "description": "Add unit", "body_fields": ["name"] },
+    { "method": "PATCH", "endpoint": "/api/unit-update/{id}", "description": "Edit unit", "body_fields": ["name"] },
+    { "method": "DELETE", "endpoint": "/api/unit-delete/{id}", "description": "Delete unit" }
+  ]
+}

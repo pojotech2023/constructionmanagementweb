@@ -15,6 +15,9 @@ use App\Http\Controllers\API\OtherUtilitiesController;
 use App\Http\Controllers\API\OtherUtilitiesSubController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\PropertyController;
+use App\Http\Controllers\API\PurchaseBillController;
+use App\Http\Controllers\API\MaterialEstimationRequestController;
+use App\Http\Controllers\API\UnitController;
 use App\Http\Controllers\API\SalesBillController;
 use App\Http\Controllers\API\SiteController;
 use App\Http\Controllers\API\SubContractorController;
@@ -79,6 +82,31 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/sales-bill-form/{siteId}', [SalesBillController::class, 'getDetails']);
   Route::post('/sales-bill-add', [SalesBillController::class, 'store']);
   Route::get('/sales-bill/{id}', [SalesBillController::class, 'show']);
+
+  //Purchase Bill
+  Route::get('/purchase-bill-form/{siteId}', [PurchaseBillController::class, 'getDetails']);
+  Route::get('/purchase-bills/{siteId}', [PurchaseBillController::class, 'index']);
+  Route::post('/purchase-bill-add', [PurchaseBillController::class, 'store']);
+  Route::get('/purchase-bill/{id}', [PurchaseBillController::class, 'show']);
+  Route::patch('/purchase-bill-update/{id}', [PurchaseBillController::class, 'update']);
+  Route::delete('/purchase-bill-delete/{id}', [PurchaseBillController::class, 'destroy']);
+
+  //Material Estimation
+  Route::get('/material-estimation-form/{siteId}', [MaterialEstimationRequestController::class, 'index']);
+  Route::post('/material-estimation-add', [MaterialEstimationRequestController::class, 'store']);
+  Route::get('/material-estimation/{id}', [MaterialEstimationRequestController::class, 'show']);
+  Route::patch('/material-estimation-update/{id}', [MaterialEstimationRequestController::class, 'update']);
+  Route::delete('/material-estimation-delete/{id}', [MaterialEstimationRequestController::class, 'destroy']);
+
+  //Unit Master
+  Route::get('/unit-master', [UnitController::class, 'index']);
+  Route::post('/unit-add', [UnitController::class, 'store']);
+  Route::patch('/unit-update/{id}', [UnitController::class, 'update']);
+  Route::delete('/unit-delete/{id}', [UnitController::class, 'destroy']);
+
+  //Supervisor Locations
+  Route::get('/supervisor-locations', [SupervisorController::class, 'locations']);
+  Route::get('/supervisor-location/{id}', [SupervisorController::class, 'locationDetail']);
 
   //Attendance
   Route::delete('/attendance-delete/{id}', [AttendanceController::class, 'destroy']);
@@ -217,6 +245,7 @@ Route::get('/test', function() {
     return response()->json(['status' => 'ok']);
 });
 Route::delete('/drawing/{id}', [DrawingController::class, 'destroy']);
+Route::post('/drawings/{id}/whatsapp', [DrawingController::class, 'shareWhatsapp']);
 
 
 
@@ -234,6 +263,7 @@ Route::get('/quotation/{id}', [GenerateQuotationController::class, 'show']);
 Route::delete('/quotation/detail/{id}', [GenerateQuotationController::class, 'removeDetail']);
 Route::get('/quotation/pdf/{id}', [GenerateQuotationController::class, 'generatePdf']);
 Route::get('/default-items', [GenerateQuotationController::class, 'defaultItemList']);
+Route::get('/quotation-history', [GenerateQuotationController::class, 'history']);
 
 
 // attendance

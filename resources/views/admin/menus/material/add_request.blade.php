@@ -58,7 +58,8 @@
                             <div class="col-lg-4">
                                 <div class="form-group">
                                     <input type="text" id="vendor_mobile" name="vendor_mobile" class="form-control"
-                                        placeholder="Mobile Number">
+                                        placeholder="Mobile Number" maxlength="10" minlength="10" pattern="\d{10}"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                                 </div>
                                 @error('vendor_mobile')
                                     <div class="text-danger">{{ $message }}</div>
@@ -199,9 +200,10 @@
     <div class="col-md-4">
         <div class="form-group">
             <input type="text" class="form-control" name="supervisor_phone" id="supervisor_phone"
-                placeholder="Enter phone number"
+                placeholder="Enter phone number" maxlength="10" minlength="10" pattern="\d{10}"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
                 value="{{ old('supervisor_phone', $supervisor->mobile_no ?? '') }}">
-                
+
         </div>
         @error('supervisor_phone')
             <div class="text-danger">{{ $message }}</div>
@@ -212,15 +214,16 @@
 <div class="row align-items-center mt-4">
     <div class="col-lg-2">
         <div class="form-group">
-            <label for="supervisor_phone" class="fw-bold">Price</label>
+            <label for="price" class="fw-bold">Price</label>
         </div>
     </div>
     <div class="col-md-4">
         <div class="form-group">
-            <input type="text" class="form-control" name="price" id="supervisor_phone"
+            <input type="text" class="form-control" name="price" id="price"
                 placeholder="Enter Price"
-                value="">
-                
+                value=""
+                oninput="document.getElementById('price_words').innerText = numberToWordsIndian(this.value);">
+            <small id="price_words" class="form-text text-muted"></small>
         </div>
         @error('price')
             <div class="text-danger">{{ $message }}</div>

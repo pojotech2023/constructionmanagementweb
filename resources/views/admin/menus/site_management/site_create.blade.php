@@ -109,7 +109,9 @@
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="number" class="form-control" name="budget_amount" id="budget_amount" min="0" step="0.01" value="{{ old('budget_amount') }}">
+                                                <input type="number" class="form-control" name="budget_amount" id="budget_amount" min="0" step="0.01" value="{{ old('budget_amount') }}"
+                                                    oninput="document.getElementById('budget_amount_words').innerText = numberToWordsIndian(this.value);">
+                                                <small id="budget_amount_words" class="form-text text-muted"></small>
                                             </div>
                                             @error('budget_amount')
                                                 <div class="text-danger">{{ $message }}</div>

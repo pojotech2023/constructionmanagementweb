@@ -49,9 +49,10 @@ class SalesBillController extends Controller
             'name' => 'required',
             'subject' => 'required',
             'date' => 'required|date',
-            'mobile_no' => 'required',
+            'mobile_no' => 'nullable|numeric|digits:10',
             'location' => 'required',
             'email' => 'nullable|email',
+            'terms_conditions' => 'nullable|string',
             'particular' => 'required|array',
             'count' => 'required|array',
             'amount' => 'required|array',
@@ -72,6 +73,7 @@ class SalesBillController extends Controller
                 'mobile_no' => $request->mobile_no,
                 'location' => $request->location,
                 'email' => $request->email,
+                'terms_conditions' => $request->terms_conditions,
                 'created_by' => auth('api')->id(),
             ]);
 

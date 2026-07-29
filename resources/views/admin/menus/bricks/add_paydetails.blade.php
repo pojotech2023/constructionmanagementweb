@@ -95,6 +95,7 @@
                                 <div class="form-group">
                                     <input id="total_amount" name="total_amount" type="text" class="form-control"
                                         placeholder="Enter price" oninput="calculatePending()" />
+                                    <small id="total_amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('total_amount')
                                     <div class="text-danger">{{ $message }}</div>
@@ -113,6 +114,7 @@
                                 <div class="form-group">
                                     <input id="settled_amount" name="settled_amount" type="text" class="form-control"
                                         placeholder="Enter price" oninput="calculatePending()" />
+                                    <small id="settled_amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('settled_amount')
                                     <div class="text-danger">{{ $message }}</div>
@@ -131,6 +133,7 @@
                                 <div class="form-group">
                                     <input id="pending_amount" name="pending_amount" type="text" class="form-control"
                                         placeholder="Pending price" readonly />
+                                    <small id="pending_amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('pending_amount')
                                     <div class="text-danger">{{ $message }}</div>
@@ -284,6 +287,10 @@
             var pending = total - settled;
             if (pending < 0) pending = 0; // in case settled > total
             document.getElementById('pending_amount').value = pending.toFixed(2);
+
+            document.getElementById('total_amount_words').innerText = numberToWordsIndian(total);
+            document.getElementById('settled_amount_words').innerText = numberToWordsIndian(settled);
+            document.getElementById('pending_amount_words').innerText = numberToWordsIndian(pending);
         }
     </script>
 @endsection

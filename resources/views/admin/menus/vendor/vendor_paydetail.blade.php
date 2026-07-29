@@ -158,8 +158,9 @@
                             </div>
                             <div class="col-lg-10">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="total_unit_price"
+                                    <input type="text" class="form-control" name="total_unit_price" id="total_unit_price"
                                         value="{{ $totalAmount }}" readonly>
+                                    <small id="total_unit_price_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('total_unit_price')
                                     <div class="text-danger">{{ $message }}</div>
@@ -178,6 +179,7 @@
                                 <div class="form-group">
                                     <input type="text" class="form-control" name="paid_amount" id="paid_amount"
                                         value="{{ $paidAmount ?? 0 }}" readonly>
+                                    <small id="paid_amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('paid_amount')
                                     <div class="text-danger">{{ $message }}</div>
@@ -195,6 +197,7 @@
                                 <div class="form-group">
                                     <input type="text" class="form-control" name="balance_amount" id="balance_amount"
                                         value="{{ $balanceAmount ?? 0 }}" readonly>
+                                    <small id="balance_amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('balance_amount')
                                     <div class="text-danger">{{ $message }}</div>
@@ -266,8 +269,9 @@
                                 <label for="payment">Payment</label>
                             </div>
                             <div class="col-lg-10">
-                                <input id="payment" name="payment" type="text" class="form-control" 
-                                oninput="this.value = this.value.replace(/[^0-9.]/g, '');"/>
+                                <input id="payment" name="payment" type="text" class="form-control"
+                                oninput="this.value = this.value.replace(/[^0-9.]/g, ''); document.getElementById('payment_words').innerText = numberToWordsIndian(this.value);"/>
+                                <small id="payment_words" class="form-text text-muted"></small>
                                 @error('payment')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
@@ -332,6 +336,14 @@
             const confirmButton = document.getElementById('confirmOpeningBalance');
             const cancelButton = document.getElementById('cancelOpeningBalance');
             let allowVendorPayDetailSubmit = false;
+
+            ['total_unit_price', 'paid_amount', 'balance_amount'].forEach(function(fieldId) {
+                const field = document.getElementById(fieldId);
+                const wordsEl = document.getElementById(fieldId + '_words');
+                if (field && wordsEl) {
+                    wordsEl.innerText = numberToWordsIndian(field.value);
+                }
+            });
 
             // Auto-hide success alert
             const successAlert = document.querySelector(".alert-success");

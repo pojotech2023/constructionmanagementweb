@@ -115,11 +115,7 @@ public function store(Request $request)
         'existing_customer_id'=> 'nullable|exists:customers,id',
         'name'           => 'nullable|string',
         'mobile_no'      => 'nullable|numeric|digits:10',
-        'email'          => [
-            'nullable',
-            'email',
-            Rule::unique('customers', 'email')->ignore($request->existing_customer_id),
-        ],
+        'email'          => 'nullable|email',
         'dob'            => 'nullable|date',
         'address'        => 'nullable|string',
     ]);

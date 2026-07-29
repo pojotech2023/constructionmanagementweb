@@ -256,14 +256,14 @@ public function materialRequest(Request $request)
     $validate = Validator::make($request->all(), [
         'site_id'             => 'required|exists:sites,id',
         'vendor_name'         => 'required|string',
-        'vendor_mobile'       => 'required|string',
+        'vendor_mobile'       => 'required|numeric|digits:10',
         'vendor_address'      => 'required|string',
         'items'       => 'required|string',
         'price'       => 'required|string',
         'quantity'            => 'required',
         'date_of_delivery'  => 'required',
         'supervisor_name'     => 'required',
-        'supervisor_phone'    => 'required',
+        'supervisor_phone'    => 'required|numeric|digits:10',
        'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
 
     ]);
@@ -379,7 +379,7 @@ public function materialRequest(Request $request)
             'site_id'  => 'required|exists:sites,id',
             'vendor_id' => 'required|exists:vendors,id',
             'vendor_name' => 'required',
-            'vendor_mobile' => 'required',
+            'vendor_mobile' => 'required|numeric|digits:10',
             'vendor_address' => 'required',
             'material_type' => 'required|string',
             'date' => 'required',

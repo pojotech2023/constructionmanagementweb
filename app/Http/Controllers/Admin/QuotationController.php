@@ -54,7 +54,7 @@ class QuotationController extends Controller
         'name' => 'required',
         'subject' => 'required',
         'date' => 'required|date',
-        'mobile_no' => 'required',
+        'mobile_no' => 'nullable|numeric|digits:10',
         'location' => 'required',
         'contractor' => 'required',
         'particular' => 'required|array',

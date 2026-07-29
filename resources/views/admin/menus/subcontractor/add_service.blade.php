@@ -129,7 +129,9 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <input id="amount" name="amount" type="number" class="form-control no-arrow"
-                                        min="0" step="0.01" placeholder="Enter Amount" />
+                                        min="0" step="0.01" placeholder="Enter Amount"
+                                        oninput="document.getElementById('amount_words').innerText = numberToWordsIndian(this.value);" />
+                                    <small id="amount_words" class="form-text text-muted"></small>
                                 </div>
                                 @error('amount')
                                     <div class="text-danger">{{ $message }}</div>

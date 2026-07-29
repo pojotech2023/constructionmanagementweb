@@ -88,6 +88,37 @@ public function download($id)
     return response()->download($filePath, $drawing->file_name);
 }
 
+public function shareWhatsapp(Request $request, $id)
+{
+    $drawing = Drawing::findOrFail($id);
+
+    $validator = Validator::make($request->all(), [
+        'mobile_no' => 'required|digits:10',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Validation failed',
+            'errors'  => $validator->errors(),
+        ], 422);
+    }
+
+    $fileUrl = asset('storage/' . $drawing->file_path);
+
+    $message = "*POJO INFRA 360*\n"
+        . "Drawing: {$drawing->file_name}\n"
+        . "Link: {$fileUrl}";
+
+    $whatsappUrl = 'https://wa.me/91' . $request->mobile_no . '?text=' . urlencode($message);
+
+    return response()->json([
+        'status'       => true,
+        'message'      => 'WhatsApp share link generated successfully.',
+        'whatsapp_url' => $whatsappUrl,
+    ]);
+}
+
 public function destroy($id)
 {
     // Find the drawing record

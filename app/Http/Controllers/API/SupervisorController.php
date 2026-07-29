@@ -162,4 +162,48 @@ class SupervisorController extends Controller
             'data'          => $sites,
         ]);
     }
+
+    public function locations()
+    {
+        $supervisors = User::whereHas('roles', function ($query) {
+            $query->where('role_name', 'Supervisor');
+        })->get();
+
+        $data = $supervisors->map(function ($supervisor) {
+            return [
+                'id' => $supervisor->id,
+                'name' => $supervisor->name,
+                'mobile_no' => $supervisor->mobile_no,
+                'latitude' => $supervisor->latitude,
+                'longitude' => $supervisor->longitude,
+                'location_updated_at' => $supervisor->location_updated_at,
+            ];
+        })->values();
+
+        return response()->json([
+            'response_code' => 200,
+            'status'        => true,
+            'message'       => 'Supervisor locations fetched successfully!',
+            'data'          => $data,
+        ]);
+    }
+
+    public function locationDetail($id)
+    {
+        $supervisor = User::findOrFail($id);
+
+        return response()->json([
+            'response_code' => 200,
+            'status'        => true,
+            'message'       => 'Supervisor location fetched successfully!',
+            'data'          => [
+                'id' => $supervisor->id,
+                'name' => $supervisor->name,
+                'mobile_no' => $supervisor->mobile_no,
+                'latitude' => $supervisor->latitude,
+                'longitude' => $supervisor->longitude,
+                'location_updated_at' => $supervisor->location_updated_at,
+            ],
+        ]);
+    }
 }

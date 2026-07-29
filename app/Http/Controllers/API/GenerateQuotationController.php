@@ -17,13 +17,54 @@ use App\Mail\QuotationMail;
 
 class GenerateQuotationController extends Controller
 {
+    /**
+     * List all quotations.
+     */
+    public function index()
+    {
+        $quotations = Quotation::orderBy('date', 'desc')->orderBy('id', 'desc')->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Quotations fetched successfully.',
+            'data' => $quotations,
+        ]);
+    }
+
+    /**
+     * Quotation history search by mobile number.
+     */
+    public function history(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'mobile_no' => 'required|digits:10',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json(['status' => false, 'errors' => $validate->errors()], 422);
+        }
+
+        $quotations = Quotation::with('details')
+            ->where('mobile_no', $request->mobile_no)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Quotation history fetched successfully.',
+            'mobile_no' => $request->mobile_no,
+            'data' => $quotations,
+        ]);
+    }
+
 public function store(Request $request)
 {
     $validate = Validator::make($request->all(), [
         'name' => 'required',
         'subject' => 'required',
         'date' => 'required|date',
-        'mobile_no' => 'required',
+        'mobile_no' => 'nullable|numeric|digits:10',
         'location' => 'required',
         'contractor' => 'required',
         'email' => 'nullable|email',

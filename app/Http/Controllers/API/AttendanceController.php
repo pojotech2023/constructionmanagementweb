@@ -65,6 +65,8 @@ public function addAttendance(Request $request)
     $validate = Validator::make($request->all(), [
         'site_id'  => 'required|exists:sites,id',
         'date'     => 'required|date',
+        'time'     => 'nullable|date_format:H:i,H:i:s',
+        'image'    => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         'count_mason' => 'nullable|numeric',
         'count_helper' => 'nullable|numeric',
         'count_fitter' => 'nullable|numeric',
@@ -76,6 +78,12 @@ public function addAttendance(Request $request)
             'status' => 'error',
             'errors' => $validate->errors()
         ], 422);
+    }
+
+    $imageUrl = null;
+    if ($request->hasFile('image')) {
+        $path = $request->file('image')->store('attendance_images', 'public');
+        $imageUrl = asset('storage/' . $path);
     }
 
     // Map database category names with request input fields
@@ -93,6 +101,8 @@ public function addAttendance(Request $request)
                 'category' => $categoryName,
                 'count' => $request->$fieldName,
                 'date' => $request->date,
+                'time' => $request->time,
+                'image_url' => $imageUrl,
                 'created_by' => auth('api')->id(),
             ]);
         }
@@ -175,9 +185,44 @@ public function addAttendance(Request $request)
         }
 
         /* =======================
+           CHECK-IN / CHECK-OUT PHOTOS (from wages table, per date)
+        ========================*/
+        $dayPhotos = [];
+        $allWages = Wages::where('site_id', $siteId)->get();
+
+        foreach ($allWages as $wage) {
+            $wageDate = Carbon::parse($wage->date)->toDateString();
+
+            if (!isset($dayPhotos[$wageDate])) {
+                $dayPhotos[$wageDate] = [
+                    'check_in_time'   => null,
+                    'check_in_photo'  => null,
+                    'check_out_time'  => null,
+                    'check_out_photo' => null,
+                ];
+            }
+
+            if (!$dayPhotos[$wageDate]['check_in_photo'] && $wage->check_in_photo) {
+                $dayPhotos[$wageDate]['check_in_photo'] = asset('storage/' . $wage->check_in_photo);
+            }
+
+            if (!$dayPhotos[$wageDate]['check_in_time'] && $wage->check_in_time) {
+                $dayPhotos[$wageDate]['check_in_time'] = $wage->check_in_time;
+            }
+
+            if (!$dayPhotos[$wageDate]['check_out_photo'] && $wage->check_out_photo) {
+                $dayPhotos[$wageDate]['check_out_photo'] = asset('storage/' . $wage->check_out_photo);
+            }
+
+            if (!$dayPhotos[$wageDate]['check_out_time'] && $wage->check_out_time) {
+                $dayPhotos[$wageDate]['check_out_time'] = $wage->check_out_time;
+            }
+        }
+
+        /* =======================
            GROUPED BY DATE (OLD STRUCTURE + EXTRA WAGE FIELD)
         ========================*/
-        $groupedByDate = $attendances->groupBy('date')->map(function ($records, $day) use ($siteId, &$allCategories) {
+        $groupedByDate = $attendances->groupBy('date')->map(function ($records, $day) use ($siteId, &$allCategories, $dayPhotos) {
 
             $dayData = [
                 'date'  => $day,
@@ -203,6 +248,18 @@ public function addAttendance(Request $request)
 
                 $allCategories[$categoryKey] = true;
             }
+
+            // 🔹 NEW: check-in/check-out time & photo for this date
+            $photos = $dayPhotos[$day] ?? [
+                'check_in_time'   => null,
+                'check_in_photo'  => null,
+                'check_out_time'  => null,
+                'check_out_photo' => null,
+            ];
+            $dayData['check_in_time']   = $photos['check_in_time'];
+            $dayData['check_in_photo']  = $photos['check_in_photo'];
+            $dayData['check_out_time']  = $photos['check_out_time'];
+            $dayData['check_out_photo'] = $photos['check_out_photo'];
 
             return $dayData;
 
@@ -242,6 +299,14 @@ public function addAttendance(Request $request)
             })
             ->toArray();
 
+        // 🔹 Flat check-in/check-out for the selected single date (defaults to today when no month/week given)
+        $selectedDayPhotos = $dayPhotos[$date] ?? [
+            'check_in_time'   => null,
+            'check_in_photo'  => null,
+            'check_out_time'  => null,
+            'check_out_photo' => null,
+        ];
+
         /* =======================
            FINAL RESPONSE
         ========================*/
@@ -259,6 +324,11 @@ public function addAttendance(Request $request)
             'category_wages'  => $categoryWages,
             'total_wages'     => $totalWages,
             'wage'            => $wageData,
+            'check_in_time'   => $selectedDayPhotos['check_in_time'],
+            'check_in_photo'  => $selectedDayPhotos['check_in_photo'],
+            'check_out_time'  => $selectedDayPhotos['check_out_time'],
+            'check_out_photo' => $selectedDayPhotos['check_out_photo'],
+            'day_photos'      => $dayPhotos,
         ]);
     }
 private function getApplicableWage($siteId, $category, $attendanceDate)
@@ -475,7 +545,15 @@ private function buildDayData($siteId, $date, $categories)
         $request->validate([
             'site_id' => 'required',
             'date'    => 'required|date',
+            'time'    => 'nullable|date_format:H:i,H:i:s',
+            'image'   => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
+
+        $imageUrl = null;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('attendance_images', 'public');
+            $imageUrl = asset('storage/' . $path);
+        }
 
         $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
 
@@ -489,16 +567,26 @@ private function buildDayData($siteId, $date, $categories)
                 continue;
             }
 
+            $updateData = [
+                'count'      => $input,
+                'created_by' => $request->admin_id ?? 1, // mobile will send admin_id
+            ];
+
+            if ($request->filled('time')) {
+                $updateData['time'] = $request->time;
+            }
+
+            if ($imageUrl) {
+                $updateData['image_url'] = $imageUrl;
+            }
+
             Attendance::updateOrCreate(
                 [
                     'site_id'  => $request->site_id,
                     'date'     => $request->date,
                     'category' => $cat,
                 ],
-                [
-                    'count'      => $input,
-                    'created_by' => $request->admin_id ?? 1, // mobile will send admin_id
-                ]
+                $updateData
             );
         }
 
@@ -571,10 +659,18 @@ private function buildDayData($siteId, $date, $categories)
     $request->validate([
         'site_id' => 'required',
         'date'    => 'required|date',
+        'time'    => 'nullable|date_format:H:i,H:i:s',
+        'image'   => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
     ]);
 
     $adminId = $request->admin_id ?? 1; // mobile will send admin_id
     $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
+
+    $imageUrl = null;
+    if ($request->hasFile('image')) {
+        $path = $request->file('image')->store('attendance_images', 'public');
+        $imageUrl = asset('storage/' . $path);
+    }
 
     foreach ($categories as $cat) {
 
@@ -583,16 +679,26 @@ private function buildDayData($siteId, $date, $categories)
         $countInput = $request->input($countKey);
 
         if ($countInput !== null && $countInput !== '') {
+            $attendanceData = [
+                'count'      => $countInput,
+                'created_by' => $adminId,
+            ];
+
+            if ($request->filled('time')) {
+                $attendanceData['time'] = $request->time;
+            }
+
+            if ($imageUrl) {
+                $attendanceData['image_url'] = $imageUrl;
+            }
+
             Attendance::updateOrCreate(
                 [
                     'site_id'  => $request->site_id,
                     'date'     => $request->date,
                     'category' => $cat,
                 ],
-                [
-                    'count'      => $countInput,
-                    'created_by' => $adminId,
-                ]
+                $attendanceData
             );
         }
 

@@ -77,7 +77,7 @@ class SiteController extends Controller
 
         'name'           => 'nullable|string',
         'mobile_no'      => 'nullable|numeric|digits:10',
-        'email'          => 'nullable|email|unique:customers,email',
+        'email'          => 'nullable|email',
         'dob'            => 'nullable|date',
         'address'        => 'nullable|string',
 

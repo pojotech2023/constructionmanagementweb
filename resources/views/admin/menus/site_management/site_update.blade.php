@@ -108,7 +108,9 @@
         <div class="col-lg-4">
             <div class="form-group">
                 <input type="number" name="budget_amount" id="budget_amount" class="form-control"
-                    placeholder="Enter Budget Amount" min="0" step="0.01" value="{{ old('budget_amount', $site->budget_amount ?? '') }}">
+                    placeholder="Enter Budget Amount" min="0" step="0.01" value="{{ old('budget_amount', $site->budget_amount ?? '') }}"
+                    oninput="document.getElementById('budget_amount_words').innerText = numberToWordsIndian(this.value);">
+                <small id="budget_amount_words" class="form-text text-muted"></small>
             </div>
             @error('budget_amount')
                 <div class="text-danger">{{ $message }}</div>
@@ -249,6 +251,12 @@
                 form.addEventListener('submit', function(event) {
                     spinner.classList.remove('d-none'); //Show spinner
                 });
+            }
+
+            //Show amount in words for the pre-filled budget amount
+            const budgetAmountInput = document.getElementById('budget_amount');
+            if (budgetAmountInput && budgetAmountInput.value) {
+                document.getElementById('budget_amount_words').innerText = numberToWordsIndian(budgetAmountInput.value);
             }
         });
     </script>

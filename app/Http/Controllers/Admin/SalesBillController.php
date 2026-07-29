@@ -34,7 +34,7 @@ class SalesBillController extends Controller
             'name' => 'required',
             'subject' => 'required',
             'date' => 'required|date',
-            'mobile_no' => 'required',
+            'mobile_no' => 'nullable|numeric|digits:10',
             'location' => 'required',
             'email' => 'nullable|email',
             'terms_conditions' => 'nullable|string',
