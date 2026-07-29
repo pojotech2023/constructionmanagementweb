@@ -153,6 +153,14 @@
                             <button type="button" class="btn btn-outline-primary quotation-action-btn" id="downloadPdfButton">Download PDF Quotation</button>
                         </div>
                     </div>
+
+                    <hr class="mt-4 mb-3">
+
+                    <div class="row align-items-center">
+                        <div class="col-12 text-center">
+                            <button type="button" class="btn btn-outline-danger quotation-action-btn" id="resetFormButton">Reset</button>
+                        </div>
+                    </div>
                 </form>
 
             </div>
@@ -335,6 +343,13 @@ $(document).ready(function () {
 
     $('#sendMailButton').on('click', function () {
         submitQuotation('mail');
+    });
+
+    $('#resetFormButton').on('click', function () {
+        if (confirm('Reset the form? All entered data will be lost.')) {
+            quotationDirty = false;
+            window.location.reload();
+        }
     });
 
     $('#quotationForm').on('submit', function (e) {

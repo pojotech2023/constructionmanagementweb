@@ -126,6 +126,14 @@
                             <button type="button" class="btn btn-outline-primary purchase-bill-action-btn" id="downloadPdfButton">Download PDF</button>
                         </div>
                     </div>
+
+                    <hr class="mt-4 mb-3">
+
+                    <div class="row align-items-center">
+                        <div class="col-12 text-center">
+                            <button type="button" class="btn btn-outline-danger purchase-bill-action-btn" id="resetFormButton">Reset</button>
+                        </div>
+                    </div>
                 </form>
 
             </div>
@@ -318,6 +326,13 @@ $(document).ready(function () {
 
     $('#sendMailButton').on('click', function () {
         submitPurchaseBill('mail');
+    });
+
+    $('#resetFormButton').on('click', function () {
+        if (confirm('Reset the form? All entered data will be lost.')) {
+            purchaseBillDirty = false;
+            window.location.reload();
+        }
     });
 
     $('#purchaseBillForm').on('submit', function (e) {
