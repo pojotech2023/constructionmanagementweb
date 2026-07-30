@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\AttendanceCheckin;
 use App\Models\Site;
 use App\Models\Wages;
 use Carbon\Carbon;
@@ -101,35 +102,17 @@ class AttendanceController extends Controller
 
         $allCategories = array_keys($allCategories);
 
-        // Map of date => check-in/check-out photo & time (first found for that date)
+        // Map of date => check-in/check-out photo & time (single source of truth: attendance_checkins)
         $dayPhotos = [];
-        foreach ($wages as $wage) {
-            $wageDate = Carbon::parse($wage->date)->toDateString();
+        foreach (AttendanceCheckin::where('site_id', $siteId)->get() as $checkin) {
+            $checkinDate = Carbon::parse($checkin->date)->toDateString();
 
-            if (!isset($dayPhotos[$wageDate])) {
-                $dayPhotos[$wageDate] = [
-                    'check_in_photo' => null,
-                    'check_in_time' => null,
-                    'check_out_photo' => null,
-                    'check_out_time' => null,
-                ];
-            }
-
-            if (!$dayPhotos[$wageDate]['check_in_photo'] && $wage->check_in_photo) {
-                $dayPhotos[$wageDate]['check_in_photo'] = $wage->check_in_photo;
-            }
-
-            if (!$dayPhotos[$wageDate]['check_in_time'] && $wage->check_in_time) {
-                $dayPhotos[$wageDate]['check_in_time'] = $wage->check_in_time;
-            }
-
-            if (!$dayPhotos[$wageDate]['check_out_photo'] && $wage->check_out_photo) {
-                $dayPhotos[$wageDate]['check_out_photo'] = $wage->check_out_photo;
-            }
-
-            if (!$dayPhotos[$wageDate]['check_out_time'] && $wage->check_out_time) {
-                $dayPhotos[$wageDate]['check_out_time'] = $wage->check_out_time;
-            }
+            $dayPhotos[$checkinDate] = [
+                'check_in_photo'  => $checkin->check_in_photo,
+                'check_in_time'   => $checkin->check_in_time,
+                'check_out_photo' => $checkin->check_out_photo,
+                'check_out_time'  => $checkin->check_out_time,
+            ];
         }
 
         return view('admin.menus.attendance.attendance_management', compact(
@@ -205,6 +188,7 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             }
 
             $redirectMonth = null;
+            $checkInDates = [];
             foreach ($request->input('rows') as $row) {
                 $date = $row['date'] ?? $request->input('date') ?? null;
                 if ($date && !$redirectMonth) {
@@ -217,8 +201,6 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
                         'category' => $row['category'],
                         'amount' => $row['amount'],
                         'date' => $date ?? Carbon::now()->toDateString(),
-                        'check_in_time' => $request->time,
-                        'check_in_photo' => $checkInPhoto,
                         'created_by' => auth('admin')->id(),
                     ]);
                 }
@@ -231,6 +213,24 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
                         'date' => $date ?? Carbon::now()->toDateString(),
                         'created_by' => auth('admin')->id(),
                     ]);
+                }
+
+                $checkInDates[$date ?? Carbon::now()->toDateString()] = true;
+            }
+
+            if ($request->filled('time') || $checkInPhoto) {
+                foreach (array_keys($checkInDates) as $checkInDate) {
+                    AttendanceCheckin::updateOrCreate(
+                        [
+                            'site_id' => $request->site_id,
+                            'date'    => $checkInDate,
+                        ],
+                        array_filter([
+                            'check_in_time'  => $request->time,
+                            'check_in_photo' => $checkInPhoto,
+                            'created_by'     => auth('admin')->id(),
+                        ], fn ($v) => $v !== null)
+                    );
                 }
             }
 
@@ -275,11 +275,23 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
                     'category'   => $category,
                     'amount'     => $request->$amountField,
                     'date'       => $request->date,
-                    'check_in_time' => $request->time,
-                    'check_in_photo' => $checkInPhoto,
                     'created_by' => auth('admin')->id(),
                 ]);
             }
+        }
+
+        if ($request->filled('time') || $checkInPhoto) {
+            AttendanceCheckin::updateOrCreate(
+                [
+                    'site_id' => $request->site_id,
+                    'date'    => $request->date,
+                ],
+                array_filter([
+                    'check_in_time'  => $request->time,
+                    'check_in_photo' => $checkInPhoto,
+                    'created_by'     => auth('admin')->id(),
+                ], fn ($v) => $v !== null)
+            );
         }
 
         return redirect()->route('attendance', [
@@ -386,7 +398,7 @@ if ($wages->isEmpty()) {
     // Provide the variable name your view expects
     $siteId = $site_id;
 
-    $checkOut = Wages::where('site_id', $site_id)
+    $checkOut = AttendanceCheckin::where('site_id', $site_id)
         ->where('date', $date)
         ->first();
 
@@ -586,7 +598,7 @@ public function updateAttendanceAndWages(Request $request)
         }
     }
 
-    // Check-out time & photo apply to all wage entries recorded for this site/date
+    // Check-out time & photo for this site/date
     if ($request->filled('time') || $request->hasFile('photo')) {
         $checkOutUpdate = [];
 
@@ -598,9 +610,13 @@ public function updateAttendanceAndWages(Request $request)
             $checkOutUpdate['check_out_photo'] = $request->file('photo')->store('wages_checkout', 'public');
         }
 
-        Wages::where('site_id', $request->site_id)
-            ->where('date', $request->date)
-            ->update($checkOutUpdate);
+        AttendanceCheckin::updateOrCreate(
+            [
+                'site_id' => $request->site_id,
+                'date'    => $request->date,
+            ],
+            $checkOutUpdate + ['created_by' => auth('admin')->id()]
+        );
     }
 
     return redirect()->route('attendance', [

@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Attendance;
+use App\Models\AttendanceCheckin;
 use App\Models\Wages;
 use App\Models\Site;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -82,12 +83,12 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
             $total = $attendance->count * $amount;
             $this->grandTotal += $total;
 
-            $dayWage = Wages::where('site_id', $attendance->site_id)
+            $dayCheckin = AttendanceCheckin::where('site_id', $attendance->site_id)
                 ->where('date', $attendance->date)
                 ->first();
 
-            $checkInPhoto = $dayWage && $dayWage->check_in_photo ? asset('storage/' . $dayWage->check_in_photo) : '-';
-            $checkOutPhoto = $dayWage && $dayWage->check_out_photo ? asset('storage/' . $dayWage->check_out_photo) : '-';
+            $checkInPhoto = $dayCheckin && $dayCheckin->check_in_photo ? asset('storage/' . $dayCheckin->check_in_photo) : '-';
+            $checkOutPhoto = $dayCheckin && $dayCheckin->check_out_photo ? asset('storage/' . $dayCheckin->check_out_photo) : '-';
 
             $this->rows[] = [
                 Carbon::parse($attendance->date)->format('d-m-Y'),

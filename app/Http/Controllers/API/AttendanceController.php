@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
+use App\Models\AttendanceCheckin;
 use App\Models\Wages;
 use App\Models\Site;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +20,12 @@ class AttendanceController extends Controller
     public function addWages(Request $request)
 {
     $validate = Validator::make($request->all(), [
+        'time' => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'check_in_time' => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'check_out_time' => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'check_in_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'check_out_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         'site_id' => 'required|exists:sites,id',
         'date' => 'required|date',
         'amount_mason' => 'nullable|numeric',
@@ -51,6 +58,29 @@ class AttendanceController extends Controller
                 'created_by' => auth('api')->id(),
             ]);
         }
+    }
+
+    $checkInTime = $this->normalizeTime($request->input('time', $request->input('check_in_time')));
+    $checkInPhotoFile = $request->hasFile('photo') ? $request->file('photo') : ($request->hasFile('check_in_photo') ? $request->file('check_in_photo') : null);
+
+    $checkOutTime = $this->normalizeTime($request->input('check_out_time'));
+    $checkOutPhotoFile = $request->hasFile('check_out_photo') ? $request->file('check_out_photo') : null;
+
+    $checkinUpdate = array_filter([
+        'check_in_time'   => $checkInTime,
+        'check_in_photo'  => $checkInPhotoFile ? $checkInPhotoFile->store('wages_checkin', 'public') : null,
+        'check_out_time'  => $checkOutTime,
+        'check_out_photo' => $checkOutPhotoFile ? $checkOutPhotoFile->store('wages_checkout', 'public') : null,
+    ], fn ($v) => $v !== null);
+
+    if (!empty($checkinUpdate)) {
+        AttendanceCheckin::updateOrCreate(
+            [
+                'site_id' => $request->site_id,
+                'date'    => $request->date,
+            ],
+            $checkinUpdate + ['created_by' => auth('api')->id()]
+        );
     }
 
     return response()->json([
@@ -185,38 +215,20 @@ public function addAttendance(Request $request)
         }
 
         /* =======================
-           CHECK-IN / CHECK-OUT PHOTOS (from wages table, per date)
+           CHECK-IN / CHECK-OUT PHOTOS (single source of truth: attendance_checkins, per date)
         ========================*/
         $dayPhotos = [];
-        $allWages = Wages::where('site_id', $siteId)->get();
+        $allCheckins = AttendanceCheckin::where('site_id', $siteId)->get();
 
-        foreach ($allWages as $wage) {
-            $wageDate = Carbon::parse($wage->date)->toDateString();
+        foreach ($allCheckins as $checkin) {
+            $checkinDate = Carbon::parse($checkin->date)->toDateString();
 
-            if (!isset($dayPhotos[$wageDate])) {
-                $dayPhotos[$wageDate] = [
-                    'check_in_time'   => null,
-                    'check_in_photo'  => null,
-                    'check_out_time'  => null,
-                    'check_out_photo' => null,
-                ];
-            }
-
-            if (!$dayPhotos[$wageDate]['check_in_photo'] && $wage->check_in_photo) {
-                $dayPhotos[$wageDate]['check_in_photo'] = asset('storage/' . $wage->check_in_photo);
-            }
-
-            if (!$dayPhotos[$wageDate]['check_in_time'] && $wage->check_in_time) {
-                $dayPhotos[$wageDate]['check_in_time'] = $wage->check_in_time;
-            }
-
-            if (!$dayPhotos[$wageDate]['check_out_photo'] && $wage->check_out_photo) {
-                $dayPhotos[$wageDate]['check_out_photo'] = asset('storage/' . $wage->check_out_photo);
-            }
-
-            if (!$dayPhotos[$wageDate]['check_out_time'] && $wage->check_out_time) {
-                $dayPhotos[$wageDate]['check_out_time'] = $wage->check_out_time;
-            }
+            $dayPhotos[$checkinDate] = [
+                'check_in_time'   => $checkin->check_in_time,
+                'check_in_photo'  => $checkin->check_in_photo ? asset('storage/' . $checkin->check_in_photo) : null,
+                'check_out_time'  => $checkin->check_out_time,
+                'check_out_photo' => $checkin->check_out_photo ? asset('storage/' . $checkin->check_out_photo) : null,
+            ];
         }
 
         /* =======================
@@ -331,6 +343,19 @@ public function addAttendance(Request $request)
             'day_photos'      => $dayPhotos,
         ]);
     }
+private function normalizeTime(?string $value): ?string
+{
+    if (!$value) {
+        return null;
+    }
+
+    try {
+        return Carbon::parse($value)->format('H:i:s');
+    } catch (\Exception $e) {
+        return null;
+    }
+}
+
 private function getApplicableWage($siteId, $category, $attendanceDate)
 {
     return Wages::where('site_id', $siteId)
@@ -659,8 +684,13 @@ private function buildDayData($siteId, $date, $categories)
     $request->validate([
         'site_id' => 'required',
         'date'    => 'required|date',
-        'time'    => 'nullable|date_format:H:i,H:i:s',
+        'time'    => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'check_in_time'  => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'check_out_time' => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
         'image'   => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+        'photo'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'check_in_photo'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'check_out_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
     ]);
 
     $adminId = $request->admin_id ?? 1; // mobile will send admin_id
@@ -721,6 +751,29 @@ private function buildDayData($siteId, $date, $categories)
         }
     }
 
+    $checkInTime = $this->normalizeTime($request->input('check_in_time'));
+    $checkInPhotoFile = $request->hasFile('check_in_photo') ? $request->file('check_in_photo') : null;
+
+    $checkOutTime = $this->normalizeTime($request->input('time', $request->input('check_out_time')));
+    $checkOutPhotoFile = $request->hasFile('photo') ? $request->file('photo') : ($request->hasFile('check_out_photo') ? $request->file('check_out_photo') : null);
+
+    $checkinUpdate = array_filter([
+        'check_in_time'   => $checkInTime,
+        'check_in_photo'  => $checkInPhotoFile ? $checkInPhotoFile->store('wages_checkin', 'public') : null,
+        'check_out_time'  => $checkOutTime,
+        'check_out_photo' => $checkOutPhotoFile ? $checkOutPhotoFile->store('wages_checkout', 'public') : null,
+    ], fn ($v) => $v !== null);
+
+    if (!empty($checkinUpdate)) {
+        AttendanceCheckin::updateOrCreate(
+            [
+                'site_id' => $request->site_id,
+                'date'    => $request->date,
+            ],
+            $checkinUpdate + ['created_by' => $adminId]
+        );
+    }
+
     return response()->json([
         'success' => true,
         'message' => 'Attendance and wages updated successfully!',
@@ -728,3 +781,5 @@ private function buildDayData($siteId, $date, $categories)
 }
 
 }
+
+
