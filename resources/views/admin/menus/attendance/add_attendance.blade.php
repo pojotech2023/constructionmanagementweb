@@ -1,12 +1,65 @@
 @extends('layouts.app')
 
 @section('content')
+    <style>
+        .duplicate-entry-popup {
+            max-width: 360px !important;
+            border-radius: 18px !important;
+            padding: 1.75rem 1.5rem 1.5rem !important;
+            box-shadow: 0 12px 36px rgba(241, 65, 108, 0.22) !important;
+        }
+        /* Scale the whole icon proportionally (don't resize width/height directly —
+           the exclamation mark inside is absolutely positioned for the default size
+           and breaks/misaligns if the box is resized instead of scaled). */
+        .duplicate-entry-popup .swal-icon,
+        .duplicate-entry-popup .swal-icon--warning {
+            transform: scale(0.7);
+            margin: -8px auto -16px !important;
+            background-color: rgba(241, 65, 108, 0.1) !important;
+            border-color: #f1416c !important;
+        }
+        .duplicate-entry-popup .swal-icon--warning__body,
+        .duplicate-entry-popup .swal-icon--warning__dot {
+            background-color: #f1416c !important;
+        }
+        .duplicate-entry-popup-title,
+        .duplicate-entry-popup .swal-title {
+            margin: 0 0 0.4rem !important;
+            font-size: 1.15rem !important;
+            color: #d81b5f !important;
+            font-weight: 700 !important;
+        }
+        .duplicate-entry-popup .swal-text {
+            font-size: 0.85rem !important;
+            line-height: 1.4 !important;
+            color: #6c757d !important;
+            text-align: center !important;
+        }
+        .duplicate-entry-popup .swal-footer {
+            text-align: center !important;
+            margin-top: 1rem !important;
+        }
+        .duplicate-entry-popup-btn,
+        .duplicate-entry-popup .swal-button {
+            border-radius: 20px !important;
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            padding: 0.5rem 1.75rem !important;
+            background-color: #f1416c !important;
+            box-shadow: 0 4px 12px rgba(241, 65, 108, 0.3) !important;
+            transition: transform 0.15s ease !important;
+        }
+        .duplicate-entry-popup .swal-button:hover {
+            background-color: #d81b5f !important;
+            transform: translateY(-1px) !important;
+        }
+    </style>
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-10 d-flex justify-content-center">
                 <h3 class="pb-4 mt-3 mb-0">Add Attendance</h3>
             </div>
-            
+
         </div>
 
         <div class="row">
@@ -20,14 +73,6 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         {{ session()->forget('success') }}
-                    @endif
-
-                    <!-- Error Alert -->
-                    @if (session('error'))
-                        <div id="errorAlert" class="alert alert-danger alert-dismissible fade show w-100" role="alert">
-                            {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
                     @endif
 
                     <form id="requestForm" action="{{ route('add.attendance') }}" method="POST" class="container">
@@ -101,23 +146,74 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        function showDuplicatePopup(message) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Added',
+                    text: message,
+                    confirmButtonText: 'Got it',
+                    confirmButtonColor: '#f1416c',
+                    customClass: {
+                        popup: 'duplicate-entry-popup',
+                        title: 'duplicate-entry-popup-title',
+                        confirmButton: 'duplicate-entry-popup-btn'
+                    }
+                }).then(function() {
+                    window.location.reload();
+                });
+            } else if (typeof swal !== 'undefined') {
+                swal({
+                    title: 'Already Added',
+                    text: message,
+                    icon: 'warning',
+                    dangerMode: true,
+                    className: 'duplicate-entry-popup',
+                    button: { text: 'Got it' }
+                }).then(function() {
+                    window.location.reload();
+                });
+            } else {
+                window.alert(message);
+                window.location.reload();
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             const form = document.getElementById('requestForm');
             const spinner = document.getElementById('loadingSpinner');
             const successAlert = document.getElementById('successAlert');
+            const dateInput = document.getElementById('todayDate');
 
             @if (session('error'))
-                (function() {
-                    const message = @json(session('error'));
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({ icon: 'error', title: 'Already Added', text: message });
-                    } else if (typeof swal !== 'undefined') {
-                        swal({ icon: 'error', title: 'Already Added', text: message });
-                    } else {
-                        window.alert(message);
-                    }
-                })();
+                showDuplicatePopup(@json(session('error')));
             @endif
+
+            // Proactively check the selected date before the admin fills the form —
+            // if this site already has attendance/wages for that date, warn immediately.
+            if (dateInput) {
+                function checkDateAndWarn() {
+                    const selectedDate = dateInput.value;
+                    if (!selectedDate) return;
+
+                    fetch("{{ route('attendance.checkDate', $siteId) }}?date=" + encodeURIComponent(selectedDate))
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                showDuplicatePopup(
+                                    data.categories.join(', ') + ' already added for ' + data.date + '. Please edit the existing entry instead of adding it again.'
+                                );
+                            }
+                        })
+                        .catch(() => {});
+                }
+
+                // 'change' covers picking a different date; 'blur' also covers re-picking
+                // the SAME date again (native date inputs don't fire 'change' when the
+                // value doesn't actually change), so the warning shows every time.
+                dateInput.addEventListener('change', checkDateAndWarn);
+                dateInput.addEventListener('blur', checkDateAndWarn);
+            }
 
             // ✅ Spinner show on submit
             if (form && spinner) {

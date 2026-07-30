@@ -187,22 +187,27 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             $duplicates = [];
             foreach ($request->input('rows') as $row) {
                 $rowDate = $row['date'] ?? $request->input('date') ?? Carbon::now()->toDateString();
+                $what = [];
 
                 if (!empty($row['amount']) && Wages::where('site_id', $request->site_id)
                         ->where('date', $rowDate)->where('category', $row['category'])->exists()) {
-                    $duplicates[] = $row['category'] . ' wages on ' . Carbon::parse($rowDate)->format('d-m-Y');
+                    $what[] = 'wages';
                 }
 
                 if (!empty($row['count']) && Attendance::where('site_id', $request->site_id)
                         ->where('date', $rowDate)->where('category', $row['category'])->exists()) {
-                    $duplicates[] = $row['category'] . ' attendance on ' . Carbon::parse($rowDate)->format('d-m-Y');
+                    $what[] = 'attendance';
+                }
+
+                if (!empty($what)) {
+                    $duplicates[] = $row['category'] . ' ' . implode(' & ', $what) . ' (' . Carbon::parse($rowDate)->format('d-m-Y') . ')';
                 }
             }
 
             if (!empty($duplicates)) {
                 return redirect()->back()->withInput()->with(
                     'error',
-                    implode(', ', $duplicates) . ' already added. Please edit the existing entry instead of adding it again.'
+                    implode(', ', $duplicates) . ' already added. Please edit instead.'
                 );
             }
 
@@ -312,7 +317,7 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             return redirect()->back()->withInput()->with(
                 'error',
                 'Wages for ' . implode(', ', $duplicates) . ' on ' . Carbon::parse($request->date)->format('d-m-Y')
-                    . ' is already added. Please edit the existing entry instead of adding it again.'
+                    . ' already added. Please edit instead.'
             );
         }
 
@@ -391,7 +396,7 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             return redirect()->back()->withInput()->with(
                 'error',
                 'Attendance for ' . implode(', ', $duplicates) . ' on ' . Carbon::parse($request->date)->format('d-m-Y')
-                    . ' is already added. Please edit the existing entry instead of adding it again.'
+                    . ' already added. Please edit instead.'
             );
         }
 
@@ -422,6 +427,36 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
     public function getAttendanceForm($siteId)
     {
         return view('admin.menus.attendance.add_attendance', compact('siteId'));
+    }
+
+    // AJAX: check whether a date already has attendance/wages before the admin fills the form
+    public function checkDate(Request $request, $siteId)
+    {
+        $date = $request->query('date');
+
+        if (!$date) {
+            return response()->json(['exists' => false]);
+        }
+
+        $attendanceCategories = Attendance::where('site_id', $siteId)
+            ->where('date', $date)
+            ->pluck('category')
+            ->unique()
+            ->values();
+
+        $wageCategories = Wages::where('site_id', $siteId)
+            ->where('date', $date)
+            ->pluck('category')
+            ->unique()
+            ->values();
+
+        $categories = $attendanceCategories->merge($wageCategories)->unique()->sort()->values();
+
+        return response()->json([
+            'exists' => $categories->isNotEmpty(),
+            'categories' => $categories,
+            'date' => Carbon::parse($date)->format('d-m-Y'),
+        ]);
     }
 
     public function exportAttendance(Request $request, $siteId)

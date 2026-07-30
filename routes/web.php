@@ -211,6 +211,7 @@ Route::prefix('admin')->group(function () {
 
         Route::get('attendance/{siteId}/wages-form', [AttendanceController::class, 'getWagesForm'])->name('wages.form');
         Route::get('/attendance/{siteId}/form', [AttendanceController::class, 'getAttendanceForm'])->name('attendance.form');
+        Route::get('/attendance/{siteId}/check-date', [AttendanceController::class, 'checkDate'])->name('attendance.checkDate');
 
         //Materials
         Route::get('/material-detail/{siteId}', [MaterialController::class, 'getMaterial'])->name('material.detail');
