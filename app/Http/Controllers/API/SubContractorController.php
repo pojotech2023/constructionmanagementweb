@@ -4,10 +4,12 @@ namespace App\Http\Controllers\API;
 
 use App\Exports\SubcontractorExport;
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\Site;
 use App\Models\Subcontractor;
 use App\Models\SubcontractorPayDetail;
 use App\Models\SubcontractorPayment;
+use App\Models\SubcontractorType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -153,12 +155,38 @@ class SubContractorController extends Controller
             ];
         });
 
+    // Remove subcontractor types (fixed or dynamically-added) that the admin has hidden from the grid
+    $hidden = Setting::getHiddenSubcontractorTypes();
+    $subcontractors = $subcontractors->except($hidden);
+
+    // Include dynamically-added subcontractor types even if they have no services yet,
+    // so newly-added cards show up immediately.
+    $subcontractorTypes = SubcontractorType::orderBy('name')->get()
+        ->reject(function ($type) use ($hidden) {
+            return in_array($type->slug, $hidden, true);
+        });
+    foreach ($subcontractorTypes as $type) {
+        if (!$subcontractors->has($type->slug)) {
+            $subcontractors[$type->slug] = [
+                'totalAmounts' => 0,
+            ];
+        }
+    }
+
     // If empty → convert to null
     $formattedData = $subcontractors->isEmpty() ? null : $subcontractors;
 
     return response()->json([
         'response code' => 200,
         'data' => $formattedData,
+        'subcontractor_types' => $subcontractorTypes->map(function ($type) {
+            return [
+                'id' => $type->id,
+                'name' => $type->name,
+                'slug' => $type->slug,
+                'image_url' => $type->image ? asset('storage/' . $type->image) : null,
+            ];
+        }),
         'status' => true,
         'message' => 'SubContractor Management fetched successfully.',
     ]);
@@ -432,6 +460,88 @@ class SubContractorController extends Controller
         ]);
     }
 
+
+    // Edit a payment entry (used by Petty Cash / Rental Management / regular subcontractor payment history action buttons)
+    public function updatePayment(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'payment' => 'required|numeric',
+            'date' => 'required|date',
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+
+        $payment = SubcontractorPayment::findOrFail($id);
+
+        $payment->update([
+            'payment' => $request->payment,
+            'date' => $request->date,
+            'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
+            'updated_by' => auth('api')->id(),
+        ]);
+
+        $paidAmount = SubcontractorPayment::where('subcontractor_id', $payment->subcontractor_id)->sum('payment');
+        $totalAmount = SubcontractorService::where('subcontractor_id', $payment->subcontractor_id)->sum('amount');
+
+        $payDetail = SubcontractorPayDetail::updateOrCreate(
+            ['subcontractor_id' => $payment->subcontractor_id],
+            [
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('api')->id(),
+            ]
+        );
+
+        return response()->json([
+            'response code' => 200,
+            'status' => true,
+            'message' => 'Payment updated successfully.',
+            'data' => [
+                'payment' => $payment,
+                'pay_detail' => $payDetail,
+            ],
+        ]);
+    }
+
+    // Delete a payment entry (used by Petty Cash / Rental Management / regular subcontractor payment history action buttons)
+    public function deletePayment($id)
+    {
+        $payment = SubcontractorPayment::findOrFail($id);
+        $subcontractorId = $payment->subcontractor_id;
+
+        $payment->delete();
+
+        $paidAmount = SubcontractorPayment::where('subcontractor_id', $subcontractorId)->sum('payment');
+        $totalAmount = SubcontractorService::where('subcontractor_id', $subcontractorId)->sum('amount');
+
+        $payDetail = SubcontractorPayDetail::updateOrCreate(
+            ['subcontractor_id' => $subcontractorId],
+            [
+                'total_amount' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('api')->id(),
+            ]
+        );
+
+        return response()->json([
+            'response code' => 200,
+            'status' => true,
+            'message' => 'Payment deleted successfully.',
+            'data' => [
+                'pay_detail' => $payDetail,
+            ],
+        ]);
+    }
 
     public function paymentHistory($subcontractorId)
     {

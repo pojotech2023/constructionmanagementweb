@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MaterialOrder;
 use App\Models\MaterialPayment;
 use App\Models\MaterialRequest;
+use App\Models\MaterialType;
+use App\Models\Setting;
 use App\Models\Site;
 use App\Models\Vendor;
 use App\Models\VendorPayDetail;
@@ -36,9 +38,36 @@ class MaterialController extends Controller
             ];
         });
 
+        // Remove material types (fixed or dynamically-added) that the admin has hidden from the grid
+        $hidden = Setting::getHiddenMaterialTypes();
+        $materials = $materials->except($hidden);
+
+        // Include dynamically-added material types (App\Models\MaterialType) even if
+        // they have no orders yet, so newly-added cards show up immediately.
+        $materialTypes = MaterialType::orderBy('name')->get()
+            ->reject(function ($type) use ($hidden) {
+                return in_array($type->slug, $hidden, true);
+            });
+        foreach ($materialTypes as $type) {
+            if (!$materials->has($type->slug)) {
+                $materials[$type->slug] = [
+                    'units' => 0,
+                    'values' => 0,
+                ];
+            }
+        }
+
         return response()->json([
             'response code' => 200,
             'data' => $materials,
+            'material_types' => $materialTypes->map(function ($type) {
+                return [
+                    'id' => $type->id,
+                    'name' => $type->name,
+                    'slug' => $type->slug,
+                    'image_url' => $type->image ? asset('storage/' . $type->image) : null,
+                ];
+            }),
             'status' => true,
             'message' => 'Material Management fetched successfully.',
         ]);
@@ -219,6 +248,75 @@ public function materialRequest(Request $request)
         ],
     ]);
 }
+
+    // Admin: view all supervisor-submitted material requests for a site
+    public function requestList($siteId)
+    {
+        Site::findOrFail($siteId);
+
+        $requests = MaterialRequest::with('vendor')
+            ->where('site_id', $siteId)
+            ->where('source', MaterialRequest::SOURCE_SUPERVISOR)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'data' => $requests,
+        ]);
+    }
+
+    // Admin: approve a supervisor-submitted material request
+    public function approveRequest($id)
+    {
+        $materialRequest = MaterialRequest::findOrFail($id);
+
+        $materialRequest->update([
+            'status' => MaterialRequest::STATUS_APPROVED,
+            'admin_remark' => null,
+            'reviewed_at' => now(),
+            'updated_by' => auth('api')->id(),
+        ]);
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'message' => 'Request approved successfully.',
+            'data' => $materialRequest,
+        ]);
+    }
+
+    // Admin: reject a supervisor-submitted material request
+    public function rejectRequest(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'admin_remark' => 'nullable|string',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+
+        $materialRequest = MaterialRequest::findOrFail($id);
+
+        $materialRequest->update([
+            'status' => MaterialRequest::STATUS_REJECTED,
+            'admin_remark' => $request->admin_remark,
+            'reviewed_at' => now(),
+            'updated_by' => auth('api')->id(),
+        ]);
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'message' => 'Request rejected successfully.',
+            'data' => $materialRequest,
+        ]);
+    }
 
     // Supervisor: view the status of material requests they submitted for a site
     public function myRequests($siteId)

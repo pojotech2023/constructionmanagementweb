@@ -10,6 +10,7 @@ use App\Http\Controllers\API\DeviceTokenController;
 use App\Http\Controllers\API\GenerateQuotationController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\MaterialController;
+use App\Http\Controllers\API\MaterialTypeController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OtherUtilitiesController;
 use App\Http\Controllers\API\OtherUtilitiesSubController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\API\UnitController;
 use App\Http\Controllers\API\SalesBillController;
 use App\Http\Controllers\API\SiteController;
 use App\Http\Controllers\API\SubContractorController;
+use App\Http\Controllers\API\SubcontractorTypeController;
 use App\Http\Controllers\API\SupervisorController;
 use App\Http\Controllers\API\VendorController;
 use App\Http\Controllers\ChecklistController;
@@ -116,6 +118,14 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/material/{siteId}/{materialType}', [MaterialController::class, 'materialData']); //bricks, sand list
   Route::post('/request-order', [MaterialController::class, 'materialRequest']); //add request
   Route::get('/my-material-requests/{siteId}', [MaterialController::class, 'myRequests']); //supervisor: view own request statuses
+  Route::get('/material-request-list/{siteId}', [MaterialController::class, 'requestList']); //admin: view all supervisor requests for a site
+  Route::post('/material-request-approve/{id}', [MaterialController::class, 'approveRequest']); //admin: approve a request
+  Route::post('/material-request-reject/{id}', [MaterialController::class, 'rejectRequest']); //admin: reject a request (admin_remark optional)
+
+  //Material Types (dynamic material categories)
+  Route::post('/material-type-add', [MaterialTypeController::class, 'store']); //multipart: name, image
+  Route::delete('/material-type-delete/{id}', [MaterialTypeController::class, 'delete']); //remove a dynamically-added material card
+  Route::delete('/material-type-hide/{slug}', [MaterialTypeController::class, 'hideFixed']); //hide a fixed/built-in material card
   Route::post('/add-order', [MaterialController::class, 'materialOrder']);    // add order
   Route::get('/materials-unit', [MaterialController::class, 'index']);
   Route::get('/material-export', [MaterialController::class, 'exportMaterial']);
@@ -138,6 +148,11 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/service-update/{id}', [SubContractorController::class, 'updateService']);
   Route::delete('/service-delete/{id}', [SubContractorController::class, 'destroyService']);
   Route::get('/subcontractor-export', [SubContractorController::class, 'exportSubcontractor']);
+
+  //Subcontractor Types (dynamic subcontractor categories shown on SubContractor Details grid)
+  Route::post('/subcontractor-type-add', [SubcontractorTypeController::class, 'store']); //"+ Add SubContractor" button, multipart: name, image
+  Route::delete('/subcontractor-type-delete/{id}', [SubcontractorTypeController::class, 'delete']); //remove a dynamically-added card (× button)
+  Route::delete('/subcontractor-type-hide/{slug}', [SubcontractorTypeController::class, 'hideFixed']); //hide a fixed/built-in card (× button)
 
   //Other Utilities Subcontractor
   Route::get('/site-subutilities/{id}', [OtherUtilitiesSubController::class, 'index']);
@@ -187,6 +202,8 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/subpaydetail/{subcontractorId}', [SubcontractorController::class, 'getPayDetailsForm']);
   Route::post('subpaydetail-update', [SubcontractorController::class, 'subcontractorpayUpdate']); //only for opening balance
   Route::post('subpayment-add', [SubcontractorController::class, 'addPayment']);
+  Route::patch('subpayment-update/{id}', [SubcontractorController::class, 'updatePayment']); //petty cash / rental management / payment history: edit action button
+  Route::delete('subpayment-delete/{id}', [SubcontractorController::class, 'deletePayment']); //petty cash / rental management / payment history: delete action button
   Route::get('subpayment-history/{subcontractorId}', [SubcontractorController::class, 'paymentHistory']);
   Route::get('subpayment-history/{subcontractorId}/export', [SubcontractorController::class, 'exportPaymentHistory']);
   Route::get('subcontractor-orders/{subcontractorId}', [SubcontractorController::class, 'subcontractorOrders']);
