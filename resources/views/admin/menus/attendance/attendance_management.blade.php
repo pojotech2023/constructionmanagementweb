@@ -124,7 +124,7 @@
                                     <th>{{ ucfirst($cat) }}</th>
                                 @endforeach
                                 <th>Total (₹)</th>
-                                <th class="text-center">Photos</th>
+                                <th class="text-center">Check In / Check Out</th>
                                 <th class="text-center attendance-action-column">Action</th>
                             </tr>
                         </thead>

@@ -17,11 +17,19 @@
 
                     <!-- Success Alert -->
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show w-100" role="alert">
+                        <div id="successAlert" class="alert alert-success alert-dismissible fade show w-100" role="alert">
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         {{ session()->forget('success') }}
+                    @endif
+
+                    <!-- Error Alert -->
+                    @if (session('error'))
+                        <div id="errorAlert" class="alert alert-danger alert-dismissible fade show w-100" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                     @endif
 
                     <form id="requestForm" action="{{ route('add.wages') }}" method="POST" class="container" enctype="multipart/form-data">
@@ -79,10 +87,10 @@
                                                 <input type="text" name="rows[{{ $i }}][category]" class="form-control" value="{{ $cat }}">
                                             </td>
                                             <td>
-                                                <input type="number" name="rows[{{ $i }}][amount]" class="form-control amount-input" step="0.01" min="0" value="{{ old('rows.' . $i . '.amount') }}">
+                                                <input type="number" name="rows[{{ $i }}][amount]" class="form-control amount-input no-arrow" step="0.01" min="0" value="{{ old('rows.' . $i . '.amount') }}">
                                             </td>
                                             <td>
-                                                <input type="number" name="rows[{{ $i }}][count]" class="form-control count-input" min="0" value="{{ old('rows.' . $i . '.count') }}">
+                                                <input type="number" name="rows[{{ $i }}][count]" class="form-control count-input no-arrow" min="0" value="{{ old('rows.' . $i . '.count') }}">
                                             </td>
                                             <td class="text-center">
                                                     <div class="d-flex justify-content-center gap-1">
@@ -134,7 +142,20 @@
         document.addEventListener("DOMContentLoaded", function() {
             const form = document.getElementById('requestForm');
             const spinner = document.getElementById('loadingSpinner');
-            const alert = document.querySelector('.alert');
+            const successAlert = document.getElementById('successAlert');
+
+            @if (session('error'))
+                (function() {
+                    const message = @json(session('error'));
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Already Added', text: message });
+                    } else if (typeof swal !== 'undefined') {
+                        swal({ icon: 'error', title: 'Already Added', text: message });
+                    } else {
+                        window.alert(message);
+                    }
+                })();
+            @endif
 
             const wagesTable = document.getElementById('wagesTable');
             const addRowBtn = document.getElementById('addRowBtn');
@@ -150,10 +171,10 @@
                             <input type="text" name="rows[${index}][category]" class="form-control" value="${data.category || ''}">
                         </td>
                         <td>
-                            <input type="number" name="rows[${index}][amount]" class="form-control amount-input" step="0.01" min="0" value="${data.amount || ''}">
+                            <input type="number" name="rows[${index}][amount]" class="form-control amount-input no-arrow" step="0.01" min="0" value="${data.amount || ''}">
                         </td>
                         <td>
-                            <input type="number" name="rows[${index}][count]" class="form-control count-input" min="0" value="${data.count || ''}">
+                            <input type="number" name="rows[${index}][count]" class="form-control count-input no-arrow" min="0" value="${data.count || ''}">
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
@@ -245,10 +266,10 @@
             }
 
             // Success message fade & redirect
-            if (alert) {
+            if (successAlert) {
                 setTimeout(() => {
-                    alert.classList.remove('show');
-                    alert.classList.add('fade');
+                    successAlert.classList.remove('show');
+                    successAlert.classList.add('fade');
                     const siteId = "{{ $siteId }}";
                     window.location.href = "/admin/public/admin/attendance/" + siteId;
                 }, 1000);

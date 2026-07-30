@@ -15,11 +15,19 @@
 
                     <!-- Success Alert -->
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show w-100" role="alert">
+                        <div id="successAlert" class="alert alert-success alert-dismissible fade show w-100" role="alert">
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         {{ session()->forget('success') }}
+                    @endif
+
+                    <!-- Error Alert -->
+                    @if (session('error'))
+                        <div id="errorAlert" class="alert alert-danger alert-dismissible fade show w-100" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                     @endif
 
                     <form id="requestForm" action="{{ route('add.attendance') }}" method="POST" class="container">
@@ -96,7 +104,20 @@
         document.addEventListener("DOMContentLoaded", function() {
             const form = document.getElementById('requestForm');
             const spinner = document.getElementById('loadingSpinner');
-            const alert = document.querySelector('.alert');
+            const successAlert = document.getElementById('successAlert');
+
+            @if (session('error'))
+                (function() {
+                    const message = @json(session('error'));
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Already Added', text: message });
+                    } else if (typeof swal !== 'undefined') {
+                        swal({ icon: 'error', title: 'Already Added', text: message });
+                    } else {
+                        window.alert(message);
+                    }
+                })();
+            @endif
 
             // ✅ Spinner show on submit
             if (form && spinner) {
@@ -106,10 +127,10 @@
             }
 
             // ✅ Success alert fade and redirect
-            if (alert) {
+            if (successAlert) {
                 setTimeout(() => {
-                    alert.classList.remove('show');
-                    alert.classList.add('fade');
+                    successAlert.classList.remove('show');
+                    successAlert.classList.add('fade');
                     const siteId = "{{ $siteId }}";
                     window.location.href = "/admin/public/admin/attendance/" + siteId;
                 }, 1000);

@@ -149,7 +149,7 @@ private function getApplicableWage($category, $attendanceDate, $wages)
 // Helper: group attendance by date with calculated total
 private function getGroupedAttendance($attendances, $wages, &$allCategories)
 {
-    return $attendances->groupBy('date')->map(function ($records, $day) use ($wages, &$allCategories) {
+    return $attendances->sortBy('date')->groupBy('date')->map(function ($records, $day) use ($wages, &$allCategories) {
         $dayData = ['date' => $day, 'total' => 0];
         foreach ($records as $rec) {
             $amount = $this->getApplicableWage($rec->category, Carbon::parse($rec->date), $wages);
@@ -180,6 +180,30 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
 
             if ($validate->fails()) {
                 return redirect()->back()->withErrors($validate)->withInput();
+            }
+
+            // Don't silently duplicate — if attendance/wages already exist for a site/date/category
+            // in these rows, stop and tell the admin to edit the existing entry instead.
+            $duplicates = [];
+            foreach ($request->input('rows') as $row) {
+                $rowDate = $row['date'] ?? $request->input('date') ?? Carbon::now()->toDateString();
+
+                if (!empty($row['amount']) && Wages::where('site_id', $request->site_id)
+                        ->where('date', $rowDate)->where('category', $row['category'])->exists()) {
+                    $duplicates[] = $row['category'] . ' wages on ' . Carbon::parse($rowDate)->format('d-m-Y');
+                }
+
+                if (!empty($row['count']) && Attendance::where('site_id', $request->site_id)
+                        ->where('date', $rowDate)->where('category', $row['category'])->exists()) {
+                    $duplicates[] = $row['category'] . ' attendance on ' . Carbon::parse($rowDate)->format('d-m-Y');
+                }
+            }
+
+            if (!empty($duplicates)) {
+                return redirect()->back()->withInput()->with(
+                    'error',
+                    implode(', ', $duplicates) . ' already added. Please edit the existing entry instead of adding it again.'
+                );
             }
 
             $checkInPhoto = null;
@@ -268,6 +292,30 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             'Centring Helper' => 'amount_Centring_Helper',
         ];
 
+        // Don't silently duplicate — if a wage rate already exists for this site/date/category,
+        // stop and tell the admin to edit the existing entry instead of creating a second one.
+        $duplicates = [];
+        foreach ($categories as $category => $amountField) {
+            if ($request->filled($amountField)) {
+                $exists = Wages::where('site_id', $request->site_id)
+                    ->where('date', $request->date)
+                    ->where('category', $category)
+                    ->exists();
+
+                if ($exists) {
+                    $duplicates[] = $category;
+                }
+            }
+        }
+
+        if (!empty($duplicates)) {
+            return redirect()->back()->withInput()->with(
+                'error',
+                'Wages for ' . implode(', ', $duplicates) . ' on ' . Carbon::parse($request->date)->format('d-m-Y')
+                    . ' is already added. Please edit the existing entry instead of adding it again.'
+            );
+        }
+
         foreach ($categories as $category => $amountField) {
             if ($request->filled($amountField)) {
                 Wages::create([
@@ -323,6 +371,30 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             'Centring Helper' => 'count_Centring_Helper',
         ];
 
+        // Don't silently duplicate — if attendance already exists for this site/date/category,
+        // stop and tell the admin to edit the existing entry instead of creating a second one.
+        $duplicates = [];
+        foreach ($categories as $category => $countField) {
+            if ($request->filled($countField)) {
+                $exists = Attendance::where('site_id', $request->site_id)
+                    ->where('date', $request->date)
+                    ->where('category', $category)
+                    ->exists();
+
+                if ($exists) {
+                    $duplicates[] = $category;
+                }
+            }
+        }
+
+        if (!empty($duplicates)) {
+            return redirect()->back()->withInput()->with(
+                'error',
+                'Attendance for ' . implode(', ', $duplicates) . ' on ' . Carbon::parse($request->date)->format('d-m-Y')
+                    . ' is already added. Please edit the existing entry instead of adding it again.'
+            );
+        }
+
         foreach ($categories as $category => $countField) {
             if ($request->filled($countField)) {
                 Attendance::create([
@@ -373,26 +445,32 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
 
 public function editPage($site_id, $date)
 {
-    $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
-
     $attendance = Attendance::where('site_id', $site_id)
                             ->where('date', $date)
                             ->pluck('count', 'category');
 
-                             // 1. Check if that date has wages
-// 1. Check if wage exists for the given date
-$wages = Wages::where('site_id', $site_id)
-              ->where('date', $date)
-              ->pluck('amount', 'category');
-
-
-// 2. If NO wage on this date → use nearest previous wage
-if ($wages->isEmpty()) {
-    $wages = Wages::where('site_id', $site_id)
-                  ->where('date', '<', $date)     // previous dates only
-                  ->orderBy('date', 'desc')        // nearest previous
+    // 1. Check if wage exists for the given date
+    $wagesForDate = Wages::where('site_id', $site_id)
+                  ->where('date', $date)
                   ->pluck('amount', 'category');
-}
+
+    // 2. If NO wage on this date → use nearest previous wage (for pre-filling the rate only)
+    $wages = $wagesForDate;
+    if ($wages->isEmpty()) {
+        $wages = Wages::where('site_id', $site_id)
+                      ->where('date', '<', $date)     // previous dates only
+                      ->orderBy('date', 'desc')        // nearest previous
+                      ->pluck('amount', 'category');
+    }
+
+    // Only show categories actually recorded on THIS date — not the site's whole history,
+    // so a date that only has e.g. "sithal" only shows "sithal".
+    $categories = $attendance->keys()
+        ->merge($wagesForDate->keys())
+        ->filter()
+        ->unique()
+        ->sort()
+        ->values();
 
 
     // Provide the variable name your view expects
@@ -514,6 +592,8 @@ public function updateWages(Request $request)
 public function updateAttendanceAndWages(Request $request)
 {
     $validate = Validator::make($request->all(), [
+        'checkin_time'  => 'nullable|date_format:H:i',
+        'checkin_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         'time'  => 'nullable|date_format:H:i',
         'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
     ]);
@@ -522,7 +602,7 @@ public function updateAttendanceAndWages(Request $request)
         return redirect()->back()->withErrors($validate)->withInput();
     }
 
-    $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
+    $categories = $request->input('categories', []);
 
     foreach ($categories as $cat) {
         $countKey = "count_" . str_replace(' ', '_', $cat);
@@ -598,16 +678,25 @@ public function updateAttendanceAndWages(Request $request)
         }
     }
 
-    // Check-out time & photo for this site/date
-    if ($request->filled('time') || $request->hasFile('photo')) {
-        $checkOutUpdate = [];
+    // Check-in / check-out time & photo for this site/date
+    if ($request->filled('checkin_time') || $request->hasFile('checkin_photo')
+        || $request->filled('time') || $request->hasFile('photo')) {
+        $checkInOutUpdate = [];
+
+        if ($request->filled('checkin_time')) {
+            $checkInOutUpdate['check_in_time'] = $request->checkin_time;
+        }
+
+        if ($request->hasFile('checkin_photo')) {
+            $checkInOutUpdate['check_in_photo'] = $request->file('checkin_photo')->store('wages_checkin', 'public');
+        }
 
         if ($request->filled('time')) {
-            $checkOutUpdate['check_out_time'] = $request->time;
+            $checkInOutUpdate['check_out_time'] = $request->time;
         }
 
         if ($request->hasFile('photo')) {
-            $checkOutUpdate['check_out_photo'] = $request->file('photo')->store('wages_checkout', 'public');
+            $checkInOutUpdate['check_out_photo'] = $request->file('photo')->store('wages_checkout', 'public');
         }
 
         AttendanceCheckin::updateOrCreate(
@@ -615,7 +704,7 @@ public function updateAttendanceAndWages(Request $request)
                 'site_id' => $request->site_id,
                 'date'    => $request->date,
             ],
-            $checkOutUpdate + ['created_by' => auth('admin')->id()]
+            $checkInOutUpdate + ['created_by' => auth('admin')->id()]
         );
     }
 

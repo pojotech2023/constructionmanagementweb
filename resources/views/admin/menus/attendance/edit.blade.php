@@ -35,6 +35,28 @@
 
     <div class="row mt-2">
         <div class="col-md-4">
+            <label for="checkInTime" class="fw-bold">Time (Check-in)</label>
+            <input type="time" id="checkInTime" class="form-control" name="checkin_time" value="{{ old('checkin_time', optional($checkOut)->check_in_time ? \Carbon\Carbon::parse($checkOut->check_in_time)->format('H:i') : '') }}">
+            @error('checkin_time')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="col-md-4">
+            <label for="checkInPhoto" class="fw-bold">Upload Photo (Check-in)</label>
+            <input type="file" id="checkInPhoto" name="checkin_photo" class="form-control" accept="image/*">
+            @if (optional($checkOut)->check_in_photo)
+                <div class="mt-2">
+                    <img src="{{ asset('storage/' . $checkOut->check_in_photo) }}" alt="Check-in photo" style="max-width: 120px; max-height: 90px; object-fit: contain;">
+                </div>
+            @endif
+            @error('checkin_photo')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-4">
             <label for="checkOutTime" class="fw-bold">Time (Check-out)</label>
             <input type="time" id="checkOutTime" class="form-control" name="time" value="{{ old('time', optional($checkOut)->check_out_time ? \Carbon\Carbon::parse($checkOut->check_out_time)->format('H:i') : '') }}">
             @error('time')
@@ -61,12 +83,13 @@
     <div id="attendanceRows"></div>
 
     @foreach ($categories as $cat)
+        <input type="hidden" name="categories[]" value="{{ $cat }}">
         <div class="row mt-2">
             <div class="col-md-4">
                 <label>{{ $cat }}</label>
             </div>
             <div class="col-md-4">
-                <input type="number" class="form-control"
+                <input type="number" class="form-control no-arrow"
                        name="count_{{ str_replace(' ', '_', $cat) }}"
                        value="{{ $attendance[$cat] ?? 0 }}">
             </div>
@@ -84,7 +107,7 @@
                 <label>{{ $cat }}</label>
             </div>
             <div class="col-md-4">
-                <input type="number" class="form-control"
+                <input type="number" class="form-control no-arrow"
                        name="amount_{{ str_replace(' ', '_', $cat) }}"
                        value="{{ $wages[$cat] ?? 0 }}">
             </div>
@@ -128,7 +151,7 @@
                     </div>
                     <div class="col-md-4">
                         <label>${valueLabel}</label>
-                        <input type="number" step="${inputStep}" class="form-control" name="${fieldName}[${index}][${valueName}]" placeholder="${valueLabel}">
+                        <input type="number" step="${inputStep}" class="form-control no-arrow" name="${fieldName}[${index}][${valueName}]" placeholder="${valueLabel}">
                     </div>
                     <div class="col-md-2">
                         <button type="button" class="btn btn-outline-danger btn-sm remove-row" aria-label="Remove row">&times;</button>
