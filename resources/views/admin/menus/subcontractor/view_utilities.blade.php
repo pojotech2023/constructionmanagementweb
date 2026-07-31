@@ -119,11 +119,11 @@
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label class="form-label">From Date</label>
-                                    <input type="date" name="from_date" class="form-control">
+                                    <input type="date" name="from_date" class="form-control" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">To Date</label>
-                                    <input type="date" name="to_date" class="form-control">
+                                    <input type="date" name="to_date" class="form-control" required>
                                 </div>
                             </div>
                             <div class="modal-footer">

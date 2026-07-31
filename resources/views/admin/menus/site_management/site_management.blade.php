@@ -130,7 +130,7 @@
                                             <p><strong>Duration</strong>
                                                 <span class="text-muted">{{ $site->duration }}</span>
                                             </p>
-                                            <p><strong>Budget Amount:</strong>
+                                            <p><strong>Contract Value:</strong>
                                                 <span class="text-muted">
                                                     {{ $site->budget_amount !== null ? 'Rs. ' . number_format((float) $site->budget_amount, 2) : '-' }}
                                                 </span>

@@ -104,12 +104,12 @@
 
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="budget_amount">Budget Amount</label>
+                                                <label for="budget_amount">Contract Value</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="number" class="form-control" name="budget_amount" id="budget_amount" min="0" step="0.01" value="{{ old('budget_amount') }}"
+                                                <input type="number" class="form-control no-arrow" name="budget_amount" id="budget_amount" min="0" step="0.01" value="{{ old('budget_amount') }}"
                                                     oninput="document.getElementById('budget_amount_words').innerText = numberToWordsIndian(this.value);">
                                                 <small id="budget_amount_words" class="form-text text-muted"></small>
                                             </div>
@@ -335,7 +335,7 @@
                                         <div class="col-lg-4">
                                             <div class="form-group">
                                                 <input type="date" name="dob" id="customer_dob"
-                                                    class="form-control" value="{{ old('dob') }}">
+                                                    class="form-control" max="{{ date('Y-m-d') }}" value="{{ old('dob') }}">
                                             </div>
                                             @error('dob')
                                                 <div class="text-danger">{{ $message }}</div>

@@ -161,6 +161,9 @@
                                         <option value="Carpenter">Carpenter</option>
                                         <option value="Centering Works">Centering Works</option>
                                         <option value="Mason Works">Mason Works</option>
+                                        @foreach ($sharedSubcontractorTypes as $subcontractorType)
+                                            <option value="{{ $subcontractorType->name }}">{{ $subcontractorType->name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 @error('subcontractors')
@@ -218,8 +221,9 @@
                                 <label for="gst">GST</label>
                             </div>
                             <div class="col-lg-10">
-                                <input id="gst" name="gst" type="text" class="form-control"
-                                    placeholder="Enter gst" />
+                                <input id="gst" name="gst" type="text" class="form-control text-uppercase"
+                                    maxlength="15" placeholder="Enter GST number (optional)"
+                                    oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);" />
                                 @error('gst')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror

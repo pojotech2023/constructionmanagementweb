@@ -52,7 +52,7 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="subcontractor_mobile" class="fw-bold">Requestor Mobile No</label>
+                                    <label for="subcontractor_mobile" class="fw-bold">Subcontractor Mobile No</label>
                                 </div>
                             </div>
                             <div class="col-lg-4">
@@ -87,7 +87,7 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="subcontractor_address" class="fw-bold">Requestor Address</label>
+                                    <label for="subcontractor_address" class="fw-bold">Subcontractor Address</label>
                                 </div>
                             </div>
                             <div class="col-lg-4">

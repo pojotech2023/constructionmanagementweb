@@ -170,6 +170,13 @@
                                         <option value="Transport">Transport</option>
                                         <option value="Interior">Interior</option>
                                         <option value="Painting">Painting</option>
+                                        <option value="Steel">Steel</option>
+                                        <option value="Aggregate">Aggregate</option>
+                                        <option value="RMC">RMC</option>
+                                        <option value="Gravel">Gravel</option>
+                                        @foreach ($sharedMaterialTypes as $materialType)
+                                            <option value="{{ $materialType->name }}">{{ $materialType->name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 @error('site_utilities')
@@ -227,8 +234,9 @@
                                 <label for="gst">GST</label>
                             </div>
                             <div class="col-lg-10">
-                                <input id="gst" name="gst" type="text" class="form-control"
-                                    placeholder="Enter gst" />
+                                <input id="gst" name="gst" type="text" class="form-control text-uppercase"
+                                    maxlength="15" placeholder="Enter GST number (optional)"
+                                    oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);" />
                                 @error('gst')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror

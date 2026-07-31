@@ -27,7 +27,7 @@ class VendorController extends Controller
             'mobile_no'     => 'nullable|numeric|digits:10',
             'email'         => 'nullable|email|unique:vendors,email',
             'address'       => 'nullable|string',
-            'gst'           => 'nullable'
+            'gst'           => 'nullable|alpha_num|max:15'
         ]);
 
         if ($validate->fails()) {
@@ -55,7 +55,7 @@ class VendorController extends Controller
             'mobile_no' => 'nullable|numeric|digits:10',
             'email'         => 'nullable|email',
             'address'  => 'nullable|string',
-            'gst'           => 'nullable'
+            'gst'           => 'nullable|alpha_num|max:15'
         ]);
 
         if ($validate->fails()) {
@@ -87,7 +87,7 @@ class VendorController extends Controller
     public function search(Request $request)
     {
         $vendors = Vendor::where('name', 'LIKE', $request->name . '%')
-            ->select('id', 'name', 'mobile_no', 'address')
+            ->select('id', 'name', 'mobile_no', 'address', 'gst')
             ->get();
 
         return response()->json($vendors);
@@ -213,6 +213,68 @@ class VendorController extends Controller
             'status' => 'success',
             //'whatsapp_url' => $whatsappUrl
         ]);
+    }
+
+    public function updatePayment(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'payment' => 'required|numeric',
+            'date' => 'required|date',
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string'
+        ]);
+
+        if ($validate->fails()) {
+            return redirect()->back()->withErrors($validate)->withInput();
+        }
+
+        $payment = VendorPayment::findOrFail($id);
+
+        $payment->update([
+            'payment' => $request->payment,
+            'date' => $request->date,
+            'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
+            'updated_by' => auth('admin')->id(),
+        ]);
+
+        $paidAmount = VendorPayment::where('vendor_id', $payment->vendor_id)->sum('payment');
+        $totalAmount = MaterialOrder::where('vendor_id', $payment->vendor_id)->sum('price');
+
+        VendorPayDetail::updateOrCreate(
+            ['vendor_id' => $payment->vendor_id],
+            [
+                'total_unit_price' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Payment updated successfully.');
+    }
+
+    public function deletePayment($id)
+    {
+        $payment = VendorPayment::findOrFail($id);
+        $vendorId = $payment->vendor_id;
+
+        $payment->delete();
+
+        $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+
+        VendorPayDetail::updateOrCreate(
+            ['vendor_id' => $vendorId],
+            [
+                'total_unit_price' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('admin')->id(),
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Payment deleted successfully.');
     }
 
 

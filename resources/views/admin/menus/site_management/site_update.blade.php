@@ -102,13 +102,13 @@
 
         <div class="col-lg-2">
             <div class="form-group">
-                <label for="budget_amount">Budget Amount</label>
+                <label for="budget_amount">Contract Value</label>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="form-group">
                 <input type="number" name="budget_amount" id="budget_amount" class="form-control"
-                    placeholder="Enter Budget Amount" min="0" step="0.01" value="{{ old('budget_amount', $site->budget_amount ?? '') }}"
+                    placeholder="Enter Contract Value" min="0" step="0.01" value="{{ old('budget_amount', $site->budget_amount ?? '') }}"
                     oninput="document.getElementById('budget_amount_words').innerText = numberToWordsIndian(this.value);">
                 <small id="budget_amount_words" class="form-text text-muted"></small>
             </div>

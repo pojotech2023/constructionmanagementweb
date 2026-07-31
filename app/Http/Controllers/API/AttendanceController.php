@@ -660,6 +660,35 @@ private function buildDayData($siteId, $date, $categories)
     }
 
 
+    public function deleteWages(Request $request)
+    {
+        $request->validate([
+            'site_id' => 'required',
+            'date'    => 'required|date',
+        ]);
+
+        $query = Wages::where('site_id', $request->site_id)
+            ->whereDate('date', $request->date);
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        $deleted = $query->delete();
+
+        if (!$deleted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No wages record found to delete.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Wages deleted successfully!',
+        ]);
+    }
+
     public function destroy($id)
     {
         $attendance = Attendance::find($id);

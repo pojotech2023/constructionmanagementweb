@@ -288,6 +288,7 @@
                                         <option value="">Select Payment Mode</option>
                                         <option value="Online">Online</option>
                                         <option value="Cheque">Cheque</option>
+                                        <option value="Check">Check</option>
                                         <option value="Net Banking">Net Banking</option>
                                         <option value="Cash">Cash</option>
                                     </select>

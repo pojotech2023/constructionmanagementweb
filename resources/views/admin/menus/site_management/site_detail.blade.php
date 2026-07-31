@@ -205,5 +205,29 @@
             border-color: #007bff;
             box-shadow: 0px 5px 15px rgba(0, 123, 255, 0.3);
         }
+
+        .site-card .card-body {
+            justify-content: center !important;
+            gap: 6px;
+        }
+
+        .site-card .card-body > div:first-child {
+            margin-bottom: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 90px;
+        }
+
+        .site-card .card-body img {
+            width: auto !important;
+            height: 80px !important;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .site-card .card-body .text-muted {
+            margin-bottom: 0 !important;
+        }
     </style>
 @endsection

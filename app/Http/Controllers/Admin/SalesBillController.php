@@ -40,8 +40,11 @@ class SalesBillController extends Controller
             'terms_conditions' => 'nullable|string',
             'action' => 'nullable|in:whatsapp,download,mail',
             'particular' => 'required|array',
+            'particular.*' => 'required|string',
             'count' => 'required|array',
+            'count.*' => 'required|numeric',
             'amount' => 'required|array',
+            'amount.*' => 'required|numeric',
         ]);
 
         if ($validate->fails()) {

@@ -49,14 +49,14 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="vendor_mobile" class="fw-bold">Requestor Mobile No</label>
+                                    <label for="vendor_mobile" class="fw-bold">Vendor Mobile No</label>
                                 </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="form-group">
                                     <input type="text" id="vendor_mobile" name="vendor_mobile" class="form-control"
-                                        placeholder="Mobile Number" maxlength="10" minlength="10" pattern="\d{10}"
-                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                                        placeholder="Auto-filled on selecting vendor" maxlength="10" minlength="10" pattern="\d{10}"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" readonly>
                                 </div>
                                 @error('vendor_mobile')
                                     <div class="text-danger">{{ $message }}</div>
@@ -67,14 +67,32 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="vendor_address" class="fw-bold">Requestor Address</label>
+                                    <label for="vendor_address" class="fw-bold">Vendor Address</label>
                                 </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="form-group">
-                                    <textarea id="vendor_address" name="vendor_address" class="form-control" rows="2" placeholder="Vendor Address"></textarea>
+                                    <textarea id="vendor_address" name="vendor_address" class="form-control" rows="2" placeholder="Auto-filled on selecting vendor" readonly></textarea>
                                 </div>
                                 @error('vendor_address')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center mt-5">
+                            <div class="col-lg-2">
+                                <div class="form-group">
+                                    <label for="gst">Vendor GST</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                        <input id="gst" name="gst" type="number" class="form-control no-arrow"
+                                            min="0" max="10" step="0.01" placeholder="Auto-filled on selecting vendor"
+                                            oninput="if (this.value !== '' && parseFloat(this.value) > 10) { this.value = 10; }" readonly />
+                                </div>
+                                @error('gst')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -156,23 +174,6 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="gst">GST</label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                        <input id="gst" name="gst" type="number" class="form-control no-arrow"
-                                            min="0" step="0.01" placeholder="Enter GST amount" />
-                                </div>
-                                @error('gst')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row align-items-center mt-5">
-                            <div class="col-lg-2">
-                                <div class="form-group">
                                     <label for="price">Total Price</label>
                                 </div>
                             </div>
@@ -192,7 +193,7 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="attachment">Upload Image</label>
+                                    <label for="attachment">Invoice</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -282,7 +283,8 @@
                             data-id="${vendor.id}"
                             data-name="${vendor.name}"
                             data-mobile="${vendor.mobile_no}"
-                            data-address="${vendor.address}">
+                            data-address="${vendor.address}"
+                            data-gst="${vendor.gst ?? ''}">
                             ${vendor.name}
                         </a>`;
                             });
@@ -300,6 +302,7 @@
                 $('#vendor_mobile').val($(this).data('mobile'));
                 $('#vendor_id').val($(this).data('id'));
                 $('#vendor_address').val($(this).data('address'));
+                $('#gst').val($(this).data('gst'));
                 $('#vendor_suggestions').hide();
             });
 
@@ -387,6 +390,8 @@
                         <option value="Solid block">Solid Block</option>
                     </select>
                 </div>
+            </div>
+            <div class="row align-items-center mt-5">
                 <div class="col-lg-2">
                     <label class="fw-bold">Inch</label>
                 </div>

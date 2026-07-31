@@ -37,6 +37,11 @@ class SiteController extends Controller
         return Setting::getCurrentPlan()['site_limit'];
     }
 
+    protected function isSupervisor(): bool
+    {
+        return session('role_name') === 'Supervisor';
+    }
+
     public function index(Request $request, SiteExpenseCalculator $expenseCalculator)
     {
         $status = $request->input('status');
@@ -45,6 +50,9 @@ class SiteController extends Controller
             ->where('is_inactive', 0)
             ->when($status && $status !== 'All', function ($query) use ($status) {
                 return $query->where('status', $status);
+            })
+            ->when($this->isSupervisor(), function ($query) {
+                return $query->where('supervisor_id', auth('admin')->id());
             })
             ->orderBy('id', 'desc')
             ->get();
@@ -116,7 +124,7 @@ public function store(Request $request)
         'name'           => 'nullable|string',
         'mobile_no'      => 'nullable|numeric|digits:10',
         'email'          => 'nullable|email',
-        'dob'            => 'nullable|date',
+        'dob'            => 'nullable|date|before_or_equal:today',
         'address'        => 'nullable|string',
     ]);
 
@@ -250,6 +258,14 @@ public function store(Request $request)
     public function siteDetail($id)
     {
         abort_unless(\App\Models\Setting::getMenuVisibility()['site_detail'] ?? true, 403);
+
+        if ($this->isSupervisor()) {
+            abort_unless(
+                Site::where('id', $id)->where('supervisor_id', auth('admin')->id())->exists(),
+                403,
+                'You are not assigned to this site.'
+            );
+        }
 
         $site = Site::with('materialOrders')
             ->where('id', $id)->first();

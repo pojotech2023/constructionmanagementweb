@@ -119,6 +119,8 @@ Route::prefix('admin')->group(function () {
         //opening Balance
         Route::post('pay-update', [VendorController::class, 'vendorpayUpdate'])->name('paydetail.update');
         Route::post('payment-add', [VendorController::class, 'addPayment'])->name('payment.add');
+        Route::patch('payment-update/{id}', [VendorController::class, 'updatePayment'])->name('payment.update');
+        Route::delete('payment-delete/{id}', [VendorController::class, 'deletePayment'])->name('payment.delete');
         Route::get('payment-history/{vendorId}', [VendorController::class, 'paymentHistory'])->name('payment.history');
         Route::get('payment-history/{vendorId}/export', [VendorController::class, 'exportPaymentHistory'])->name('payment.history.export');
 

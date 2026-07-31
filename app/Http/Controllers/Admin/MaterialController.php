@@ -220,7 +220,7 @@ class MaterialController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $columns = ['Date', 'Quantity', 'Vendor', 'Price', 'Material Type', 'Image Link'];
+        $columns = ['Date', 'Quantity', 'Vendor', 'Price', 'Material Type', 'Invoice Link'];
 
         $callback = function () use ($materials, $columns) {
             $file = fopen('php://output', 'w');

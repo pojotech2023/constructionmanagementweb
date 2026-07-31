@@ -105,7 +105,7 @@
                                         </div>
                                         <div class="dashboard-chart-summary">
                                             <div>
-                                                <span><i class="chart-swatch chart-swatch-budget"></i>Budget Amount</span>
+                                                <span><i class="chart-swatch chart-swatch-budget"></i>Contract Value</span>
                                                 <strong>₹{{ number_format((float) $chart['budget_amount'], 2) }}</strong>
                                             </div>
                                             <div>

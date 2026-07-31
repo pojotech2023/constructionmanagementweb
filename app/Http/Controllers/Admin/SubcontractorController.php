@@ -34,7 +34,7 @@ class SubcontractorController extends Controller
             'mobile_no'     => 'required|numeric|digits:10',
             'email'         => 'required|email|unique:subcontractors,email',
             'address'       => 'required|string',
-            'gst'           => 'required'
+            'gst'           => 'nullable|alpha_num|max:15'
         ]);
 
         if ($validate->fails()) {
@@ -47,7 +47,7 @@ class SubcontractorController extends Controller
             'mobile_no' => $request->mobile_no,
             'email' => $request->email,
             'address' => $request->address,
-            'gst' => $request->gst,
+            'gst' => $request->filled('gst') ? $request->gst : null,
             'created_by'  => auth('admin')->id(),
         ]);
 
@@ -63,7 +63,7 @@ class SubcontractorController extends Controller
             'mobile_no' => 'required|numeric|digits:10',
             'email'         => 'required|email',
             'address'  => 'required|string',
-            'gst'           => 'required'
+            'gst'           => 'nullable|alpha_num|max:15'
         ]);
 
         if ($validate->fails()) {
@@ -78,7 +78,7 @@ class SubcontractorController extends Controller
             'mobile_no' => $request->mobile_no,
             'email'  => $request->email,
             'address'  => $request->address,
-            'gst' => $request->gst,
+            'gst' => $request->filled('gst') ? $request->gst : null,
             'updated_by'  => auth('admin')->id(),
         ]);
 

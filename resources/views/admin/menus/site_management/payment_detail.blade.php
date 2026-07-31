@@ -44,13 +44,14 @@
                         <div class="row align-items-center">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="budget_amount" class="fw-bold">Budget Amount</label>
+                                    <label for="budget_amount" class="fw-bold">Contract Value</label>
                                 </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="form-group">
                                     <input type="text" id="budget_amount" class="form-control"
                                         value="{{ number_format($budgetAmount, 2, '.', '') }}" readonly>
+                                    <small id="budget_amount_words" class="form-text text-muted"></small>
                                 </div>
                             </div>
                         </div>
@@ -65,6 +66,7 @@
                                 <div class="form-group">
                                     <input type="text" id="paid_amount" class="form-control"
                                         value="{{ number_format($paidAmount, 2, '.', '') }}" readonly>
+                                    <small id="paid_amount_words" class="form-text text-muted"></small>
                                 </div>
                             </div>
                         </div>
@@ -79,6 +81,7 @@
                                 <div class="form-group">
                                     <input type="text" id="balance_amount" class="form-control"
                                         value="{{ number_format($balanceAmount, 2, '.', '') }}" readonly>
+                                    <small id="balance_amount_words" class="form-text text-muted"></small>
                                 </div>
                             </div>
                         </div>
@@ -129,6 +132,7 @@
                                     <option value="">Select Payment Mode</option>
                                     <option value="Online">Online</option>
                                     <option value="Cheque">Cheque</option>
+                                    <option value="Check">Check</option>
                                     <option value="Net Banking">Net Banking</option>
                                     <option value="Cash">Cash</option>
                                     <option value="Cash-B">Cash-B</option>
@@ -163,6 +167,20 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            [
+                ['budget_amount', 'budget_amount_words'],
+                ['paid_amount', 'paid_amount_words'],
+                ['balance_amount', 'balance_amount_words']
+            ].forEach(function ([inputId, wordsId]) {
+                const input = document.getElementById(inputId);
+                const words = document.getElementById(wordsId);
+                if (input && words) {
+                    words.innerText = numberToWordsIndian(input.value);
+                }
+            });
+        });
+
         $(document).ready(function() {
             $('#sitePaymentForm').on('submit', function(e) {
                 e.preventDefault();

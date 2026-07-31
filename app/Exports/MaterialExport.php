@@ -70,7 +70,7 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
 
     public function headings(): array
     {
-        return ['Date', 'Material Type', 'Quantity', 'Price (₹)', 'Vendor', 'Remarks', 'Image Link'];
+        return ['Date', 'Material Type', 'Quantity', 'Price (₹)', 'Vendor', 'Remarks', 'Invoice Link'];
     }
 
     public function map($row): array

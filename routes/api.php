@@ -296,4 +296,5 @@ Route::get('/sites/{siteId}/attendance-by-date', [AttendanceController::class, '
 });
 
 Route::post('/wages/update', [AttendanceController::class, 'updateWages']);
+Route::post('/wages/delete', [AttendanceController::class, 'deleteWages']);
 Route::post('/update-attendance-wages', [AttendanceController::class, 'updateAttendanceAndWages']);

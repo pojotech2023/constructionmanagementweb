@@ -266,10 +266,10 @@
             </div>
 
             <div class="section">
-                <div class="section-title">Budget Summary</div>
+                <div class="section-title">Contract Summary</div>
                 <table class="details-table">
                     <tr>
-                        <td class="label">Budget Amount</td>
+                        <td class="label">Contract Value</td>
                         <td>Rs. {{ number_format((float) $budgetAmount, 2) }}</td>
                     </tr>
                     <tr>

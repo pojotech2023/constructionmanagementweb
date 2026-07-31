@@ -77,18 +77,18 @@
 
                     <hr class="mt-5 mb-3">
 
-                    <h5 class="mb-3">Particulars</h5>
+                    <h5 class="mb-3">Particulars <span class="text-danger">*</span></h5>
 
                     <div id="particularRows">
                         <div class="row mb-2 particular-row">
                             <div class="col-md-5">
-                                <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)">
+                                <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)" required>
                             </div>
                             <div class="col-md-3">
-                                <input type="number" step="any" name="count[]" class="form-control count" placeholder="Count">
+                                <input type="number" step="any" name="count[]" class="form-control count no-arrow" placeholder="Count">
                             </div>
                             <div class="col-md-3">
-                                <input type="number" step="any" name="amount[]" class="form-control amount" placeholder="Amount">
+                                <input type="number" step="any" name="amount[]" class="form-control amount no-arrow" placeholder="Amount">
                             </div>
                             <div class="col-md-1">
                                 <button type="button" class="btn btn-danger remove-row">X</button>
@@ -194,6 +194,17 @@ $(document).ready(function () {
     }
 
     function submitPurchaseBill(action) {
+        let missingParticular = false;
+        $('#particularRows .particular-row input[name="particular[]"]').each(function () {
+            if (!$(this).val().trim()) {
+                missingParticular = true;
+            }
+        });
+        if (missingParticular) {
+            alert('Particular is mandatory for every row. Please fill it in before continuing.');
+            return;
+        }
+
         if (action === 'mail' && !$('#email').val().trim()) {
             alert('Please enter an email address before sending the mail.');
             return;
@@ -293,13 +304,13 @@ $(document).ready(function () {
         const row = `
 <div class="row mb-2 particular-row">
     <div class="col-md-5">
-        <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)">
+        <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)" required>
     </div>
     <div class="col-md-3">
-        <input type="number" step="any" name="count[]" class="form-control count" placeholder="Count">
+        <input type="number" step="any" name="count[]" class="form-control count no-arrow" placeholder="Count">
     </div>
     <div class="col-md-3">
-        <input type="number" step="any" name="amount[]" class="form-control amount" placeholder="Amount">
+        <input type="number" step="any" name="amount[]" class="form-control amount no-arrow" placeholder="Amount">
     </div>
     <div class="col-md-1">
         <button type="button" class="btn btn-danger remove-row">X</button>

@@ -113,8 +113,8 @@
                                                 <th>Quantity</th>
                                                 <th>Vendor</th>
                                                 <th>Price</th>
-                                                <th>GST</th>
-                                                <th>Image</th>
+                                                <th>Vendor GST</th>
+                                                <th>Invoice</th>
                                                 <th style="width:10%">Action</th>
                                                 {{-- <th>Available</th> --}}
                                             </tr>
@@ -131,12 +131,12 @@
                                                     <td>
                                                         @if ($brick->image_url)
                                                             @if (str_ends_with(strtolower($brick->image_url), '.pdf'))
-                                                                <a href="{{ $brick->image_url }}" target="_blank" title="View attachment">
+                                                                <a href="{{ $brick->image_url }}" target="_blank" title="View invoice">
                                                                     <i class="fa fa-file-pdf"></i> View
                                                                 </a>
                                                             @else
-                                                                <a href="{{ $brick->image_url }}" target="_blank" title="View image">
-                                                                    <img src="{{ $brick->image_url }}" class="material-photo-thumb" alt="Order image">
+                                                                <a href="{{ $brick->image_url }}" target="_blank" title="View invoice">
+                                                                    <img src="{{ $brick->image_url }}" class="material-photo-thumb" alt="Invoice">
                                                                 </a>
                                                             @endif
                                                         @else
@@ -228,11 +228,12 @@
                                             <small id="edit_order_price_words" class="form-text text-muted"></small>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">GST</label>
-                                            <input type="number" step="0.01" name="gst" id="edit_order_gst" class="form-control">
+                                            <label class="form-label">Vendor GST</label>
+                                            <input type="number" step="0.01" min="0" max="10" name="gst" id="edit_order_gst" class="form-control"
+                                                oninput="if (this.value !== '' && parseFloat(this.value) > 10) { this.value = 10; }">
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Image</label>
+                                            <label class="form-label">Invoice</label>
                                             <div id="edit_order_current_image" class="mb-2"></div>
                                             <input type="file" name="attachment" id="edit_order_attachment" class="form-control" accept="image/*,.pdf">
                                         </div>
@@ -402,9 +403,9 @@
                     const currentImageDiv = document.getElementById('edit_order_current_image');
                     if (image) {
                         if (image.toLowerCase().endsWith('.pdf')) {
-                            currentImageDiv.innerHTML = '<a href="' + image + '" target="_blank"><i class="fa fa-file-pdf"></i> View current attachment</a>';
+                            currentImageDiv.innerHTML = '<a href="' + image + '" target="_blank"><i class="fa fa-file-pdf"></i> View current invoice</a>';
                         } else {
-                            currentImageDiv.innerHTML = '<a href="' + image + '" target="_blank"><img src="' + image + '" class="material-photo-thumb" alt="Current image"></a>';
+                            currentImageDiv.innerHTML = '<a href="' + image + '" target="_blank"><img src="' + image + '" class="material-photo-thumb" alt="Current invoice"></a>';
                         }
                     } else {
                         currentImageDiv.innerHTML = '<span class="text-muted">No image uploaded</span>';

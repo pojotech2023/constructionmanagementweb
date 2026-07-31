@@ -52,7 +52,7 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="vendor_mobile" class="fw-bold">Requestor Mobile No</label>
+                                    <label for="vendor_mobile" class="fw-bold">Vendor Mobile No</label>
                                 </div>
                             </div>
                             <div class="col-lg-4">
@@ -70,7 +70,7 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="vendor_address" class="fw-bold">Requestor Address</label>
+                                    <label for="vendor_address" class="fw-bold">Vendor Address</label>
                                 </div>
                             </div>
                             <div class="col-lg-4">
@@ -408,6 +408,8 @@ function loadUnitField(materialType) {
                         <option value="Solid block">Solid Block</option>
                     </select>
                 </div>
+            </div>
+            <div class="row align-items-center mt-5">
                 <div class="col-lg-2">
                     <label class="fw-bold">Unit</label>
                 </div>
