@@ -3,55 +3,36 @@
 @section('content')
     <style>
         .duplicate-entry-popup {
-            max-width: 360px !important;
-            border-radius: 18px !important;
-            padding: 1.75rem 1.5rem 1.5rem !important;
-            box-shadow: 0 12px 36px rgba(241, 65, 108, 0.22) !important;
-        }
-        /* Scale the whole icon proportionally (don't resize width/height directly —
-           the exclamation mark inside is absolutely positioned for the default size
-           and breaks/misaligns if the box is resized instead of scaled). */
-        .duplicate-entry-popup .swal-icon,
-        .duplicate-entry-popup .swal-icon--warning {
-            transform: scale(0.7);
-            margin: -8px auto -16px !important;
-            background-color: rgba(241, 65, 108, 0.1) !important;
-            border-color: #f1416c !important;
-        }
-        .duplicate-entry-popup .swal-icon--warning__body,
-        .duplicate-entry-popup .swal-icon--warning__dot {
-            background-color: #f1416c !important;
-        }
-        .duplicate-entry-popup-title,
-        .duplicate-entry-popup .swal-title {
-            margin: 0 0 0.4rem !important;
-            font-size: 1.15rem !important;
-            color: #d81b5f !important;
-            font-weight: 700 !important;
-        }
-        .duplicate-entry-popup .swal-text {
-            font-size: 0.85rem !important;
-            line-height: 1.4 !important;
-            color: #6c757d !important;
             text-align: center !important;
+            border-radius: 16px !important;
+            padding: 2rem 1.75rem 1.75rem !important;
         }
+
+        .duplicate-entry-popup .swal-text {
+            text-align: center !important;
+            width: 100% !important;
+            margin: 0.75rem 0 0 !important;
+            color: #5a6169 !important;
+            font-size: 0.95rem !important;
+            line-height: 1.5 !important;
+        }
+
         .duplicate-entry-popup .swal-footer {
             text-align: center !important;
-            margin-top: 1rem !important;
+            margin-top: 1.5rem !important;
         }
-        .duplicate-entry-popup-btn,
-        .duplicate-entry-popup .swal-button {
-            border-radius: 20px !important;
-            font-size: 0.85rem !important;
-            font-weight: 600 !important;
-            padding: 0.5rem 1.75rem !important;
-            background-color: #f1416c !important;
-            box-shadow: 0 4px 12px rgba(241, 65, 108, 0.3) !important;
-            transition: transform 0.15s ease !important;
+
+        .duplicate-entry-popup .swal-button-container {
+            display: flex !important;
+            justify-content: center !important;
+            margin: 0 !important;
         }
-        .duplicate-entry-popup .swal-button:hover {
-            background-color: #d81b5f !important;
-            transform: translateY(-1px) !important;
+
+        .duplicate-entry-popup .swal-button,
+        .duplicate-entry-popup-btn {
+            padding: 0.7rem 2.5rem !important;
+            font-size: 1rem !important;
+            border-radius: 8px !important;
         }
     </style>
     <div class="container">
@@ -188,13 +169,12 @@
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Already Added',
                     text: message,
                     confirmButtonText: 'Got it',
-                    confirmButtonColor: '#f1416c',
                     customClass: {
                         popup: 'duplicate-entry-popup',
-                        title: 'duplicate-entry-popup-title',
+                        htmlContainer: 'duplicate-entry-popup-text',
+                        actions: 'duplicate-entry-popup-actions',
                         confirmButton: 'duplicate-entry-popup-btn'
                     }
                 }).then(function() {
@@ -202,12 +182,12 @@
                 });
             } else if (typeof swal !== 'undefined') {
                 swal({
-                    title: 'Already Added',
                     text: message,
                     icon: 'warning',
-                    dangerMode: true,
                     className: 'duplicate-entry-popup',
-                    button: { text: 'Got it' }
+                    button: {
+                        text: 'Got it'
+                    }
                 }).then(function() {
                     window.location.reload();
                 });
