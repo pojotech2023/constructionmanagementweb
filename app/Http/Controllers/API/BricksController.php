@@ -19,8 +19,8 @@ class BricksController extends Controller
         $week = (int) $request->query('week', 0); // default: 0 (full month)
 
         // Parse month range
-        $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
-        $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+        $startOfMonth = Carbon::createFromFormat('Y-m-d', $monthYear . '-01')->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         // Calculate date range
         if ($week == 0) {

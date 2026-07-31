@@ -92,6 +92,8 @@ class AttendanceController extends Controller
 
 public function addAttendance(Request $request)
 {
+    $this->decodeJsonArrayField($request, 'attendance_rows');
+
     $validate = Validator::make($request->all(), [
         'site_id'  => 'required|exists:sites,id',
         'date'     => 'required|date',
@@ -101,6 +103,9 @@ public function addAttendance(Request $request)
         'count_helper' => 'nullable|numeric',
         'count_fitter' => 'nullable|numeric',
         'count_Centring_Helper' => 'nullable|numeric',
+        'attendance_rows' => 'nullable|array',
+        'attendance_rows.*.category' => 'required_with:attendance_rows|string|max:255',
+        'attendance_rows.*.count' => 'required_with:attendance_rows|numeric',
     ]);
 
     if ($validate->fails()) {
@@ -124,18 +129,56 @@ public function addAttendance(Request $request)
         'Centring Helper' => 'count_Centring_Helper',
     ];
 
+    $savedCount = 0;
+
     foreach ($categories as $categoryName => $fieldName) {
         if ($request->filled($fieldName)) {
-            Attendance::create([
-                'site_id' => $request->site_id,
-                'category' => $categoryName,
-                'count' => $request->$fieldName,
-                'date' => $request->date,
-                'time' => $request->time,
-                'image_url' => $imageUrl,
-                'created_by' => auth('api')->id(),
-            ]);
+            Attendance::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $categoryName,
+                ],
+                [
+                    'count' => $request->$fieldName,
+                    'time' => $request->time,
+                    'image_url' => $imageUrl,
+                    'created_by' => auth('api')->id(),
+                ]
+            );
+            $savedCount++;
         }
+    }
+
+    // Same free-text dynamic-category flow the web app uses (attendance_rows[])
+    foreach ($request->input('attendance_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $count = $row['count'] ?? null;
+
+        if ($category !== '' && $count !== null && $count !== '') {
+            Attendance::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
+                ],
+                [
+                    'count' => $count,
+                    'time' => $request->time,
+                    'image_url' => $imageUrl,
+                    'created_by' => auth('api')->id(),
+                ]
+            );
+            $savedCount++;
+        }
+    }
+
+    if ($savedCount === 0) {
+        return response()->json([
+            'response code' => 422,
+            'status' => false,
+            'message' => 'No attendance categories were provided to save.',
+        ], 422);
     }
 
     return response()->json([
@@ -567,11 +610,16 @@ private function buildDayData($siteId, $date, $categories)
 
     public function updateAttendance(Request $request)
     {
+        $this->decodeJsonArrayField($request, 'attendance_rows');
+
         $request->validate([
             'site_id' => 'required',
             'date'    => 'required|date',
             'time'    => 'nullable|date_format:H:i,H:i:s',
             'image'   => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'attendance_rows' => 'nullable|array',
+            'attendance_rows.*.category' => 'required_with:attendance_rows|string|max:255',
+            'attendance_rows.*.count' => 'required_with:attendance_rows|numeric',
         ]);
 
         $imageUrl = null;
@@ -610,6 +658,38 @@ private function buildDayData($siteId, $date, $categories)
                     'site_id'  => $request->site_id,
                     'date'     => $request->date,
                     'category' => $cat,
+                ],
+                $updateData
+            );
+        }
+
+        // Same free-text dynamic-category flow the web app uses (attendance_rows[])
+        foreach ($request->input('attendance_rows', []) as $row) {
+            $category = trim($row['category'] ?? '');
+            $count = $row['count'] ?? null;
+
+            if ($category === '' || $count === null || $count === '') {
+                continue;
+            }
+
+            $updateData = [
+                'count'      => $count,
+                'created_by' => $request->admin_id ?? 1,
+            ];
+
+            if ($request->filled('time')) {
+                $updateData['time'] = $request->time;
+            }
+
+            if ($imageUrl) {
+                $updateData['image_url'] = $imageUrl;
+            }
+
+            Attendance::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
                 ],
                 $updateData
             );
@@ -808,6 +888,25 @@ private function buildDayData($siteId, $date, $categories)
         'message' => 'Attendance and wages updated successfully!',
     ]);
 }
+
+    /**
+     * multipart/form-data can't carry nested arrays natively, so mobile clients
+     * sometimes send a JSON-encoded string for an array field instead of
+     * bracket-indexed keys. Decode it in place so validation/downstream code
+     * can treat the field as an array either way.
+     */
+    private function decodeJsonArrayField(Request $request, string $field): void
+    {
+        $value = $request->input($field);
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $request->merge([$field => $decoded]);
+            }
+        }
+    }
 
 }
 

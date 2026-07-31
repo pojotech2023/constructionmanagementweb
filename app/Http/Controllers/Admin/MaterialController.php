@@ -47,8 +47,8 @@ class MaterialController extends Controller
         $month = $request->query('month') ?: Carbon::now()->format('Y-m');
         $week = (int) $request->query('week');
 
-        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-        $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+        $startOfMonth = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         $startDate = $startOfMonth->copy();
         $endDate = $endOfMonth->copy();
@@ -124,8 +124,8 @@ class MaterialController extends Controller
         $week = (int) $request->input('week'); // 1, 2, 3, 4
         $materialType = $request->input('material_type');
 
-        $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
-        $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+        $startOfMonth = Carbon::createFromFormat('Y-m-d', $monthYear . '-01')->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         // Default to full month
         $startDate = $startOfMonth->copy();
@@ -192,8 +192,8 @@ class MaterialController extends Controller
             $startDate = $fromDate ? Carbon::parse($fromDate)->startOfDay() : Carbon::create(1900, 1, 1)->startOfDay();
             $endDate = $toDate ? Carbon::parse($toDate)->endOfDay() : now()->endOfDay();
         } else {
-            $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
-            $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+            $startOfMonth = Carbon::createFromFormat('Y-m-d', $monthYear . '-01')->startOfMonth();
+            $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
             $startDate = $startOfMonth->copy();
             $endDate = $endOfMonth->copy();

@@ -12,6 +12,7 @@ class MaterialEstimationRequest extends Model
     protected $fillable = [
         'site_id',
         'particular',
+        'quantity',
         'unit',
         'date',
         'created_by',

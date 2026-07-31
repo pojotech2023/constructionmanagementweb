@@ -17,8 +17,8 @@ class BricksController extends Controller
     $month = $request->query('month') ?: Carbon::now()->format('Y-m');
     $week = (int) $request->query('week');
 
-    $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
-    $endOfMonth = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+    $startOfMonth = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+    $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
     $startDate = $startOfMonth->copy();
     $endDate = $endOfMonth->copy();
@@ -80,8 +80,8 @@ class BricksController extends Controller
     $monthYear = $request->input('monthYear'); // format: YYYY-MM
     $week = $request->input('week'); // 1, 2, 3, 4
 
-    $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
-    $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+    $startOfMonth = Carbon::createFromFormat('Y-m-d', $monthYear . '-01')->startOfMonth();
+    $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
     $query = MaterialOrder::with('vendor')
         ->where('site_id', $siteId)
@@ -143,8 +143,8 @@ class BricksController extends Controller
     $monthYear = $request->query('month') ?: now()->format('Y-m');
     $week = (int) $request->query('week');
 
-    $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
-    $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+    $startOfMonth = Carbon::createFromFormat('Y-m-d', $monthYear . '-01')->startOfMonth();
+    $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
     $startDate = $startOfMonth->copy();
     $endDate = $endOfMonth->copy();

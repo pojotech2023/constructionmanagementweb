@@ -198,8 +198,8 @@ class SubContractorController extends Controller
     $monthYear = $request->input('monthYear', now()->format('Y-m'));
     $week = (int) $request->input('week');
 
-    $startOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->startOfMonth();
-    $endOfMonth = Carbon::createFromFormat('Y-m', $monthYear)->endOfMonth();
+    $startOfMonth = Carbon::createFromFormat('Y-m-d', $monthYear . '-01')->startOfMonth();
+    $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
     $query = SubcontractorService::with('subcontractor')
         ->where('site_id', $siteId)

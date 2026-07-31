@@ -28,6 +28,8 @@ class MaterialEstimationRequestController extends Controller
             'site_id' => 'required|exists:sites,id',
             'particular' => 'required|array',
             'particular.*' => 'required|string',
+            'quantity' => 'nullable|array',
+            'quantity.*' => 'nullable|numeric',
             'unit' => 'nullable|array',
             'date' => 'required|array',
             'date.*' => 'required|date',
@@ -41,6 +43,7 @@ class MaterialEstimationRequestController extends Controller
             MaterialEstimationRequest::create([
                 'site_id' => $request->site_id,
                 'particular' => $particular,
+                'quantity' => $request->quantity[$index] ?? null,
                 'unit' => $request->unit[$index] ?? null,
                 'date' => $request->date[$index],
                 'created_by' => auth('admin')->id(),
@@ -55,6 +58,7 @@ class MaterialEstimationRequestController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'particular' => 'required|string',
+            'quantity' => 'nullable|numeric',
             'unit' => 'nullable|string',
             'date' => 'required|date',
         ]);
@@ -66,6 +70,7 @@ class MaterialEstimationRequestController extends Controller
         $materialEstimationRequest = MaterialEstimationRequest::findOrFail($id);
         $materialEstimationRequest->update([
             'particular' => $request->particular,
+            'quantity' => $request->quantity,
             'unit' => $request->unit,
             'date' => $request->date,
             'updated_by' => auth('admin')->id(),

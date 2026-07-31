@@ -1,6 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    input[name="quantity[]"]::-webkit-outer-spin-button,
+    input[name="quantity[]"]::-webkit-inner-spin-button,
+    #edit_quantity::-webkit-outer-spin-button,
+    #edit_quantity::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[name="quantity[]"],
+    #edit_quantity {
+        -moz-appearance: textfield;
+    }
+</style>
 <div class="container">
     <div class="row">
         <div class="col-lg-10">
@@ -27,10 +40,13 @@
 
                     <div id="particularRows">
                         <div class="row mb-2 particular-row align-items-center">
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <input type="number" step="0.01" min="0" name="quantity[]" class="form-control" placeholder="Quantity">
+                            </div>
+                            <div class="col-md-2">
                                 <select name="unit[]" class="form-control">
                                     <option value="">Select Unit</option>
                                     @foreach ($sharedUnits as $unitOption)
@@ -67,6 +83,7 @@
                                 <tr>
                                     <th>S.No</th>
                                     <th>Particular</th>
+                                    <th>Quantity</th>
                                     <th>Unit</th>
                                     <th>Date</th>
                                     <th style="width:100px">Action</th>
@@ -77,6 +94,7 @@
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $req->particular }}</td>
+                                        <td>{{ $req->quantity ?? '-' }}</td>
                                         <td>{{ $req->unit ?? '-' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($req->date)->format('d-m-Y') }}</td>
                                         <td>
@@ -84,6 +102,7 @@
                                                 <button type="button" class="btn btn-link btn-primary btn-sm editRequestBtn"
                                                     data-id="{{ $req->id }}"
                                                     data-particular="{{ $req->particular }}"
+                                                    data-quantity="{{ $req->quantity }}"
                                                     data-unit="{{ $req->unit }}"
                                                     data-date="{{ \Carbon\Carbon::parse($req->date)->format('Y-m-d') }}"
                                                     data-bs-toggle="modal" data-bs-target="#editRequestModal" title="Edit">
@@ -123,6 +142,10 @@
                     <div class="mb-3">
                         <label class="form-label">Particular</label>
                         <input type="text" name="particular" id="edit_particular" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" step="0.01" min="0" name="quantity" id="edit_quantity" class="form-control">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Unit</label>
@@ -179,10 +202,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = document.createElement('div');
         row.className = 'row mb-2 particular-row align-items-center';
         row.innerHTML = `
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)" required>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <input type="number" step="0.01" min="0" name="quantity[]" class="form-control" placeholder="Quantity">
+            </div>
+            <div class="col-md-2">
                 <select name="unit[]" class="form-control">
                     <option value="">Select Unit</option>
                     @foreach ($sharedUnits as $unitOption)
@@ -217,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('editRequestForm');
             form.action = '{{ url("admin/material-estimation-update") }}/' + id;
             document.getElementById('edit_particular').value = editBtn.getAttribute('data-particular') || '';
+            document.getElementById('edit_quantity').value = editBtn.getAttribute('data-quantity') || '';
             document.getElementById('edit_unit').value = editBtn.getAttribute('data-unit') || '';
             document.getElementById('edit_date').value = editBtn.getAttribute('data-date') || '';
         }
