@@ -304,6 +304,12 @@ Route::prefix('admin')->group(function () {
         Route::post('/checklist/add', [ChecklistController::class, 'store'])->name('checklist.add');
         Route::get('/checklist/edit/{id}', [ChecklistController::class, 'edit'])->name('checklist.edit');
         Route::post('/checklist/update/{id}', [ChecklistController::class, 'update'])->name('checklist.update');
+        //manage checklist templates: delete items/stages, drag-and-drop reorder
+        Route::get('/checklist-manage', [ChecklistController::class, 'manage'])->name('checklist.manage');
+        Route::delete('/checklist-task/{id}', [ChecklistController::class, 'deleteTask'])->name('checklist.task.delete');
+        Route::delete('/checklist-stage/{id}', [ChecklistController::class, 'destroy'])->name('checklist.stage.delete');
+        Route::post('/checklist-tasks/reorder', [ChecklistController::class, 'reorderTasks'])->name('checklist.tasks.reorder');
+        Route::post('/checklist-stages/reorder', [ChecklistController::class, 'reorderChecklists'])->name('checklist.stages.reorder');
         //task update for supervisor
         Route::get('/taskupdate/{siteId}/{taskId}', [ChecklistController::class, 'taskcreate'])->name('task.create');
         Route::get('/task/{task}/upload', [ChecklistController::class, 'create'])->name('task.upload.create');

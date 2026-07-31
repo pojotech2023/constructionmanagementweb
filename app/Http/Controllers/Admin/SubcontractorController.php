@@ -486,21 +486,21 @@ class SubcontractorController extends Controller
 
         $site = Site::find($request->site_id);
 
-       // $message = "* SS BULIDERS*\n"
-         //   . "Site Name: {$site->site_name} - SubContractor Service\n"
-          //  . "SubContractor Name: {$request->subcontractor_name}\n"
-          //  . "SubContractor Address: {$request->subcontractor_address}\n"
-          //  . "Mobile Number: {$request->subcontractor_mobile}\n"
-          //  . "SubContractor Type: {$request->subcontractor_type}\n"
-          //  . "Date: " . Carbon::parse($request->date)->format('d-m-Y') . "\n"
-          //  . "Amount: ₹{$request->amount}\n";
+        $message = "* SS BULIDERS*\n"
+            . "Site Name: {$site->site_name} - SubContractor Service\n"
+            . "SubContractor Name: {$request->subcontractor_name}\n"
+            . "SubContractor Address: {$request->subcontractor_address}\n"
+            . "Mobile Number: {$request->subcontractor_mobile}\n"
+            . "SubContractor Type: {$request->subcontractor_type}\n"
+            . "Date: " . Carbon::parse($request->date)->format('d-m-Y') . "\n"
+            . "Amount: ₹{$request->amount}\n";
 
-        //$whatsappUrl = "https://wa.me/{$request->subcontractor_mobile}?text=" . urlencode($message);
+        $whatsappUrl = "https://wa.me/{$request->subcontractor_mobile}?text=" . urlencode($message);
 
         return response()->json([
             'status' => 'success',
             'message' => 'SubContractor service added successfully.',
-           // 'whatsapp_url' => $whatsappUrl
+            'whatsapp_url' => $whatsappUrl
         ]);
     }
 

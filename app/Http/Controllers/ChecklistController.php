@@ -22,17 +22,78 @@ class ChecklistController extends Controller
 
     $checklist = Checklist::create([
         'stage' => $request->stage,
+        'order' => (Checklist::max('order') ?? 0) + 1,
     ]);
 
-    foreach ($request->task_list as $task) {
+    foreach ($request->task_list as $index => $task) {
         $checklist->tasks()->create([
             'task_name' => $task,
+            'order' => $index,
         ]);
     }
 
 
 
     return redirect()->back()->with('success', 'Checklist created successfully.');
+}
+
+// admin: list all checklist stages + tasks for management (delete / reorder)
+public function manage()
+{
+    $checklists = Checklist::with(['tasks' => function ($query) {
+        $query->orderBy('order')->orderBy('id');
+    }])->orderBy('order')->orderBy('id')->get();
+
+    return view('admin.checklist.checklist_manage', compact('checklists'));
+}
+
+// delete a single task/checklist item
+public function deleteTask($id)
+{
+    $task = task::findOrFail($id);
+    $task->delete();
+
+    return redirect()->back()->with('success', 'Checklist item deleted successfully.');
+}
+
+// delete an entire checklist stage (and its tasks)
+public function destroy($id)
+{
+    $checklist = Checklist::findOrFail($id);
+    $checklist->tasks()->delete();
+    $checklist->delete();
+
+    return redirect()->back()->with('success', 'Checklist stage deleted successfully.');
+}
+
+// persist new order for tasks within a stage (drag-and-drop)
+public function reorderTasks(Request $request)
+{
+    $request->validate([
+        'task_ids' => 'required|array',
+        'task_ids.*' => 'integer|exists:tasks,id',
+    ]);
+
+    foreach ($request->task_ids as $index => $taskId) {
+        task::where('id', $taskId)->update(['order' => $index]);
+    }
+
+    return response()->json(['status' => true]);
+}
+
+// persist new order for checklist stages (drag-and-drop)
+public function reorderChecklists(Request $request)
+{
+    $request->validate([
+        'checklist_ids' => 'required|array',
+        'checklist_ids.*' => 'integer|exists:checklists,id',
+    ]);
+
+    foreach ($request->checklist_ids as $index => $checklistId) {
+        Checklist::where('id', $checklistId)->update(['order' => $index]);
+    }
+
+    return response()->json(['status' => true]);
 }
 
 // api for checklist add
@@ -97,12 +158,13 @@ public function update(Request $request, $id)
 public function index($siteId)
 {
     $site = Site::findOrFail($siteId);
-    
+
     $checklists = Checklist::with(['tasks' => function ($query) use ($siteId) {
-        $query->with(['media' => function ($q) use ($siteId) {
-            $q->where('site_id', $siteId);
-        }]);
-    }])->get();
+        $query->orderBy('order')->orderBy('id')
+            ->with(['media' => function ($q) use ($siteId) {
+                $q->where('site_id', $siteId);
+            }]);
+    }])->orderBy('order')->orderBy('id')->get();
 
     $mediaTaskIdsForSite = TaskMedia::where('site_id', $siteId)
         ->pluck('task_id')

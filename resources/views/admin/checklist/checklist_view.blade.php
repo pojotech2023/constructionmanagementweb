@@ -47,10 +47,14 @@
                     <h2>{{ $site->site_name }}</h2>
                     <p>Track every stage, task update, media submission, and approval status for this site.</p>
                 </div>
-                <a href="{{ route('checklist-create') }}" class="hero-action">
-                    <i class="fa fa-plus"></i>
-                    <span>Add Checklist</span>
-                </a>
+                <div class="d-flex gap-2 flex-wrap">
+                    @if (session('role_name') == 'Admin')
+                        <a href="{{ route('checklist.manage') }}" class="hero-action">
+                            <i class="fa fa-sliders-h"></i>
+                            <span>Manage Checklist</span>
+                        </a>
+                    @endif
+                </div>
             </div>
 
             <div class="checklist-board">
@@ -178,6 +182,14 @@
     </div>
 
     <script>
+        // Force a fresh reload when returning via the browser back button (e.g. from Manage Checklist),
+        // since bfcache would otherwise show stale stages/items after edits.
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (window.performance && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+                window.location.reload();
+            }
+        });
+
         document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll('.checklist-stage-header').forEach(button => {
                 button.addEventListener('click', function() {

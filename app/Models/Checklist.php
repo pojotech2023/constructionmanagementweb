@@ -10,6 +10,7 @@ class Checklist extends Model
     use HasFactory;
     protected $fillable = [
         'stage',
+        'order',
        ];
  public function tasks()
 {

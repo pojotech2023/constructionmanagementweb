@@ -11,6 +11,7 @@ class task extends Model
     protected $fillable = [
         'checklist_id',
         'task_name',
+        'order',
        ];
 
 public function checklist()

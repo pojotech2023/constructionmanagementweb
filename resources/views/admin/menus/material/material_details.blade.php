@@ -229,8 +229,7 @@
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Vendor GST</label>
-                                            <input type="number" step="0.01" min="0" max="10" name="gst" id="edit_order_gst" class="form-control"
-                                                oninput="if (this.value !== '' && parseFloat(this.value) > 10) { this.value = 10; }">
+                                            <input type="number" step="0.01" min="0" max="10" name="gst" id="edit_order_gst" class="form-control no-arrow" readonly>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Invoice</label>

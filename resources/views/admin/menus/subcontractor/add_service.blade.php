@@ -243,8 +243,9 @@
                             $('#loadingSpinner').addClass('d-none');
 
                             if (response.status === 'success') {
-                                // alert(response.message);
-                               // window.open(response.whatsapp_url, '_blank');
+                                if (response.whatsapp_url) {
+                                    window.open(response.whatsapp_url, '_blank');
+                                }
                                 form[0].reset();
 
                                 // Redirect
