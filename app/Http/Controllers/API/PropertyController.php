@@ -21,6 +21,18 @@ class PropertyController extends Controller
         ]);
     }
 
+    public function getPropertyForm()
+    {
+        return response()->json([
+            'response code' => 200,
+            'status' => true,
+            'message' => 'Property form details fetched successfully.',
+            'data' => [
+                'types' => ['Plot', 'Land'],
+            ],
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [

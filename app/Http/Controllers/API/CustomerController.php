@@ -49,6 +49,50 @@ class CustomerController extends Controller
         ]);
     }
 
+public function edit($id)
+{
+    $customer = Customer::findOrFail($id);
+
+    return response()->json([
+        'response_code' => 200,
+        'status' => true,
+        'message' => 'Customer fetched successfully!',
+        'data' => $customer,
+    ]);
+}
+
+public function lookupByMobile(Request $request)
+{
+    $validate = Validator::make($request->all(), [
+        'mobile_no' => 'required|numeric|digits:10',
+    ]);
+
+    if ($validate->fails()) {
+        return response()->json(['status' => 'error', 'message' => 'Enter a valid 10 digit mobile number.'], 422);
+    }
+
+    $customer = Customer::where('mobile_no', $request->mobile_no)
+        ->where('is_inactive', 0)
+        ->orderBy('id', 'desc')
+        ->first();
+
+    if (! $customer) {
+        return response()->json(['status' => 'not_found', 'message' => 'No customer found with this mobile number.']);
+    }
+
+    return response()->json([
+        'status' => 'found',
+        'customer' => [
+            'id'        => $customer->id,
+            'name'      => $customer->name,
+            'mobile_no' => $customer->mobile_no,
+            'email'     => $customer->email,
+            'dob'       => $customer->dob,
+            'address'   => $customer->address,
+        ],
+    ]);
+}
+
 public function update(Request $request)
 {
     $validate = Validator::make($request->all(), [

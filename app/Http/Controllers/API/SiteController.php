@@ -286,6 +286,65 @@ public function addPayment(Request $request)
     ]);
 }
 
+public function updatePayment(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'payment' => 'required|numeric|min:0',
+        'date' => 'required|date',
+        'payment_mode' => 'required|string',
+        'remarks' => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $payment = SitePayment::find($id);
+
+    if (!$payment) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Payment not found.',
+        ], 404);
+    }
+
+    $payment->update([
+        'payment' => $request->payment,
+        'date' => $request->date,
+        'payment_mode' => $request->payment_mode,
+        'remarks' => $request->remarks,
+        'updated_by' => auth('api')->id(),
+    ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Payment updated successfully.',
+        'data' => $payment,
+    ]);
+}
+
+public function deletePayment($id)
+{
+    $payment = SitePayment::find($id);
+
+    if (!$payment) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Payment not found.',
+        ], 404);
+    }
+
+    $payment->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Payment deleted successfully.',
+    ]);
+}
+
 public function paymentHistory($siteId)
 {
     $site = Site::find($siteId);

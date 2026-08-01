@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\AdminControlController;
 use App\Http\Controllers\API\AgentController;
 use App\Http\Controllers\API\AttendanceController;
 use App\Http\Controllers\API\AuthController;
@@ -73,6 +74,8 @@ Route::middleware('auth:sanctum')->group(function () {
  
   Route::get('/site-detail/{id}', [SiteController::class, 'siteDetail']);
   Route::post('/site-payment-add', [SiteController::class, 'addPayment']);
+  Route::post('/site-payment-update/{id}', [SiteController::class, 'updatePayment']);
+  Route::delete('/site-payment-delete/{id}', [SiteController::class, 'deletePayment']);
   Route::get('/site-payment-history/{siteId}', [SiteController::class, 'paymentHistory']);
   Route::get('/site-payment-history/{siteId}/export', [SiteController::class, 'exportPaymentHistory']);
   Route::get('/site-payment-summary/{siteId}', [SiteController::class, 'paymentSummary']);
@@ -127,6 +130,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::delete('/material-type-delete/{id}', [MaterialTypeController::class, 'delete']); //remove a dynamically-added material card
   Route::delete('/material-type-hide/{slug}', [MaterialTypeController::class, 'hideFixed']); //hide a fixed/built-in material card
   Route::post('/add-order', [MaterialController::class, 'materialOrder']);    // add order
+  Route::post('/material-payment', [MaterialController::class, 'materialPayment']); // record vendor payment for a material order
   Route::get('/materials-unit', [MaterialController::class, 'index']);
   Route::get('/material-export', [MaterialController::class, 'exportMaterial']);
   Route::post('/material-update/{id}', [MaterialController::class, 'updateMaterial']);
@@ -163,6 +167,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
   //Customer Management
   Route::get('/customer-management', [CustomerController::class, 'index']);
+  Route::get('/customer-edit/{id}', [CustomerController::class, 'edit']);
+  Route::post('/customer-lookup', [CustomerController::class, 'lookupByMobile']);
   Route::post('/customer-update', [CustomerController::class, 'update']);
   Route::delete('/customer-delete/{id}', [CustomerController::class, 'delete']);
 
@@ -187,6 +193,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/paydetail/{vendorId}', [VendorController::class, 'getPayDetailsForm']);
   Route::post('paydetail-update', [VendorController::class, 'paydetailUpdate']); //only for opening balance
   Route::post('payment-add', [VendorController::class, 'addPayment']);
+  Route::delete('payment-delete/{id}', [VendorController::class, 'deletePayment']);
   Route::get('payment-history/{vendorId}', [VendorController::class, 'paymentHistory']);
   Route::get('payment-history/{vendorId}/export', [VendorController::class, 'exportPaymentHistory']);
 
@@ -292,9 +299,11 @@ Route::prefix('attendance')->group(function () {
 Route::post('/edit-page', [AttendanceController::class, 'editPage']);
 Route::post('/update', [AttendanceController::class, 'updateAttendance']);
 Route::get('/sites/{siteId}/attendance-by-date', [AttendanceController::class, 'attendanceByDate']);
+Route::get('/{siteId}/check-date', [AttendanceController::class, 'checkDate']);
 
 });
 
 Route::post('/wages/update', [AttendanceController::class, 'updateWages']);
 Route::post('/wages/delete', [AttendanceController::class, 'deleteWages']);
 Route::post('/update-attendance-wages', [AttendanceController::class, 'updateAttendanceAndWages']);
+Route::delete('/attendance-delete-date/{siteId}/{date}', [AttendanceController::class, 'deleteByDate']);

@@ -450,7 +450,65 @@ public function materialRequest(Request $request)
         ],
     ]);
 }
-public function exportMaterial(Request $request)
+public function materialPayment(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'site_id'  => 'required|exists:sites,id',
+            'vendor_id' => 'required|exists:vendors,id',
+            'material_type' => 'required|string',
+            'quantity' => 'required',
+            'date'  => 'required',
+            'total_amount' => 'required|numeric',
+            'settled_amount' => 'required|numeric',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+
+        $totalAmount = (float) $request->total_amount;
+        $settledAmount = (float) $request->settled_amount;
+        $pendingAmount = max($totalAmount - $settledAmount, 0);
+
+        $materialPayment = MaterialPayment::create([
+            'site_id' => $request->site_id,
+            'vendor_id' => $request->vendor_id,
+            'material_type' => $request->material_type,
+            'date' => $request->date,
+            'quantity' => $request->quantity,
+            'total_amount' => $totalAmount,
+            'settled_amount' => $settledAmount,
+            'pending_amount' => $pendingAmount,
+            'remarks' => $request->remarks,
+            'created_by'  => auth('api')->id(),
+        ]);
+
+        Storage::makeDirectory('public/whatsapp_pdfs');
+        $pdf = Pdf::loadView('admin.helper.pdf_request', [
+            'request' => $materialPayment,
+            'vendor_name' => $request->vendor_name,
+        ]);
+        $filename = 'material_request_' . \Illuminate\Support\Str::slug($request->vendor_name ?? 'vendor') . '_' . now()->format('Ymd_His') . '.pdf';
+        Storage::put("public/whatsapp_pdfs/$filename", $pdf->output());
+        $publicLink = asset("storage/whatsapp_pdfs/$filename");
+
+        $whatsappUrl = $request->vendor_mobile
+            ? "https://wa.me/{$request->vendor_mobile}?text=" . urlencode("\n$publicLink\n\n")
+            : null;
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'message' => 'Material payment recorded successfully.',
+            'data' => $materialPayment,
+            'whatsapp_url' => $whatsappUrl,
+        ]);
+    }
+
+    public function exportMaterial(Request $request)
     {
         $request->validate([
             'site_id'       => 'required|exists:sites,id',

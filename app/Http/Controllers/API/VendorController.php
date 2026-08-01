@@ -320,6 +320,39 @@ class VendorController extends Controller
         ]);
     }
 
+    public function deletePayment($id)
+    {
+        $payment = VendorPayment::find($id);
+
+        if (!$payment) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Payment not found.',
+            ], 404);
+        }
+
+        $vendorId = $payment->vendor_id;
+        $payment->delete();
+
+        $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+
+        VendorPayDetail::updateOrCreate(
+            ['vendor_id' => $vendorId],
+            [
+                'total_unit_price' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('api')->id(),
+            ]
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Payment deleted successfully.',
+        ]);
+    }
+
 
     public function paymentHistory($vendorId)
     {

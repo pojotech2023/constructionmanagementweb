@@ -19,6 +19,8 @@ class AttendanceController extends Controller
 {
     public function addWages(Request $request)
 {
+    $this->decodeJsonArrayField($request, 'attendance_rows');
+
     $validate = Validator::make($request->all(), [
         'time' => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
         'check_in_time' => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
@@ -32,6 +34,10 @@ class AttendanceController extends Controller
         'amount_helper' => 'nullable|numeric',
         'amount_fitter' => 'nullable|numeric',
         'amount_Centring_Helper' => 'nullable|numeric',
+        'attendance_rows' => 'nullable|array',
+        'attendance_rows.*.category' => 'required_with:attendance_rows|string|max:255',
+        'attendance_rows.*.count' => 'nullable|numeric',
+        'attendance_rows.*.amount' => 'nullable|numeric',
     ]);
 
     if ($validate->fails()) {
@@ -48,6 +54,38 @@ class AttendanceController extends Controller
         'Centring Helper' => 'amount_Centring_Helper',
     ];
 
+    // Don't silently duplicate — if a wage rate already exists for this site/date/category,
+    // stop and tell the client to use /attendance/wages/update instead (matches web admin).
+    $duplicates = [];
+    foreach ($categories as $categoryName => $amountField) {
+        if ($request->filled($amountField) && Wages::where('site_id', $request->site_id)
+                ->where('date', $request->date)->where('category', $categoryName)->exists()) {
+            $duplicates[] = $categoryName;
+        }
+    }
+    foreach ($request->input('attendance_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        if ($category === '') {
+            continue;
+        }
+        $rowDate = $row['date'] ?? $request->date;
+        if (($row['count'] ?? null) !== null && $row['count'] !== '' && Attendance::where('site_id', $request->site_id)
+                ->where('date', $rowDate)->where('category', $category)->exists()) {
+            $duplicates[] = $category . ' (attendance)';
+        }
+        if (($row['amount'] ?? null) !== null && $row['amount'] !== '' && Wages::where('site_id', $request->site_id)
+                ->where('date', $rowDate)->where('category', $category)->exists()) {
+            $duplicates[] = $category . ' (wages)';
+        }
+    }
+
+    if (!empty($duplicates)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Already added for ' . implode(', ', array_unique($duplicates)) . ' on this date. Please use update instead.',
+        ], 422);
+    }
+
     foreach ($categories as $categoryName => $amountField) {
         if ($request->filled($amountField)) {
             Wages::create([
@@ -55,6 +93,41 @@ class AttendanceController extends Controller
                 'category' => $categoryName,
                 'amount' => $request->$amountField,
                 'date' => $request->date,
+                'created_by' => auth('api')->id(),
+            ]);
+        }
+    }
+
+    // Same free-text dynamic-category flow used by /add-attendance (attendance_rows[]):
+    // each row can carry a count (-> Attendance) and/or an amount (-> Wages), and its own
+    // date (falls back to the top-level date), matching the web admin's rows[] format.
+    foreach ($request->input('attendance_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+
+        if ($category === '') {
+            continue;
+        }
+
+        $rowDate = $row['date'] ?? $request->date;
+
+        $count = $row['count'] ?? null;
+        if ($count !== null && $count !== '') {
+            Attendance::create([
+                'site_id'  => $request->site_id,
+                'date'     => $rowDate,
+                'category' => $category,
+                'count' => $count,
+                'created_by' => auth('api')->id(),
+            ]);
+        }
+
+        $amount = $row['amount'] ?? null;
+        if ($amount !== null && $amount !== '') {
+            Wages::create([
+                'site_id'  => $request->site_id,
+                'date'     => $rowDate,
+                'category' => $category,
+                'amount' => $amount,
                 'created_by' => auth('api')->id(),
             ]);
         }
@@ -115,12 +188,6 @@ public function addAttendance(Request $request)
         ], 422);
     }
 
-    $imageUrl = null;
-    if ($request->hasFile('image')) {
-        $path = $request->file('image')->store('attendance_images', 'public');
-        $imageUrl = asset('storage/' . $path);
-    }
-
     // Map database category names with request input fields
     $categories = [
         'Mason' => 'count_mason',
@@ -129,23 +196,50 @@ public function addAttendance(Request $request)
         'Centring Helper' => 'count_Centring_Helper',
     ];
 
+    // Don't silently duplicate — if attendance already exists for this site/date/category,
+    // stop and tell the client to use /attendance/update instead (matches web admin).
+    $duplicates = [];
+    foreach ($categories as $categoryName => $fieldName) {
+        if ($request->filled($fieldName) && Attendance::where('site_id', $request->site_id)
+                ->where('date', $request->date)->where('category', $categoryName)->exists()) {
+            $duplicates[] = $categoryName;
+        }
+    }
+    foreach ($request->input('attendance_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $count = $row['count'] ?? null;
+        if ($category !== '' && $count !== null && $count !== '' && Attendance::where('site_id', $request->site_id)
+                ->where('date', $request->date)->where('category', $category)->exists()) {
+            $duplicates[] = $category;
+        }
+    }
+
+    if (!empty($duplicates)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Attendance for ' . implode(', ', array_unique($duplicates)) . ' on this date already added. Please use update instead.',
+        ], 422);
+    }
+
+    $imageUrl = null;
+    if ($request->hasFile('image')) {
+        $path = $request->file('image')->store('attendance_images', 'public');
+        $imageUrl = asset('storage/' . $path);
+    }
+
     $savedCount = 0;
 
     foreach ($categories as $categoryName => $fieldName) {
         if ($request->filled($fieldName)) {
-            Attendance::updateOrCreate(
-                [
-                    'site_id'  => $request->site_id,
-                    'date'     => $request->date,
-                    'category' => $categoryName,
-                ],
-                [
-                    'count' => $request->$fieldName,
-                    'time' => $request->time,
-                    'image_url' => $imageUrl,
-                    'created_by' => auth('api')->id(),
-                ]
-            );
+            Attendance::create([
+                'site_id'  => $request->site_id,
+                'date'     => $request->date,
+                'category' => $categoryName,
+                'count' => $request->$fieldName,
+                'time' => $request->time,
+                'image_url' => $imageUrl,
+                'created_by' => auth('api')->id(),
+            ]);
             $savedCount++;
         }
     }
@@ -156,19 +250,15 @@ public function addAttendance(Request $request)
         $count = $row['count'] ?? null;
 
         if ($category !== '' && $count !== null && $count !== '') {
-            Attendance::updateOrCreate(
-                [
-                    'site_id'  => $request->site_id,
-                    'date'     => $request->date,
-                    'category' => $category,
-                ],
-                [
-                    'count' => $count,
-                    'time' => $request->time,
-                    'image_url' => $imageUrl,
-                    'created_by' => auth('api')->id(),
-                ]
-            );
+            Attendance::create([
+                'site_id'  => $request->site_id,
+                'date'     => $request->date,
+                'category' => $category,
+                'count' => $count,
+                'time' => $request->time,
+                'image_url' => $imageUrl,
+                'created_by' => auth('api')->id(),
+            ]);
             $savedCount++;
         }
     }
@@ -522,11 +612,15 @@ private function buildDayData($siteId, $date, $categories)
             'site_id' => 'required|exists:sites,id',
             'month' => 'nullable|date_format:Y-m',
             'week' => 'nullable|integer|min:1|max:5',
+            'from_date' => 'nullable|date',
+            'to_date' => 'nullable|date',
         ]);
 
         $siteId = $request->site_id;
         $month = $request->month;
         $week = $request->week;
+        $fromDate = $request->from_date;
+        $toDate = $request->to_date;
 
         // Generate file name
         $fileName = 'attendance_' . $siteId . '_' . time() . '.xlsx';
@@ -534,7 +628,7 @@ private function buildDayData($siteId, $date, $categories)
 
         try {
             // Generate and store Excel file
-            Excel::store(new AttendanceExport($siteId, $month, $week), $filePath, 'public');
+            Excel::store(new AttendanceExport($siteId, $month, $week, $fromDate, $toDate), $filePath, 'public');
 
             // Create public download URL
            $downloadUrl = asset('storage/' . $filePath);
@@ -564,8 +658,6 @@ private function buildDayData($siteId, $date, $categories)
     $site_id = $request->site_id;
     $date    = $request->date;
 
-    $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
-
     // Attendance
     $attendance = Attendance::where('site_id', $site_id)
                             ->where('date', $date)
@@ -574,15 +666,17 @@ private function buildDayData($siteId, $date, $categories)
     // Convert attendance keys
     $formattedAttendance = [];
     foreach ($attendance as $key => $value) {
-        $newKey = strtolower(str_replace(' ', '_', $key)); 
+        $newKey = strtolower(str_replace(' ', '_', $key));
         $formattedAttendance[$newKey] = $value;
     }
 
-    // Wages
-    $wages = Wages::where('site_id', $site_id)
+    // Wages recorded on this exact date (used below to scope categories, matches web admin)
+    $wagesForDate = Wages::where('site_id', $site_id)
                   ->where('date', $date)
                   ->pluck('amount', 'category');
 
+    // If NO wage on this date -> use nearest previous wage (for pre-filling the rate only)
+    $wages = $wagesForDate;
     if ($wages->isEmpty()) {
         $wages = Wages::where('site_id', $site_id)
                       ->where('date', '<', $date)
@@ -593,9 +687,22 @@ private function buildDayData($siteId, $date, $categories)
     // Convert wages keys
     $formattedWages = [];
     foreach ($wages as $key => $value) {
-        $newKey = strtolower(str_replace(' ', '_', $key)); 
+        $newKey = strtolower(str_replace(' ', '_', $key));
         $formattedWages[$newKey] = $value;
     }
+
+    // Only categories actually recorded on THIS date — not the site's whole history,
+    // so a date that only has e.g. "sithal" only shows "sithal" (matches web admin).
+    $categories = $attendance->keys()
+        ->merge($wagesForDate->keys())
+        ->filter()
+        ->unique()
+        ->sort()
+        ->values();
+
+    $checkOut = AttendanceCheckin::where('site_id', $site_id)
+        ->where('date', $date)
+        ->first();
 
     return response()->json([
         'success'    => true,
@@ -604,6 +711,10 @@ private function buildDayData($siteId, $date, $categories)
         'categories' => $categories,
         'attendance' => $formattedAttendance,
         'wages'      => $formattedWages,
+        'check_in_time'   => $checkOut->check_in_time ?? null,
+        'check_in_photo'  => $checkOut && $checkOut->check_in_photo ? asset('storage/' . $checkOut->check_in_photo) : null,
+        'check_out_time'  => $checkOut->check_out_time ?? null,
+        'check_out_photo' => $checkOut && $checkOut->check_out_photo ? asset('storage/' . $checkOut->check_out_photo) : null,
     ]);
 }
 
@@ -629,6 +740,7 @@ private function buildDayData($siteId, $date, $categories)
         }
 
         $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
+        $affected = [];
 
         foreach ($categories as $cat) {
 
@@ -653,7 +765,7 @@ private function buildDayData($siteId, $date, $categories)
                 $updateData['image_url'] = $imageUrl;
             }
 
-            Attendance::updateOrCreate(
+            $record = Attendance::updateOrCreate(
                 [
                     'site_id'  => $request->site_id,
                     'date'     => $request->date,
@@ -661,6 +773,7 @@ private function buildDayData($siteId, $date, $categories)
                 ],
                 $updateData
             );
+            $affected[] = ['category' => $cat, 'id' => $record->id, 'created' => $record->wasRecentlyCreated];
         }
 
         // Same free-text dynamic-category flow the web app uses (attendance_rows[])
@@ -685,7 +798,7 @@ private function buildDayData($siteId, $date, $categories)
                 $updateData['image_url'] = $imageUrl;
             }
 
-            Attendance::updateOrCreate(
+            $record = Attendance::updateOrCreate(
                 [
                     'site_id'  => $request->site_id,
                     'date'     => $request->date,
@@ -693,22 +806,34 @@ private function buildDayData($siteId, $date, $categories)
                 ],
                 $updateData
             );
+            $affected[] = ['category' => $category, 'id' => $record->id, 'created' => $record->wasRecentlyCreated];
+        }
+
+        if (empty($affected)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No attendance categories were provided to update.',
+            ], 422);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Attendance updated successfully!'
+            'message' => 'Attendance updated successfully!',
+            'affected' => $affected,
         ]);
     }
 
     public function updateWages(Request $request)
     {
+        $this->decodeJsonArrayField($request, 'wage_rows');
+
         $request->validate([
             'site_id' => 'required',
             'date'    => 'required|date',
         ]);
 
         $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
+        $affected = [];
 
         foreach ($categories as $cat) {
 
@@ -720,7 +845,7 @@ private function buildDayData($siteId, $date, $categories)
                 continue;
             }
 
-            Wages::updateOrCreate(
+            $record = Wages::updateOrCreate(
                 [
                     'site_id'  => $request->site_id,
                     'date'     => $request->date,
@@ -731,11 +856,43 @@ private function buildDayData($siteId, $date, $categories)
                     'created_by' => $request->admin_id ?? 1,
                 ]
             );
+            $affected[] = ['category' => $cat, 'id' => $record->id, 'created' => $record->wasRecentlyCreated];
+        }
+
+        // Same free-text dynamic-category flow the web app uses (wage_rows[])
+        foreach ($request->input('wage_rows', []) as $row) {
+            $category = trim($row['category'] ?? '');
+            $amount = $row['amount'] ?? null;
+
+            if ($category === '' || $amount === null || $amount === '') {
+                continue;
+            }
+
+            $record = Wages::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
+                ],
+                [
+                    'amount'     => $amount,
+                    'created_by' => $request->admin_id ?? 1,
+                ]
+            );
+            $affected[] = ['category' => $category, 'id' => $record->id, 'created' => $record->wasRecentlyCreated];
+        }
+
+        if (empty($affected)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No wage categories were provided to update.',
+            ], 422);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Wages updated successfully!'
+            'message' => 'Wages updated successfully!',
+            'affected' => $affected,
         ]);
     }
 
@@ -769,6 +926,50 @@ private function buildDayData($siteId, $date, $categories)
         ]);
     }
 
+    // AJAX-style: check whether a date already has attendance/wages before the client fills the form
+    public function checkDate(Request $request, $siteId)
+    {
+        $date = $request->query('date');
+
+        if (!$date) {
+            return response()->json(['exists' => false]);
+        }
+
+        $attendanceCategories = Attendance::where('site_id', $siteId)
+            ->where('date', $date)
+            ->pluck('category')
+            ->unique()
+            ->values();
+
+        $wageCategories = Wages::where('site_id', $siteId)
+            ->where('date', $date)
+            ->pluck('category')
+            ->unique()
+            ->values();
+
+        $categories = $attendanceCategories->merge($wageCategories)->unique()->sort()->values();
+
+        return response()->json([
+            'exists' => $categories->isNotEmpty(),
+            'categories' => $categories,
+            'date' => Carbon::parse($date)->format('d-m-Y'),
+        ]);
+    }
+
+    // Delete all attendance records for a specific date (used from month view)
+    public function deleteByDate($siteId, $date)
+    {
+        $deleted = Attendance::where('site_id', $siteId)
+            ->whereDate('date', $date)
+            ->delete();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Attendance for the date deleted successfully.',
+            'deleted' => $deleted,
+        ]);
+    }
+
     public function destroy($id)
     {
         $attendance = Attendance::find($id);
@@ -790,6 +991,9 @@ private function buildDayData($siteId, $date, $categories)
 
     public function updateAttendanceAndWages(Request $request)
 {
+    $this->decodeJsonArrayField($request, 'attendance_rows');
+    $this->decodeJsonArrayField($request, 'wage_rows');
+
     $request->validate([
         'site_id' => 'required',
         'date'    => 'required|date',
@@ -803,7 +1007,9 @@ private function buildDayData($siteId, $date, $categories)
     ]);
 
     $adminId = $request->admin_id ?? 1; // mobile will send admin_id
-    $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
+
+    // Dynamic category list (matches web admin's 'categories[]'), falls back to the fixed set
+    $categories = $request->input('categories') ?: ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
 
     $imageUrl = null;
     if ($request->hasFile('image')) {
@@ -854,6 +1060,45 @@ private function buildDayData($siteId, $date, $categories)
                 ],
                 [
                     'amount'     => $amountInput,
+                    'created_by' => $adminId,
+                ]
+            );
+        }
+    }
+
+    // Same free-text dynamic-category flow the web app uses (attendance_rows[] / wage_rows[])
+    foreach ($request->input('attendance_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $count = $row['count'] ?? null;
+
+        if ($category !== '' && $count !== null && $count !== '') {
+            Attendance::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
+                ],
+                [
+                    'count' => $count,
+                    'created_by' => $adminId,
+                ]
+            );
+        }
+    }
+
+    foreach ($request->input('wage_rows', []) as $row) {
+        $category = trim($row['category'] ?? '');
+        $amount = $row['amount'] ?? null;
+
+        if ($category !== '' && $amount !== null && $amount !== '') {
+            Wages::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
+                ],
+                [
+                    'amount' => $amount,
                     'created_by' => $adminId,
                 ]
             );
