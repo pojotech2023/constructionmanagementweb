@@ -302,12 +302,14 @@ Route::prefix('admin')->group(function () {
     //check list
         Route::get('/checklist/{siteId}', [ChecklistController::class, 'index'])->name('checklist');
         Route::post('/checklist/add', [ChecklistController::class, 'store'])->name('checklist.add');
-        Route::get('/checklist/edit/{id}', [ChecklistController::class, 'edit'])->name('checklist.edit');
         Route::post('/checklist/update/{id}', [ChecklistController::class, 'update'])->name('checklist.update');
         //manage checklist templates: delete items/stages, drag-and-drop reorder
         Route::get('/checklist-manage', [ChecklistController::class, 'manage'])->name('checklist.manage');
         Route::delete('/checklist-task/{id}', [ChecklistController::class, 'deleteTask'])->name('checklist.task.delete');
         Route::delete('/checklist-stage/{id}', [ChecklistController::class, 'destroy'])->name('checklist.stage.delete');
+        Route::patch('/checklist-task/{id}', [ChecklistController::class, 'updateTaskName'])->name('checklist.task.rename');
+        Route::patch('/checklist-stage/{id}', [ChecklistController::class, 'updateStage'])->name('checklist.stage.rename');
+        Route::post('/checklist-task/add', [ChecklistController::class, 'storeTaskItem'])->name('checklist.task.add');
         Route::post('/checklist-tasks/reorder', [ChecklistController::class, 'reorderTasks'])->name('checklist.tasks.reorder');
         Route::post('/checklist-stages/reorder', [ChecklistController::class, 'reorderChecklists'])->name('checklist.stages.reorder');
         //task update for supervisor

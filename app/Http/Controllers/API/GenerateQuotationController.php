@@ -68,6 +68,7 @@ public function store(Request $request)
         'location' => 'required',
         'contractor' => 'required',
         'email' => 'nullable|email',
+        'terms_conditions' => 'nullable|string',
 
         'data' => 'required|array|min:1',
         'data.*.particular' => 'required|string',
@@ -88,6 +89,7 @@ public function store(Request $request)
             'mobile_no' => $request->mobile_no,
             'location' => $request->location,
             'contractor' => $request->contractor,
+            'terms_conditions' => $request->terms_conditions,
             'created_by' => auth('admin')->id(),
         ]);
 

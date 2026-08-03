@@ -47,6 +47,49 @@ public function manage()
     return view('admin.checklist.checklist_manage', compact('checklists'));
 }
 
+// add a single item to an existing checklist stage
+public function storeTaskItem(Request $request)
+{
+    $request->validate([
+        'checklist_id' => 'required|exists:checklists,id',
+        'task_name' => 'required|string|max:255',
+    ]);
+
+    $checklist = Checklist::findOrFail($request->checklist_id);
+    $checklist->tasks()->create([
+        'task_name' => $request->task_name,
+        'order' => ($checklist->tasks()->max('order') ?? 0) + 1,
+    ]);
+
+    return redirect()->back()->with('success', 'Checklist item added successfully.');
+}
+
+// rename a single task/checklist item
+public function updateTaskName(Request $request, $id)
+{
+    $request->validate([
+        'task_name' => 'required|string|max:255',
+    ]);
+
+    $task = task::findOrFail($id);
+    $task->update(['task_name' => $request->task_name]);
+
+    return redirect()->back()->with('success', 'Checklist item updated successfully.');
+}
+
+// rename a checklist stage
+public function updateStage(Request $request, $id)
+{
+    $request->validate([
+        'stage' => 'required|string|max:255',
+    ]);
+
+    $checklist = Checklist::findOrFail($id);
+    $checklist->update(['stage' => $request->stage]);
+
+    return redirect()->back()->with('success', 'Checklist stage updated successfully.');
+}
+
 // delete a single task/checklist item
 public function deleteTask($id)
 {

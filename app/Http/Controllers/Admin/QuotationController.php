@@ -62,6 +62,7 @@ class QuotationController extends Controller
         'sqFt' => 'required|array',
         'unit' => 'required|array',
         'email' => 'nullable|email',
+        'terms_conditions' => 'nullable|string',
     ]);
 
     if ($validate->fails()) {
@@ -77,6 +78,7 @@ class QuotationController extends Controller
             'mobile_no' => $request->mobile_no,
             'location' => $request->location,
             'contractor' => $request->contractor,
+            'terms_conditions' => $request->terms_conditions,
             'created_by'  => auth('admin')->id(),
         ]);
 

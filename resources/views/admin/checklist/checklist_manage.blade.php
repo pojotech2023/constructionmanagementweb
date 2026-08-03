@@ -203,6 +203,25 @@
             color: #fff;
         }
 
+        .stage-edit-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #246bfe;
+            background: #eaf1ff;
+            flex-shrink: 0;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .stage-edit-btn:hover {
+            background: #246bfe;
+            color: #fff;
+        }
+
         .task-list {
             list-style: none;
             margin: 12px 0 0;
@@ -261,6 +280,25 @@
 
         .task-delete-btn:hover {
             background: #f05260;
+            color: #fff;
+        }
+
+        .task-edit-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #246bfe;
+            background: #eaf1ff;
+            flex-shrink: 0;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .task-edit-btn:hover {
+            background: #246bfe;
             color: #fff;
         }
 
@@ -352,6 +390,12 @@
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="stage-edit-btn editStageBtn"
+                                        data-id="{{ $checklist->id }}" data-stage="{{ $checklist->stage }}"
+                                        data-bs-toggle="modal" data-bs-target="#editStageModal"
+                                        title="Edit stage">
+                                        <i class="fa fa-pen"></i>
+                                    </button>
                                     <button type="button" class="stage-delete-btn deleteStageBtn"
                                         data-id="{{ $checklist->id }}" data-bs-toggle="modal" data-bs-target="#deleteStageModal"
                                         title="Delete stage">
@@ -372,6 +416,12 @@
                                             <li class="task-item" data-id="{{ $task->id }}">
                                                 <span class="task-drag-handle"><i class="fa fa-grip-vertical"></i></span>
                                                 <span class="task-name">{{ $task->task_name }}</span>
+                                                <button type="button" class="task-edit-btn editTaskBtn"
+                                                    data-id="{{ $task->id }}" data-task-name="{{ $task->task_name }}"
+                                                    data-bs-toggle="modal" data-bs-target="#editTaskModal"
+                                                    title="Edit item">
+                                                    <i class="fa fa-pen"></i>
+                                                </button>
                                                 <button type="button" class="task-delete-btn deleteTaskBtn"
                                                     data-id="{{ $task->id }}" data-bs-toggle="modal" data-bs-target="#deleteTaskModal"
                                                     title="Delete item">
@@ -381,11 +431,88 @@
                                         @endforeach
                                     </ul>
                                 @endif
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-3 addTaskBtn"
+                                    data-checklist-id="{{ $checklist->id }}"
+                                    data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                                    <i class="fa fa-plus me-1"></i> Add Item
+                                </button>
                             </div>
                         </div>
                     @endforeach
                 </div>
             @endif
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Checklist Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addTaskForm" method="POST" action="{{ route('checklist.task.add') }}">
+                    @csrf
+                    <input type="hidden" name="checklist_id" id="add_task_checklist_id">
+                    <div class="modal-body">
+                        <label for="new_task_name" class="form-label">Item Name</label>
+                        <input type="text" name="task_name" id="new_task_name" class="form-control" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Checklist Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editTaskForm" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="modal-body">
+                        <label for="edit_task_name" class="form-label">Item Name</label>
+                        <input type="text" name="task_name" id="edit_task_name" class="form-control" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Stage Modal -->
+    <div class="modal fade" id="editStageModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Stage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editStageForm" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="modal-body">
+                        <label for="edit_stage_name" class="form-label">Stage Name</label>
+                        <input type="text" name="stage" id="edit_stage_name" class="form-control" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -452,6 +579,35 @@
                     const id = this.getAttribute('data-id');
                     document.getElementById('deleteStageForm').setAttribute('action',
                         "{{ route('checklist.stage.delete', ':id') }}".replace(':id', id));
+                });
+            });
+
+            document.querySelectorAll('.editTaskBtn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const id = this.getAttribute('data-id');
+                    document.getElementById('edit_task_name').value = this.getAttribute('data-task-name');
+                    document.getElementById('editTaskForm').setAttribute('action',
+                        "{{ route('checklist.task.rename', ':id') }}".replace(':id', id));
+                });
+            });
+
+            document.querySelectorAll('.editStageBtn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const id = this.getAttribute('data-id');
+                    document.getElementById('edit_stage_name').value = this.getAttribute('data-stage');
+                    document.getElementById('editStageForm').setAttribute('action',
+                        "{{ route('checklist.stage.rename', ':id') }}".replace(':id', id));
+                });
+            });
+
+            document.querySelectorAll('.addTaskBtn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const checklistId = this.getAttribute('data-checklist-id');
+                    document.getElementById('add_task_checklist_id').value = checklistId;
+                    document.getElementById('new_task_name').value = '';
                 });
             });
 

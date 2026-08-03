@@ -188,6 +188,47 @@
             }
         });
     </script> --}}
+
+    <style>
+        /* Amount / GST number fields: whole numbers only, no spinner arrows */
+        input[type="number"][name*="amount" i]::-webkit-outer-spin-button,
+        input[type="number"][name*="amount" i]::-webkit-inner-spin-button,
+        input[type="number"][name*="gst" i]::-webkit-outer-spin-button,
+        input[type="number"][name*="gst" i]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"][name*="amount" i],
+        input[type="number"][name*="gst" i] {
+            -moz-appearance: textfield;
+        }
+    </style>
+    <script>
+        // Amount / GST number fields: block decimal entry (whole numbers only), site-wide
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('input[type="number"]').forEach(function (input) {
+                var name = (input.getAttribute('name') || '').toLowerCase();
+                if (name.indexOf('amount') === -1 && name.indexOf('gst') === -1) {
+                    return;
+                }
+
+                input.setAttribute('step', '1');
+
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === '.' || e.key === ',' || e.key === 'e' || e.key === 'E') {
+                        e.preventDefault();
+                    }
+                });
+
+                input.addEventListener('input', function () {
+                    if (input.value.indexOf('.') !== -1) {
+                        input.value = input.value.split('.')[0];
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

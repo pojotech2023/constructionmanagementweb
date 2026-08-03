@@ -1066,12 +1066,18 @@ private function buildDayData($siteId, $date, $categories)
         }
     }
 
-    // Same free-text dynamic-category flow the web app uses (attendance_rows[] / wage_rows[])
+    // Same free-text dynamic-category flow the web app uses (attendance_rows[] / wage_rows[]).
+    // Each attendance_rows[] entry may carry both a count (-> Attendance) and an amount
+    // (-> Wages) in the same row, matching the combined-row shape used by addWages/addAttendance.
     foreach ($request->input('attendance_rows', []) as $row) {
         $category = trim($row['category'] ?? '');
-        $count = $row['count'] ?? null;
 
-        if ($category !== '' && $count !== null && $count !== '') {
+        if ($category === '') {
+            continue;
+        }
+
+        $count = $row['count'] ?? null;
+        if ($count !== null && $count !== '') {
             Attendance::updateOrCreate(
                 [
                     'site_id'  => $request->site_id,
@@ -1080,6 +1086,21 @@ private function buildDayData($siteId, $date, $categories)
                 ],
                 [
                     'count' => $count,
+                    'created_by' => $adminId,
+                ]
+            );
+        }
+
+        $amount = $row['amount'] ?? null;
+        if ($amount !== null && $amount !== '') {
+            Wages::updateOrCreate(
+                [
+                    'site_id'  => $request->site_id,
+                    'date'     => $request->date,
+                    'category' => $category,
+                ],
+                [
+                    'amount' => $amount,
                     'created_by' => $adminId,
                 ]
             );

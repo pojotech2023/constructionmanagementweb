@@ -87,6 +87,21 @@
             margin-bottom: 5px;
             font-size: 13px;
         }
+
+        .terms-box {
+            margin-top: 20px;
+        }
+
+        .terms-box .terms-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .terms-box .terms-body {
+            white-space: pre-line;
+            border: 1px solid #000;
+            padding: 8px;
+        }
     </style>
 </head>
 <body>
@@ -164,6 +179,13 @@
                 <li>Rate variation up to ±5% for Steel, Cement & RMC will be absorbed by the contractor. Any variation beyond this will be settled by the relevant party. For other materials, price increases beyond basic rates will be payable by the client.</li>
                 <li>Material basic rates provided are inclusive of GST and transportation. The vendor/contractor must follow site quality & safety guidelines per JSW One Homes SOP.</li>
             </ol>
+        @endif
+
+        @if ($pageIndex === count($chunks) - 1 && !empty($data->terms_conditions))
+            <div class="terms-box">
+                <div class="terms-title">Terms &amp; Conditions</div>
+                <div class="terms-body">{{ $data->terms_conditions }}</div>
+            </div>
         @endif
     </div>
 @endforeach

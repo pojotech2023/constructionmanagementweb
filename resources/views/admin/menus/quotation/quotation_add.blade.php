@@ -142,6 +142,14 @@
                         </div>
                     </div>
 
+                    <div class="row mt-4">
+                        <div class="col-md-2 fw-bold">Terms &amp; Conditions</div>
+                        <div class="col-md-10">
+                            <textarea name="terms_conditions" class="form-control" rows="4" placeholder="Enter terms &amp; conditions to include in the PDF (optional)">{{ old('terms_conditions') }}</textarea>
+                            @error('terms_conditions') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
                     <div class="row align-items-center mt-4 g-3 quotation-action-row">
                         <div class="col-md-4 text-start">
                             <button type="button" class="btn btn-primary quotation-action-btn" id="whatsappButton">Send WhatsApp</button>

@@ -17,6 +17,7 @@ class Quotation extends Model
         'location',
         'contractor',
         'total_amount',
+        'terms_conditions',
         'created_by',
         'updated_by'
     ];
