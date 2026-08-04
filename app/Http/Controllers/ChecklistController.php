@@ -38,11 +38,18 @@ class ChecklistController extends Controller
 }
 
 // admin: list all checklist stages + tasks for management (delete / reorder)
-public function manage()
+public function manage(Request $request)
 {
     $checklists = Checklist::with(['tasks' => function ($query) {
         $query->orderBy('order')->orderBy('id');
     }])->orderBy('order')->orderBy('id')->get();
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status' => true,
+            'data' => $checklists,
+        ]);
+    }
 
     return view('admin.checklist.checklist_manage', compact('checklists'));
 }
@@ -56,10 +63,18 @@ public function storeTaskItem(Request $request)
     ]);
 
     $checklist = Checklist::findOrFail($request->checklist_id);
-    $checklist->tasks()->create([
+    $task = $checklist->tasks()->create([
         'task_name' => $request->task_name,
         'order' => ($checklist->tasks()->max('order') ?? 0) + 1,
     ]);
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status' => true,
+            'message' => 'Checklist item added successfully.',
+            'data' => $task,
+        ], 201);
+    }
 
     return redirect()->back()->with('success', 'Checklist item added successfully.');
 }
@@ -74,6 +89,14 @@ public function updateTaskName(Request $request, $id)
     $task = task::findOrFail($id);
     $task->update(['task_name' => $request->task_name]);
 
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status'  => true,
+            'message' => 'Checklist item updated successfully.',
+            'data'    => $task,
+        ]);
+    }
+
     return redirect()->back()->with('success', 'Checklist item updated successfully.');
 }
 
@@ -87,24 +110,46 @@ public function updateStage(Request $request, $id)
     $checklist = Checklist::findOrFail($id);
     $checklist->update(['stage' => $request->stage]);
 
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status'  => true,
+            'message' => 'Checklist stage updated successfully.',
+            'data'    => $checklist,
+        ]);
+    }
+
     return redirect()->back()->with('success', 'Checklist stage updated successfully.');
 }
 
 // delete a single task/checklist item
-public function deleteTask($id)
+public function deleteTask(Request $request, $id)
 {
     $task = task::findOrFail($id);
     $task->delete();
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status'  => true,
+            'message' => 'Checklist item deleted successfully.',
+        ]);
+    }
 
     return redirect()->back()->with('success', 'Checklist item deleted successfully.');
 }
 
 // delete an entire checklist stage (and its tasks)
-public function destroy($id)
+public function destroy(Request $request, $id)
 {
     $checklist = Checklist::findOrFail($id);
     $checklist->tasks()->delete();
     $checklist->delete();
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status'  => true,
+            'message' => 'Checklist stage deleted successfully.',
+        ]);
+    }
 
     return redirect()->back()->with('success', 'Checklist stage deleted successfully.');
 }
@@ -196,6 +241,14 @@ public function update(Request $request, $id)
         ]);
     }
 
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status' => true,
+            'message' => 'Checklist updated successfully.',
+            'data' => $checklist->load('tasks'),
+        ]);
+    }
+
     return redirect()->back()->with('success', 'Checklist updated successfully.');
 }
 public function index($siteId)
@@ -278,12 +331,15 @@ public function taskstore(Request $request)
 
 
 
-public function deleteByRemarks($id, $siteId)
+public function deleteByRemarks(Request $request, $id, $siteId)
 {
     // Find the selected media record first
     $selectedMedia = TaskMedia::find($id);
 
     if (!$selectedMedia) {
+        if ($request->expectsJson()) {
+            return response()->json(['status' => false, 'message' => 'Media record not found.'], 404);
+        }
         return back()->with('error', 'Media record not found.');
     }
 
@@ -296,6 +352,9 @@ public function deleteByRemarks($id, $siteId)
         ->get();
 
     if ($mediaItems->isEmpty()) {
+        if ($request->expectsJson()) {
+            return response()->json(['status' => false, 'message' => 'No media found for this remark.'], 404);
+        }
         return back()->with('error', 'No media found for this remark.');
     }
 
@@ -312,6 +371,10 @@ public function deleteByRemarks($id, $siteId)
         $media->delete();
     }
 
+    if ($request->expectsJson()) {
+        return response()->json(['status' => true, 'message' => 'All media with this remark deleted successfully.']);
+    }
+
     return back()->with('success', 'All media with this remark deleted successfully.');
 }
 
@@ -319,7 +382,7 @@ public function deleteByRemarks($id, $siteId)
 
   //admin view page
 
-public function viewTaskMedia($siteId, $taskId)
+public function viewTaskMedia(Request $request, $siteId, $taskId)
 {
     // Filter media by both task_id and site_id
     $taskMedia = TaskMedia::where('task_id', $taskId)
@@ -327,6 +390,17 @@ public function viewTaskMedia($siteId, $taskId)
         ->get();
 
     $task = Task::findOrFail($taskId);
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'task' => $task,
+                'site_id' => $siteId,
+                'task_media' => $taskMedia,
+            ],
+        ]);
+    }
 
     return view('admin.checklist.task_view', compact('taskMedia', 'task', 'siteId'));
 }
@@ -348,6 +422,15 @@ public function updateTaskMedia(Request $request, $id)
     $media->updated_by = auth()->user()->name ?? 'Admin';
 
     $media->save();
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'status' => true,
+            'message' => 'Admin review submitted successfully.',
+            'data' => $media,
+        ]);
+    }
+
     // Redirect to checklist with correct site ID
     return redirect()
         ->route('checklist', ['siteId' => $media->site_id])

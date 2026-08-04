@@ -191,11 +191,14 @@ label[for="attachment"] {
                     @if($msg->attachment)
                         <div class="mt-2">
                             @php
-                                $ext = pathinfo($msg->attachment, PATHINFO_EXTENSION);
+                                $ext = strtolower(pathinfo($msg->attachment, PATHINFO_EXTENSION));
                             @endphp
 
                             @if(in_array($ext, ['jpg', 'jpeg', 'png', 'gif']))
-                                <img src="{{ asset('storage/' . $msg->attachment) }}" alt="Attachment" style="max-width: 200px;" class="img-fluid rounded">
+                                <a href="{{ asset('storage/' . $msg->attachment) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $msg->attachment) }}" alt="Attachment" style="max-width: 200px;" class="img-fluid rounded"
+                                        onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('a'),{href:this.src,target:'_blank',className:'btn btn-sm btn-outline-primary',textContent:'📄 View File'}));">
+                                </a>
                             @else
                                 <a href="{{ asset('storage/' . $msg->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                     📄 View File
@@ -215,6 +218,11 @@ label[for="attachment"] {
     <div class="chat-footer">
         <form action="{{ route('tickets.admin.storeMessage', $ticket->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
+            <div id="attachmentPreview" class="d-none align-items-center mb-2 p-1 px-2" style="background:#f1f3f5; border-radius:8px; width:fit-content;">
+                <img id="attachmentPreviewImg" src="" alt="" class="d-none" style="width:32px;height:32px;object-fit:cover;border-radius:4px;margin-right:8px;">
+                <span id="attachmentPreviewName" style="font-size:0.85rem; color:#333;"></span>
+                <button type="button" id="attachmentRemoveBtn" class="btn btn-sm p-0 ms-2" style="color:#dc3545; line-height:1;">✕</button>
+            </div>
             <div class="input-group align-items-center chat-input-group">
             <label for="attachment" class="attachment-icon">📎</label>
             <input type="file" name="attachment" id="attachment" class="d-none">
@@ -225,4 +233,40 @@ label[for="attachment"] {
     </div>
 
 </div>
+
+<script>
+    const attachmentInput = document.getElementById('attachment');
+    const attachmentPreview = document.getElementById('attachmentPreview');
+    const attachmentPreviewImg = document.getElementById('attachmentPreviewImg');
+    const attachmentPreviewName = document.getElementById('attachmentPreviewName');
+    const attachmentRemoveBtn = document.getElementById('attachmentRemoveBtn');
+
+    attachmentInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        attachmentPreviewName.textContent = file.name;
+        attachmentPreview.classList.remove('d-none');
+        attachmentPreview.classList.add('d-flex');
+
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                attachmentPreviewImg.src = e.target.result;
+                attachmentPreviewImg.classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            attachmentPreviewImg.classList.add('d-none');
+        }
+    });
+
+    attachmentRemoveBtn.addEventListener('click', function () {
+        attachmentInput.value = '';
+        attachmentPreviewImg.src = '';
+        attachmentPreviewImg.classList.add('d-none');
+        attachmentPreview.classList.add('d-none');
+        attachmentPreview.classList.remove('d-flex');
+    });
+</script>
 @endsection

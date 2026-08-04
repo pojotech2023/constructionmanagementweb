@@ -243,6 +243,26 @@ Route::get('/quotations', [GenerateQuotationController::class, 'index']);
 
   //Checklist Add
   Route::post('/checklist-add', [ChecklistController::class, 'apiStore']);
+  Route::post('/checklist-task-add', [ChecklistController::class, 'storeTaskItem']); //add single task to an existing stage
+
+  //Checklist Edit
+  Route::post('/checklist-stage-update/{id}', [ChecklistController::class, 'updateStage']);
+  Route::post('/checklist-task-update/{id}', [ChecklistController::class, 'updateTaskName']);
+  Route::post('/checklist-update/{id}', [ChecklistController::class, 'update']); //replace stage + task_list
+
+  //Checklist Delete
+  Route::delete('/checklist-stage/{id}', [ChecklistController::class, 'destroy']);
+  Route::delete('/checklist-task/{id}', [ChecklistController::class, 'deleteTask']);
+
+  //Checklist Manage / Reorder (admin template management, mirrored for mobile)
+  Route::get('/checklist-manage', [ChecklistController::class, 'manage']);
+  Route::post('/checklist-tasks-reorder', [ChecklistController::class, 'reorderTasks']);
+  Route::post('/checklist-stages-reorder', [ChecklistController::class, 'reorderChecklists']);
+
+  //Task Media (admin review screens, mirrored for mobile)
+  Route::get('/task-media/{siteId}/{taskId}', [ChecklistController::class, 'viewTaskMedia']);
+  Route::put('/task-media-update/{id}', [ChecklistController::class, 'updateTaskMedia']);
+  Route::delete('/task-media-delete/{id}/{siteId}', [ChecklistController::class, 'deleteByRemarks']);
 
 });
 Route::post('/login-customer', [AuthController::class, 'loginWithMobile']);
