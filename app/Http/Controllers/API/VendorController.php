@@ -320,6 +320,64 @@ class VendorController extends Controller
         ]);
     }
 
+    public function updatePayment(Request $request, $id)
+    {
+        $validate = Validator::make($request->all(), [
+            'payment' => 'required|numeric',
+            'date' => 'required|date',
+            'payment_mode' => 'required',
+            'remarks' => 'nullable|string',
+        ]);
+
+        if ($validate->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+
+        $payment = VendorPayment::find($id);
+
+        if (!$payment) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Payment not found.',
+            ], 404);
+        }
+
+        $payment->update([
+            'payment' => $request->payment,
+            'date' => $request->date,
+            'payment_mode' => $request->payment_mode,
+            'remarks' => $request->remarks,
+            'updated_by' => auth('api')->id(),
+        ]);
+
+        $vendorId = $payment->vendor_id;
+        $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+
+        $payDetail = VendorPayDetail::updateOrCreate(
+            ['vendor_id' => $vendorId],
+            [
+                'total_unit_price' => $totalAmount,
+                'paid_amount' => $paidAmount,
+                'balance_amount' => (float) $totalAmount - (float) $paidAmount,
+                'updated_by' => auth('api')->id(),
+            ]
+        );
+
+        return response()->json([
+            'response code' => 200,
+            'status' => true,
+            'message' => 'Payment updated successfully.',
+            'data' => [
+                'payment' => $payment,
+                'pay_detail' => $payDetail,
+            ],
+        ]);
+    }
+
     public function deletePayment($id)
     {
         $payment = VendorPayment::find($id);

@@ -64,7 +64,7 @@
                                                 <th>Mobile Number</th>
                                                 <th>Email ID</th>
                                                 <th>DOB</th>
-                                                
+                                                <th>Site Name</th>
                                                 <th style="width: 10%">Action</th>
                                             </tr>
                                         </thead>
@@ -76,7 +76,7 @@
                                                     <td>{{ $customer->mobile_no }}</td>
                                                     <td>{{ $customer->email }}</td>
                                                     <td>{{ $customer->dob }}</td>
-                                                    
+                                                    <td>{{ $customer->site->site_name ?? 'N/A' }}</td>
                                                     <td>
                                                         <div class="form-button-action">
                                                             <a href="{{ route('customer.edit', ['id' => $customer->id]) }}"

@@ -193,6 +193,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/paydetail/{vendorId}', [VendorController::class, 'getPayDetailsForm']);
   Route::post('paydetail-update', [VendorController::class, 'paydetailUpdate']); //only for opening balance
   Route::post('payment-add', [VendorController::class, 'addPayment']);
+  Route::patch('payment-update/{id}', [VendorController::class, 'updatePayment']); //payment history: edit action button
   Route::delete('payment-delete/{id}', [VendorController::class, 'deletePayment']);
   Route::get('payment-history/{vendorId}', [VendorController::class, 'paymentHistory']);
   Route::get('payment-history/{vendorId}/export', [VendorController::class, 'exportPaymentHistory']);

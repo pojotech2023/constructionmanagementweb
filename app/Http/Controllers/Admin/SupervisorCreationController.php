@@ -189,8 +189,6 @@ class SupervisorCreationController extends Controller
                 'label' => 'Quotation',
                 'actions' => [
                     'add_quotation'    => ['label' => 'Add',    'parent' => null],
-                    'edit_quotation'   => ['label' => 'Edit',   'parent' => null],
-                    'delete_quotation' => ['label' => 'Delete', 'parent' => null],
                 ],
             ],
 
