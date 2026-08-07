@@ -146,9 +146,10 @@ public function getTicketsBySite($site_id)
 public function getMessages($id)
 {
     try {
-        // Get the ticket with messages
+        // Get the ticket with messages (and their senders, so sender_name
+        // can be resolved without an N+1 query per message)
         $ticket = Ticket::with(['messages' => function($query) {
-            $query->orderBy('created_at', 'asc');
+            $query->orderBy('created_at', 'asc')->with(['senderUser', 'senderCustomer']);
         }])->find($id);
 
         if (!$ticket) {

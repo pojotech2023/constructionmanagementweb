@@ -24,20 +24,26 @@ class DeviceTokenController extends Controller
                 ], 422);
             }
             
-            $userId = auth('api')->id();
-             
-            if (!$userId) {
+            // Route accepts either guard (admin/supervisor via 'api', client via 'customer')
+            $authUser = auth('api')->user() ?? auth('customer')->user();
+
+            if (!$authUser) {
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
+            // Admin/Supervisor tokens resolve to App\Models\User, client
+            // tokens resolve to App\Models\Customer — store against whichever
+            // column matches so the FK stays valid for both.
+            $ownerColumn = $authUser instanceof \App\Models\Customer ? 'customer_id' : 'user_id';
+
             // Check if token already exists
-            $existing = DeviceToken::where('user_id', $userId)
+            $existing = DeviceToken::where($ownerColumn, $authUser->id)
             ->where('device_token', $request->token)
             ->first();
 
             if (!$existing) {
                 DeviceToken::firstOrCreate([
-                    'user_id' => $userId,
+                    $ownerColumn => $authUser->id,
                     'device_token' => $request->token,
                 ], [
                     'device_type' => 'mobile',

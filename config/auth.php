@@ -47,7 +47,14 @@ return [
         'api' => [
             'driver' =>'sanctum',
             'provider' => 'users',
-        ]
+        ],
+        // Dedicated guard for client (customer) Sanctum tokens — kept separate
+        // from 'api' so admin/supervisor-only endpoints (many of which do
+        // auth('api')->user()->roles) can't be reached with a client token.
+        'customer' => [
+            'driver' => 'sanctum',
+            'provider' => 'customers',
+        ],
     ],
 
     /*
@@ -71,8 +78,13 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
-        ]
-        
+        ],
+
+        'customers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Customer::class,
+        ],
+
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',

@@ -11,6 +11,7 @@ class DeviceToken extends Model
 
      protected $fillable=[
         'user_id',
+        'customer_id',
         'device_token',
         'device_type',
         'created_by',
@@ -20,5 +21,10 @@ class DeviceToken extends Model
       public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+      public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 }

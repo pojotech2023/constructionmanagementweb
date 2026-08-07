@@ -5,6 +5,7 @@ use App\Http\Controllers\API\AgentController;
 use App\Http\Controllers\API\AttendanceController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BricksController;
+use App\Http\Controllers\API\ClientProfileController;
 use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\DeviceTokenController;
@@ -47,7 +48,7 @@ use Illuminate\Support\Facades\Validator;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth:api')->get('/user', function (Request $request) {
   return $request->user();
 });
 
@@ -57,13 +58,20 @@ Route::post('/logout', [AuthController::class, 'logout']);
 //test
 Route::post('/send-notification', [NotificationController::class, 'send']);
 
-Route::middleware('auth:sanctum')->group(function () {
+// Device Token Store — shared by Admin/Supervisor (api guard) and Client
+// (customer guard), so it needs both guards tried, not just one.
+Route::middleware('auth:api,customer')->post('/save-device-token', [DeviceTokenController::class, 'store']);
+
+// Client Profile (self-service) — customer guard only.
+Route::middleware('auth:customer')->group(function () {
+    Route::get('/client-profile', [ClientProfileController::class, 'show']);
+    Route::post('/client-profile-update', [ClientProfileController::class, 'update']);
+});
+
+Route::middleware('auth:api')->group(function () {
 
     //Dashboard
       Route::get('/dashboard', [DashboardController::class, 'getDashboard']);
-
-  //Device Token Store
-  Route::post('/save-device-token', [DeviceTokenController::class, 'store']);
 
   //Supervisor Location (mobile app reports current GPS position)
   Route::post('/save-location', [LocationController::class, 'store']);

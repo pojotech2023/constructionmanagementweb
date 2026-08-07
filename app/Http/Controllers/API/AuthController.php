@@ -88,10 +88,15 @@ class AuthController extends Controller
         ], 404);
     }
 
+    // Issue a Sanctum token so the client app can call authenticated
+    // endpoints (e.g. /save-device-token) the same way admin/supervisor do.
+    $token = $customer->createToken('authToken')->plainTextToken;
+
     return response()->json([
         'status' => true,
         'message' => 'Customer found',
         'data' => [
+            'token' => $token,
             'customer' => $customer,
             'site' => $customer->site   // site record from site_id
         ]

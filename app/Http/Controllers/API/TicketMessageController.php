@@ -43,11 +43,22 @@ public function storeMessage(Request $request)
     // 🔹 Use site_id from request or fallback to ticket’s site_id
     $siteId = $request->input('site_id', $ticket->site_id);
 
+    $senderType = strtolower($request->sender_type);
+
+    // 🔹 Resolve who actually sent the message so the API can return
+    //    their real name instead of just the role label.
+    //    - admin/supervisor come from the authenticated users table
+    //    - client is tied to the ticket's customer
+    $senderId = in_array($senderType, ['admin', 'supervisor'])
+        ? auth('api')->id()
+        : $ticket->customer_id;
+
     // 🔹 Create the message entry
     TicketMessage::create([
         'ticket_id'   => $ticket->id,
         'site_id'     => $siteId,
-        'sender_type' => strtolower($request->sender_type),
+        'sender_type' => $senderType,
+        'sender_id'   => $senderId,
         'message'     => $request->message,
         'attachment'  => $filePath,
     ]);
@@ -85,6 +96,7 @@ public function storeMessage(Request $request)
     TicketMessage::create([
         'ticket_id'   => $ticket->id,
         'sender_type' => 'supervisor',
+        'sender_id'   => auth('api')->id(),
         'message'     => $request->message,
         'attachment'  => $filePath,
     ]);
