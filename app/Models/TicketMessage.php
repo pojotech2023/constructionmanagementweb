@@ -16,7 +16,7 @@ class TicketMessage extends Model
         'attachment',
     ];
 
-    protected $appends = ['sender_name'];
+    protected $appends = ['sender_name', 'attachment_url'];
 
     // senderUser/senderCustomer are only loaded to resolve sender_name
     // (senderUser in particular would otherwise leak the user's password hash)
@@ -57,5 +57,15 @@ class TicketMessage extends Model
         }
 
         return ucfirst($this->sender_type ?? '');
+    }
+
+    // The raw `attachment` column only holds the storage-relative path
+    // (e.g. "ticket_attachments/xxx.jpg" or "attachments/xxx.jpg" depending
+    // on which endpoint created the message). Clients need an absolute URL,
+    // and building it themselves is what produced the 404s — so resolve it
+    // here the same way every other module in this app does.
+    public function getAttachmentUrlAttribute()
+    {
+        return $this->attachment ? asset('storage/' . $this->attachment) : null;
     }
 }

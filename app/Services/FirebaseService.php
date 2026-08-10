@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\Site;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
@@ -83,6 +84,41 @@ class FirebaseService
             ->flatten()
             ->pluck('device_token')
             ->all();
+
+        return $this->sendToTokens($tokens, $title, $body, $data);
+    }
+
+    /**
+     * Notify a site's supervisor and client(s) — used when an admin
+     * approves/rejects a checklist task, so the people who actually did the
+     * work / are waiting on it hear back. (notifyAdmins() above is the other
+     * direction: supervisor -> admin.)
+     */
+    public function notifySiteStakeholders(int $siteId, string $title, string $body, array $data = [])
+    {
+        $site = Site::with(['supervisor.deviceToken', 'customer.deviceTokens'])->find($siteId);
+
+        if (!$site) {
+            \Log::warning('notifySiteStakeholders: site not found', ['site_id' => $siteId]);
+            return null;
+        }
+
+        $supervisorTokens = $site->supervisor
+            ? $site->supervisor->deviceToken->pluck('device_token')->all()
+            : [];
+
+        $clientTokens = $site->customer
+            ->flatMap(fn ($customer) => $customer->deviceTokens->pluck('device_token'))
+            ->all();
+
+        $tokens = array_merge($supervisorTokens, $clientTokens);
+
+        \Log::info('notifySiteStakeholders resolved recipients', [
+            'site_id'           => $siteId,
+            'supervisor_id'     => $site->supervisor_id,
+            'supervisor_tokens' => count($supervisorTokens),
+            'client_tokens'     => count($clientTokens),
+        ]);
 
         return $this->sendToTokens($tokens, $title, $body, $data);
     }

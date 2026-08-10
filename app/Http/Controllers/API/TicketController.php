@@ -9,6 +9,7 @@ use App\Models\TicketMessage;
 use App\Services\FirebaseService;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 class TicketController extends Controller
 {
  public function store(Request $request)
@@ -106,6 +107,9 @@ public function storeAdminMessage(Request $request, $id)
     $data = [
         'ticket_id' => $id,
         'sender_type' => $senderType,
+        // sender_id was missing here, so TicketMessage::sender_name could
+        // never resolve the real name and always fell back to "Admin"/"Supervisor"
+        'sender_id' => Auth::guard('admin')->id(),
         'message' => $request->message,
     ];
 
@@ -167,6 +171,13 @@ public function getMessages($id)
             'data' => $ticket->messages
         ]);
     } catch (\Exception $e) {
+        // Was previously swallowed with no trace in laravel.log, which made
+        // the reported "connection closed before full header was received"
+        // errors impossible to diagnose. Log it so the next occurrence is visible.
+        \Log::error('getMessages failed for ticket ' . $id . ': ' . $e->getMessage(), [
+            'exception' => $e,
+        ]);
+
         return response()->json([
             'status' => false,
             'message' => 'Server Error',

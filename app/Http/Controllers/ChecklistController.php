@@ -717,6 +717,8 @@ public function adminUpdateTask(Request $request)
             ]);
         }
 
+        $this->notifyStakeholdersOfChecklistDecision($siteId, $taskId, $input['status']);
+
         return response()->json([
             'status'  => true,
             'message' => 'Admin remark and status updated successfully.',
@@ -734,6 +736,31 @@ public function adminUpdateTask(Request $request)
             'message' => 'Something went wrong.',
             'error'   => $e->getMessage(),
         ], 500);
+    }
+}
+
+// This was the missing piece: adminUpdateTask (Checklist Approve/Remove)
+// never pushed anything to the site's supervisor/client — only the
+// supervisor -> admin direction (notifyAdminsOfChecklistUpdate above) existed.
+private function notifyStakeholdersOfChecklistDecision($siteId, $taskId, $status)
+{
+    try {
+        $task = Task::find($taskId);
+        $label = $status === 'approved' ? 'approved' : 'rejected';
+
+        app(FirebaseService::class)->notifySiteStakeholders(
+            $siteId,
+            'Checklist ' . ucfirst($label),
+            'Admin ' . $label . ' "' . ($task->task_name ?? 'a task') . '"',
+            [
+                'type' => 'checklist',
+                'site_id' => (string) $siteId,
+                'task_id' => (string) $taskId,
+                'status' => $status,
+            ]
+        );
+    } catch (\Exception $e) {
+        \Log::error('Failed to send checklist decision push notification: ' . $e->getMessage());
     }
 }
 
