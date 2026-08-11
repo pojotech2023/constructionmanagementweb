@@ -255,7 +255,8 @@ class SubContractorController extends Controller
             'subcontractor_type' => 'required|string',
             'date' => 'required',
             'amount' => 'required|numeric',
-            'no_counts'=> 'required'
+            'no_counts'=> 'required',
+            'remarks' => 'nullable|string',
         ]);
 
          if ($validate->fails()) {
@@ -274,6 +275,7 @@ class SubContractorController extends Controller
             'date' => $date,
             'amount' => $request->amount,
             'no_counts' => $request->no_counts,
+            'remarks' => $request->remarks,
             'created_by'  => auth('api')->id(),
         ]);
 

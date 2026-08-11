@@ -7,6 +7,7 @@ use App\Mail\PurchaseBillMail;
 use App\Models\PurchaseBill;
 use App\Models\PurchaseBillDetail;
 use App\Models\Site;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -31,23 +32,40 @@ class PurchaseBillController extends Controller
             'message' => 'Purchase bill form details fetched successfully.',
             'data' => [
                 'site' => $site,
+                'units' => Unit::orderBy('name')->pluck('name'),
             ],
         ]);
     }
 
+    // History: every purchase bill generated for a site, most recent first.
+    // Each bill carries pdf_url (View) and whatsapp_url (WhatsApp) so the app
+    // doesn't need to know/rebuild the storage path itself; Delete uses the
+    // existing DELETE /purchase-bill-delete/{id} endpoint below.
     public function index($siteId)
     {
         $purchaseBills = PurchaseBill::with('details')
             ->where('site_id', $siteId)
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
-            ->get();
+            ->get()
+            ->each(fn ($bill) => $this->attachLinks($bill));
 
         return response()->json([
             'status' => true,
             'message' => 'Purchase bills fetched successfully.',
             'data' => $purchaseBills,
         ]);
+    }
+
+    // Attach the PDF and WhatsApp links to a bill for View/WhatsApp actions in the app.
+    private function attachLinks(PurchaseBill $bill): void
+    {
+        $pdfPath = 'purchase_bills/purchase_bill_' . $bill->id . '.pdf';
+        $pdfUrl = asset('storage/' . $pdfPath);
+        $message = urlencode("Hi {$bill->name}, your purchase bill is ready. Download here: $pdfUrl");
+
+        $bill->pdf_url = $pdfUrl;
+        $bill->whatsapp_url = "https://wa.me/91{$bill->mobile_no}?text=$message";
     }
 
     public function store(Request $request)
@@ -63,6 +81,8 @@ class PurchaseBillController extends Controller
             'terms_conditions' => 'nullable|string',
             'particular' => 'required|array',
             'count' => 'required|array',
+            'unit' => 'nullable|array',
+            'unit.*' => 'nullable|string',
             'amount' => 'required|array',
         ]);
 
@@ -89,13 +109,16 @@ class PurchaseBillController extends Controller
 
             foreach ($request->particular as $index => $particular) {
                 $count = $request->count[$index];
+                $unit = $request->unit[$index] ?? null;
                 $amount = $request->amount[$index];
-                $totalAmount += (float) $amount;
+                // Amount is the rate per unit — the line total (and grand total) is count × rate.
+                $totalAmount += (float) $amount * ((float) $count > 0 ? (float) $count : 1);
 
                 PurchaseBillDetail::create([
                     'purchase_bill_id' => $purchaseBill->id,
                     'particular' => $particular,
                     'count' => $count,
+                    'unit' => $unit,
                     'amount' => $amount,
                     'created_by' => auth('api')->id(),
                 ]);
@@ -146,6 +169,8 @@ class PurchaseBillController extends Controller
             return response()->json(['status' => false, 'message' => 'Purchase bill not found.'], 404);
         }
 
+        $this->attachLinks($purchaseBill);
+
         return response()->json([
             'status' => true,
             'message' => 'Purchase bill fetched successfully.',
@@ -171,6 +196,8 @@ class PurchaseBillController extends Controller
             'terms_conditions' => 'nullable|string',
             'particular' => 'nullable|array',
             'count' => 'nullable|array',
+            'unit' => 'nullable|array',
+            'unit.*' => 'nullable|string',
             'amount' => 'nullable|array',
         ]);
 
@@ -195,13 +222,16 @@ class PurchaseBillController extends Controller
 
             foreach ($request->particular as $index => $particular) {
                 $count = $request->count[$index];
+                $unit = $request->unit[$index] ?? null;
                 $amount = $request->amount[$index];
-                $totalAmount += (float) $amount;
+                // Amount is the rate per unit — the line total (and grand total) is count × rate.
+                $totalAmount += (float) $amount * ((float) $count > 0 ? (float) $count : 1);
 
                 PurchaseBillDetail::create([
                     'purchase_bill_id' => $purchaseBill->id,
                     'particular' => $particular,
                     'count' => $count,
+                    'unit' => $unit,
                     'amount' => $amount,
                     'created_by' => auth('api')->id(),
                 ]);

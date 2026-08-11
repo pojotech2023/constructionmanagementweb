@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\SalesBill;
 use App\Models\SalesBillDetail;
 use App\Models\Site;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -23,8 +24,9 @@ class SalesBillController extends Controller
             ->where('is_inactive', 0)
             ->orderBy('id')
             ->first();
+        $units = Unit::orderBy('name')->get();
 
-        return view('admin.menus.sales_bill.sales_bill_add', compact('site', 'customer'));
+        return view('admin.menus.sales_bill.sales_bill_add', compact('site', 'customer', 'units'));
     }
 
     public function store(Request $request)
@@ -43,6 +45,8 @@ class SalesBillController extends Controller
             'particular.*' => 'required|string',
             'count' => 'required|array',
             'count.*' => 'required|numeric',
+            'unit' => 'nullable|array',
+            'unit.*' => 'nullable|string',
             'amount' => 'required|array',
             'amount.*' => 'required|numeric',
         ]);
@@ -70,13 +74,16 @@ class SalesBillController extends Controller
 
             foreach ($request->particular as $index => $particular) {
                 $count = $request->count[$index];
+                $unit = $request->unit[$index] ?? null;
                 $amount = $request->amount[$index];
-                $totalAmount += (float) $amount;
+                // Amount is the rate per unit — the line total (and grand total) is count × rate.
+                $totalAmount += (float) $amount * ((float) $count > 0 ? (float) $count : 1);
 
                 SalesBillDetail::create([
                     'sales_bill_id' => $salesBill->id,
                     'particular' => $particular,
                     'count' => $count,
+                    'unit' => $unit,
                     'amount' => $amount,
                     'created_by' => auth('admin')->id(),
                 ]);
@@ -115,5 +122,34 @@ class SalesBillController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    // List every sales bill generated for a site, most recent first.
+    public function history($siteId)
+    {
+        $site = Site::findOrFail($siteId);
+
+        $bills = SalesBill::where('site_id', $siteId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.menus.sales_bill.sales_bill_history', compact('site', 'bills'));
+    }
+
+    public function destroy($id)
+    {
+        $salesBill = SalesBill::findOrFail($id);
+        $siteId = $salesBill->site_id;
+
+        $pdfPath = 'sales_bills/sales_bill_' . $salesBill->id . '.pdf';
+        if (Storage::disk('public')->exists($pdfPath)) {
+            Storage::disk('public')->delete($pdfPath);
+        }
+
+        $salesBill->details()->delete();
+        $salesBill->delete();
+
+        return redirect()->route('salesBill.history', $siteId)->with('success', 'Sales bill deleted successfully.');
     }
 }

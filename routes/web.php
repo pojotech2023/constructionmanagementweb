@@ -175,8 +175,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/site-detail/{id}/full-report', [SiteController::class, 'exportFullReport'])->name('site.full-report.export');
         Route::get('/sales-bill-form/{siteId}', [SalesBillController::class, 'getForm'])->name('salesBill.form');
         Route::post('/sales-bill-add', [SalesBillController::class, 'store'])->name('salesBill.add');
+        Route::get('/sales-bill-history/{siteId}', [SalesBillController::class, 'history'])->name('salesBill.history');
+        Route::delete('/sales-bill-delete/{id}', [SalesBillController::class, 'destroy'])->name('salesBill.delete');
         Route::get('/purchase-bill-form/{siteId}', [PurchaseBillController::class, 'getForm'])->name('purchaseBill.form');
         Route::post('/purchase-bill-add', [PurchaseBillController::class, 'store'])->name('purchaseBill.add');
+        Route::get('/purchase-bill-history/{siteId}', [PurchaseBillController::class, 'history'])->name('purchaseBill.history');
+        Route::delete('/purchase-bill-delete/{id}', [PurchaseBillController::class, 'destroy'])->name('purchaseBill.delete');
         Route::get('/material-estimation-form/{siteId}', [MaterialEstimationRequestController::class, 'getForm'])->name('materialEstimation.form');
         Route::post('/material-estimation-add', [MaterialEstimationRequestController::class, 'store'])->name('materialEstimation.add');
         Route::patch('/material-estimation-update/{id}', [MaterialEstimationRequestController::class, 'update'])->name('materialEstimation.update');

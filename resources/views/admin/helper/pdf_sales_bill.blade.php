@@ -117,23 +117,31 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 55%;">Particular</th>
-                    <th style="width: 20%;">Count</th>
-                    <th style="width: 25%;">Amount (₹)</th>
+                    <th style="width: 34%;">Particular</th>
+                    <th style="width: 12%;">Count</th>
+                    <th style="width: 12%;">Unit</th>
+                    <th style="width: 21%;">Rate (₹)</th>
+                    <th style="width: 21%;">Total (₹)</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($chunk as $detail)
+                    @php
+                        $rowCount = (float) $detail->count > 0 ? (float) $detail->count : 1;
+                        $rowTotal = $rowCount * (float) $detail->amount;
+                    @endphp
                     <tr>
                         <td class="text-left">{{ $detail->particular }}</td>
                         <td class="text-right">{{ rtrim(rtrim(number_format((float) $detail->count, 2), '0'), '.') }}</td>
+                        <td class="text-center">{{ $detail->unit ?? '-' }}</td>
                         <td class="text-right">{{ number_format($detail->amount, 2) }}</td>
+                        <td class="text-right">{{ number_format($rowTotal, 2) }}</td>
                     </tr>
                 @endforeach
 
                 @if ($loop->last && $pageIndex === count($chunks) - 1)
                     <tr>
-                        <td colspan="2" class="text-center" style="font-weight: bold;">TOTAL</td>
+                        <td colspan="4" class="text-center" style="font-weight: bold;">TOTAL</td>
                         <td class="text-right" style="font-weight: bold;">{{ number_format($data->total_amount, 2) }}</td>
                     </tr>
                 @endif

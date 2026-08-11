@@ -7,6 +7,7 @@ use App\Mail\PurchaseBillMail;
 use App\Models\PurchaseBill;
 use App\Models\PurchaseBillDetail;
 use App\Models\Site;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -18,8 +19,9 @@ class PurchaseBillController extends Controller
     public function getForm($siteId)
     {
         $site = Site::findOrFail($siteId);
+        $units = Unit::orderBy('name')->get();
 
-        return view('admin.menus.purchase_bill.purchase_bill_add', compact('site'));
+        return view('admin.menus.purchase_bill.purchase_bill_add', compact('site', 'units'));
     }
 
     public function store(Request $request)
@@ -38,6 +40,8 @@ class PurchaseBillController extends Controller
             'particular.*' => 'required|string',
             'count' => 'required|array',
             'count.*' => 'required|numeric',
+            'unit' => 'nullable|array',
+            'unit.*' => 'nullable|string',
             'amount' => 'required|array',
             'amount.*' => 'required|numeric',
         ]);
@@ -65,13 +69,16 @@ class PurchaseBillController extends Controller
 
             foreach ($request->particular as $index => $particular) {
                 $count = $request->count[$index];
+                $unit = $request->unit[$index] ?? null;
                 $amount = $request->amount[$index];
-                $totalAmount += (float) $amount;
+                // Amount is the rate per unit — the line total (and grand total) is count × rate.
+                $totalAmount += (float) $amount * ((float) $count > 0 ? (float) $count : 1);
 
                 PurchaseBillDetail::create([
                     'purchase_bill_id' => $purchaseBill->id,
                     'particular' => $particular,
                     'count' => $count,
+                    'unit' => $unit,
                     'amount' => $amount,
                     'created_by' => auth('admin')->id(),
                 ]);
@@ -110,5 +117,34 @@ class PurchaseBillController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    // List every purchase bill generated for a site, most recent first.
+    public function history($siteId)
+    {
+        $site = Site::findOrFail($siteId);
+
+        $bills = PurchaseBill::where('site_id', $siteId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.menus.purchase_bill.purchase_bill_history', compact('site', 'bills'));
+    }
+
+    public function destroy($id)
+    {
+        $purchaseBill = PurchaseBill::findOrFail($id);
+        $siteId = $purchaseBill->site_id;
+
+        $pdfPath = 'purchase_bills/purchase_bill_' . $purchaseBill->id . '.pdf';
+        if (Storage::disk('public')->exists($pdfPath)) {
+            Storage::disk('public')->delete($pdfPath);
+        }
+
+        $purchaseBill->details()->delete();
+        $purchaseBill->delete();
+
+        return redirect()->route('purchaseBill.history', $siteId)->with('success', 'Purchase bill deleted successfully.');
     }
 }

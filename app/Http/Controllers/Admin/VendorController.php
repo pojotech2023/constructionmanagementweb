@@ -87,7 +87,7 @@ class VendorController extends Controller
     public function search(Request $request)
     {
         $vendors = Vendor::where('name', 'LIKE', $request->name . '%')
-            ->select('id', 'name', 'mobile_no', 'address', 'gst')
+            ->select('id', 'name', 'mobile_no', 'address', 'gst', 'email')
             ->get();
 
         return response()->json($vendors);

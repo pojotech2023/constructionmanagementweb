@@ -89,7 +89,7 @@
                 <label>{{ $cat }}</label>
             </div>
             <div class="col-md-4">
-                <input type="number" class="form-control no-arrow"
+                <input type="number" min="0" step="1" class="form-control no-arrow"
                        name="count_{{ str_replace(' ', '_', $cat) }}"
                        value="{{ $attendance[$cat] ?? 0 }}">
             </div>
@@ -107,7 +107,7 @@
                 <label>{{ $cat }}</label>
             </div>
             <div class="col-md-4">
-                <input type="number" class="form-control no-arrow"
+                <input type="number" min="0" class="form-control no-arrow"
                        name="amount_{{ str_replace(' ', '_', $cat) }}"
                        value="{{ $wages[$cat] ?? 0 }}">
             </div>
@@ -146,12 +146,10 @@
                 row.setAttribute('data-pair-id', pairId);
                 row.innerHTML = `
                     <div class="col-md-4">
-                        <label>Category</label>
                         <input type="text" class="form-control" name="${fieldName}[${index}][category]" placeholder="Category">
                     </div>
                     <div class="col-md-4">
-                        <label>${valueLabel}</label>
-                        <input type="number" step="${inputStep}" class="form-control no-arrow" name="${fieldName}[${index}][${valueName}]" placeholder="${valueLabel}">
+                        <input type="number" min="0" step="${inputStep}" class="form-control no-arrow" name="${fieldName}[${index}][${valueName}]" placeholder="${valueLabel}">
                     </div>
                     <div class="col-md-2">
                         <button type="button" class="btn btn-outline-danger btn-sm remove-row" aria-label="Remove row">&times;</button>

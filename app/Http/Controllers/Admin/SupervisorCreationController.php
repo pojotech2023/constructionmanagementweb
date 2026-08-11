@@ -8,7 +8,6 @@ use App\Models\Site;
 use App\Models\SupervisorPermission;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -69,7 +68,7 @@ class SupervisorCreationController extends Controller
             'name' => $request->name,
             'mobile_no' => $request->mobile_no,
             'email' => $request->email,
-            'password' => Crypt::encryptString($request->password),
+            'password' => Hash::make($request->password),
             'created_by'  => auth('admin')->id(),
         ]);
 
@@ -126,7 +125,10 @@ class SupervisorCreationController extends Controller
             ->get()
             ->keyBy(fn($p) => $p->module . '.' . $p->action);
 
-        $sites = Site::orderBy('site_name')->get();
+        // Show every active site (excluding soft-deleted ones).
+        $sites = Site::where('is_inactive', 0)
+            ->orderBy('site_name')
+            ->get();
         $assignedSiteIds = Site::where('supervisor_id', $id)->pluck('id')->toArray();
 
         return view('admin.menus.supervisor.permissions', compact('supervisor', 'modules', 'saved', 'sites', 'assignedSiteIds'));
@@ -180,6 +182,7 @@ class SupervisorCreationController extends Controller
                     'view_checklist'         => ['label' => 'Checklist',            'parent' => 'view_site'],
                     'view_tickets'           => ['label' => 'Tickets',              'parent' => 'view_site'],
                     'view_drawing'           => ['label' => 'Drawing',              'parent' => 'view_site'],
+                    'download_full_report'   => ['label' => 'Download Full Report', 'parent' => 'view_site'],
                     'edit_site'              => ['label' => 'Edit Site',            'parent' => 'view_site'],
                     'delete_site'            => ['label' => 'Delete Site',          'parent' => 'view_site'],
                 ],

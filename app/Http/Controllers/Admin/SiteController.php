@@ -57,7 +57,10 @@ class SiteController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $displayNumbers = Site::orderBy('id')->pluck('id')
+        // Number only the currently-active sites so deleting one (a soft delete via
+        // is_inactive) shifts the rest down instead of leaving a gap — e.g. deleting
+        // site #1 makes the site that was #2 become #1, not stay #2.
+        $displayNumbers = Site::where('is_inactive', 0)->orderBy('id')->pluck('id')
             ->values()
             ->flip()
             ->map(fn ($index) => $index + 1);

@@ -110,26 +110,30 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>
-                            @if(Str::contains($drawing->file_type, 'image'))
-    <img src="{{ asset('storage/' . $drawing->file_path) }}" 
-         alt="Drawing Image" 
-         width="100" 
+                            @php
+                                // The browser-reported MIME type (file_type) is unreliable on mobile
+                                // uploads — many mobile browsers send a generic/incorrect MIME even for
+                                // a valid jpg/png/pdf. The file extension in the stored name is always
+                                // accurate (it's what the upload validation itself checks), so use that
+                                // instead of $drawing->file_type to decide how to display each row.
+                                $ext = strtolower(pathinfo($drawing->file_name, PATHINFO_EXTENSION));
+                            @endphp
+                            @if(in_array($ext, ['jpg', 'jpeg', 'png']))
+    <img src="{{ asset('storage/' . $drawing->file_path) }}"
+         alt="Drawing Image"
+         width="100"
          height="100">
-@elseif(Str::contains($drawing->file_type, 'pdf'))
-    <a href="{{ asset('storage/' . $drawing->file_path) }}" 
+@elseif($ext === 'pdf')
+    <a href="{{ asset('storage/' . $drawing->file_path) }}"
        target="_blank">📄 View PDF</a>
-@elseif(Str::contains($drawing->file_type, 'excel') || 
-        Str::contains($drawing->file_type, 'spreadsheet') || 
-        Str::contains($drawing->file_type, 'xls') || 
-        Str::contains($drawing->file_type, 'xlsx'))
-    <a href="{{ asset('storage/' . $drawing->file_path) }}" 
+@elseif(in_array($ext, ['xls', 'xlsx']))
+    <a href="{{ asset('storage/' . $drawing->file_path) }}"
        download>📊 Download Excel</a>
-@elseif(Str::contains($drawing->file_type, 'dwg') || 
-        pathinfo($drawing->file_name, PATHINFO_EXTENSION) === 'dwg')
-    <a href="{{ asset('storage/' . $drawing->file_path) }}" 
+@elseif($ext === 'dwg')
+    <a href="{{ asset('storage/' . $drawing->file_path) }}"
        download>📐 Download DWG</a>
 @else
-    <span>Unsupported file type</span>
+    <a href="{{ asset('storage/' . $drawing->file_path) }}" download>📎 {{ $drawing->file_name }}</a>
 @endif
 
                         </td>
@@ -148,11 +152,12 @@
         </a>
 
         <!-- Delete Button -->
-        <form action="{{ route('drawings.destroy', $drawing->id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-danger">🗑️ Delete</button>
-        </form>
+        <button type="button" class="btn btn-sm btn-danger deleteDrawingBtn"
+            data-url="{{ route('drawings.destroy', $drawing->id) }}"
+            data-name="{{ $drawing->file_name }}"
+            data-bs-toggle="modal" data-bs-target="#deleteDrawingModal">
+            🗑️ Delete
+        </button>
     </div>
 </td>
                     </tr>
@@ -162,12 +167,36 @@
     </div>
 @endif
 
-        
+
 </div>
 </div>
 </div>
 
-   
+
+    <!-- Delete Drawing Modal -->
+    <div class="modal fade" id="deleteDrawingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="deleteDrawingForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete ?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Spinner -->
     <div class="d-flex justify-content-center mt-3">
         <div class="spinner-border text-primary d-none" role="status" id="loadingSpinner">
@@ -187,6 +216,14 @@
                 const message = `Drawing: ${name}\n${url}`;
                 const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(message);
                 window.open(whatsappUrl, '_blank');
+            });
+
+            document.addEventListener('click', function (e) {
+                const deleteBtn = e.target.closest('.deleteDrawingBtn');
+                if (!deleteBtn) return;
+
+                document.getElementById('deleteDrawingForm').action = deleteBtn.getAttribute('data-url');
+                document.getElementById('deleteDrawingName').textContent = deleteBtn.getAttribute('data-name') || 'this drawing';
             });
         });
     </script>

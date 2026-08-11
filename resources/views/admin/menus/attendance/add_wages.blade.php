@@ -116,7 +116,7 @@
                                                 <input type="number" name="rows[{{ $i }}][amount]" class="form-control amount-input no-arrow" step="0.01" min="0" value="{{ old('rows.' . $i . '.amount') }}">
                                             </td>
                                             <td>
-                                                <input type="number" name="rows[{{ $i }}][count]" class="form-control count-input no-arrow" min="0" value="{{ old('rows.' . $i . '.count') }}">
+                                                <input type="number" name="rows[{{ $i }}][count]" class="form-control count-input no-arrow" min="0" step="1" value="{{ old('rows.' . $i . '.count') }}">
                                             </td>
                                             <td class="text-center">
                                                     <div class="d-flex justify-content-center gap-1">
@@ -250,7 +250,7 @@
                             <input type="number" name="rows[${index}][amount]" class="form-control amount-input no-arrow" step="0.01" min="0" value="${data.amount || ''}">
                         </td>
                         <td>
-                            <input type="number" name="rows[${index}][count]" class="form-control count-input no-arrow" min="0" value="${data.count || ''}">
+                            <input type="number" name="rows[${index}][count]" class="form-control count-input no-arrow" min="0" step="1" value="${data.count || ''}">
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">

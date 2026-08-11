@@ -23,8 +23,18 @@ class SiteController extends Controller
     //site management list
     public function index(Request $request)
     {
+        $user = auth('api')->user();
+        $role = $user->roles->first()->role_name ?? null;
+
         $query = Site::with('customer')
             ->where('is_inactive', 0);
+
+            // A Supervisor only sees the sites assigned to them (via the "Assigned
+            // Sites" permission on the admin side) — same restriction the admin web
+            // site list already applies.
+            if ($role === 'Supervisor') {
+                $query->where('supervisor_id', $user->id);
+            }
 
             if($request->has('status') && $request->status !== 'All'){
                 $query->where('status', $request->status);

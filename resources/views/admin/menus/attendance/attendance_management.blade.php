@@ -84,7 +84,7 @@
                     <div class="col-12 col-md-8">
                         <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
                             <a href="{{ route('wages.form', ['siteId' => $siteId]) }}" class="btn btn-info">
-                                Add Wages
+                                Add Attendance
                             </a>
 
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#attendanceExportModal">

@@ -68,6 +68,9 @@ class MaterialController extends Controller
                     'image_url' => $type->image ? asset('storage/' . $type->image) : null,
                 ];
             }),
+            // Slugs of default/fixed material cards the admin has hidden (via material-type-hide/{slug}),
+            // persisted in the settings table so this list survives app restarts/refreshes.
+            'hidden_materials' => array_values($hidden),
             'status' => true,
             'message' => 'Material Management fetched successfully.',
         ]);
@@ -359,7 +362,6 @@ public function materialRequest(Request $request)
         'date' => 'required',
         'quantity' => 'required|numeric',
         'price' => 'required|numeric',
-        'gst' => 'nullable|numeric',
         'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // ✅ optional file
         'category_name' => 'nullable|string', // ✅ not stored but shown in response
     ]);
@@ -398,7 +400,6 @@ public function materialRequest(Request $request)
         'quantity' => $request->quantity,
         'unit' => $request->unit,
         'price' => $request->price,
-        'gst' => $request->gst,
         'available_unit_count' => $request->available_unit_count,
         'image_url' => $imageUrl, // ✅ store image URL
         'created_by' => auth('api')->id(),

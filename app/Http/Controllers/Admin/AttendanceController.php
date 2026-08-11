@@ -174,8 +174,8 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
                 'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
                 'rows' => 'array',
                 'rows.*.category' => 'required|string',
-                'rows.*.amount' => 'nullable|numeric',
-                'rows.*.count' => 'nullable|numeric',
+                'rows.*.amount' => 'nullable|numeric|min:0',
+                'rows.*.count' => 'nullable|integer|min:0',
             ]);
 
             if ($validate->fails()) {
@@ -275,10 +275,10 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
             'date'     => 'required|date',
             'time'     => 'nullable|date_format:H:i',
             'photo'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'amount_Mason' => 'nullable|numeric',
-            'amount_Helper' => 'nullable|numeric',
-            'amount_Fitter' => 'nullable|numeric',
-            'amount_Centring_Helper' => 'nullable|numeric',
+            'amount_Mason' => 'nullable|numeric|min:0',
+            'amount_Helper' => 'nullable|numeric|min:0',
+            'amount_Fitter' => 'nullable|numeric|min:0',
+            'amount_Centring_Helper' => 'nullable|numeric|min:0',
         ]);
 
         if ($validate->fails()) {
@@ -359,10 +359,10 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
         $validate = Validator::make($request->all(), [
             'site_id'  => 'required|exists:sites,id',
             'date'     => 'required|date',
-            'count_Mason' => 'nullable|numeric',
-            'count_Helper'   => 'nullable|numeric',
-            'count_Fitter' => 'nullable|numeric',
-            'count_Centring_Helper' => 'nullable|numeric',
+            'count_Mason' => 'nullable|integer|min:0',
+            'count_Helper'   => 'nullable|integer|min:0',
+            'count_Fitter' => 'nullable|integer|min:0',
+            'count_Centring_Helper' => 'nullable|integer|min:0',
         ]);
 
         if ($validate->fails()) {
@@ -521,6 +521,18 @@ public function editPage($site_id, $date)
 
 public function updateAttendance(Request $request)
 {
+    $validate = Validator::make($request->all(), [
+        'count_Mason'            => 'nullable|integer|min:0',
+        'count_Helper'           => 'nullable|integer|min:0',
+        'count_Fitter'           => 'nullable|integer|min:0',
+        'count_Centring_Helper'  => 'nullable|integer|min:0',
+        'attendance_rows.*.count' => 'nullable|integer|min:0',
+    ]);
+
+    if ($validate->fails()) {
+        return redirect()->back()->withErrors($validate)->withInput();
+    }
+
     $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
 
     foreach ($categories as $cat) {
@@ -573,6 +585,18 @@ public function updateAttendance(Request $request)
 
 public function updateWages(Request $request)
 {
+    $validate = Validator::make($request->all(), [
+        'amount_Mason'            => 'nullable|numeric|min:0',
+        'amount_Helper'           => 'nullable|numeric|min:0',
+        'amount_Fitter'           => 'nullable|numeric|min:0',
+        'amount_Centring_Helper'  => 'nullable|numeric|min:0',
+        'wage_rows.*.amount'      => 'nullable|numeric|min:0',
+    ]);
+
+    if ($validate->fails()) {
+        return redirect()->back()->withErrors($validate)->withInput();
+    }
+
     $categories = ['Mason', 'Helper', 'Fitter', 'Centring Helper'];
 
     foreach ($categories as $cat) {
@@ -626,12 +650,23 @@ public function updateWages(Request $request)
 
 public function updateAttendanceAndWages(Request $request)
 {
-    $validate = Validator::make($request->all(), [
+    $rules = [
         'checkin_time'  => 'nullable|date_format:H:i',
         'checkin_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         'time'  => 'nullable|date_format:H:i',
         'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-    ]);
+        'attendance_rows.*.count' => 'nullable|integer|min:0',
+        'wage_rows.*.amount'      => 'nullable|numeric|min:0',
+    ];
+
+    // Reject negative counts/amounts for the fixed categories too (count_Mason, amount_Fitter, ...)
+    foreach ($request->input('categories', []) as $cat) {
+        $key = str_replace(' ', '_', $cat);
+        $rules["count_{$key}"]  = 'nullable|integer|min:0';
+        $rules["amount_{$key}"] = 'nullable|numeric|min:0';
+    }
+
+    $validate = Validator::make($request->all(), $rules);
 
     if ($validate->fails()) {
         return redirect()->back()->withErrors($validate)->withInput();
@@ -765,7 +800,18 @@ public function updateAttendanceAndWages(Request $request)
     // Delete all attendance records for a specific date (used from month view)
     public function deleteByDate($siteId, $date)
     {
+        // Clear Attendance AND Wages (plus the check-in/out record) for this date —
+        // leaving Wages behind caused the duplicate-entry check in addWages() to
+        // still see the old rows and block re-adding after a "delete this date".
         Attendance::where('site_id', $siteId)
+            ->whereDate('date', $date)
+            ->delete();
+
+        Wages::where('site_id', $siteId)
+            ->whereDate('date', $date)
+            ->delete();
+
+        AttendanceCheckin::where('site_id', $siteId)
             ->whereDate('date', $date)
             ->delete();
 

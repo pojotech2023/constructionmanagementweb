@@ -39,11 +39,12 @@ class DrawingController extends Controller
             }
         }
 
-        return back()->with('success', 'Drawings uploaded successfully.');
+        return redirect()->route('drawing', $request->site_id)->with('success', 'Drawings uploaded successfully.');
     }
     public function destroy($id)
 {
     $drawing = Drawing::findOrFail($id);
+    $siteId = $drawing->site_id;
 
     // Delete file from storage
     if (\Storage::disk('public')->exists($drawing->file_path)) {
@@ -52,7 +53,11 @@ class DrawingController extends Controller
 
     $drawing->delete();
 
-    return back()->with('success', 'Drawing deleted successfully.');
+    // Redirect explicitly to this site's drawing page instead of back() — back()
+    // depends on the Referer header / session-tracked previous URL, which is
+    // unreliable in incognito/private browsing and was sending users to a stale
+    // or invalid URL (404) after deleting.
+    return redirect()->route('drawing', $siteId)->with('success', 'Drawing deleted successfully.');
 }
 
 //Drawing api 

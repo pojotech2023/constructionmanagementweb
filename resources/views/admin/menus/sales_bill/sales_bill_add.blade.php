@@ -2,9 +2,12 @@
 
 @section('content')
 <div class="container">
-    <div class="row">
-        <div class="col-lg-10">
-            <h3 class="text-center pb-4 mt-3">Generate Sales Bill</h3>
+    <div class="row align-items-center">
+        <div class="col-lg-8 offset-lg-1">
+            <h3 class="pb-4 mt-3">Generate Sales Bill</h3>
+        </div>
+        <div class="col-lg-2 text-end pb-4">
+            <a href="{{ route('salesBill.history', $site->id) }}" class="btn btn-outline-primary">🕘 Bill History</a>
         </div>
     </div>
     <div class="row">
@@ -78,16 +81,35 @@
 
                     <h5 class="mb-3">Particulars <span class="text-danger">*</span></h5>
 
+                    <div class="row mb-1 d-none d-md-flex">
+                        <div class="col-md-3 fw-bold small text-muted">Particular</div>
+                        <div class="col-md-2 fw-bold small text-muted">Count</div>
+                        <div class="col-md-2 fw-bold small text-muted">Unit</div>
+                        <div class="col-md-2 fw-bold small text-muted">Rate (₹)</div>
+                        <div class="col-md-2 fw-bold small text-muted">Total (₹)</div>
+                    </div>
+
                     <div id="particularRows">
                         <div class="row mb-2 particular-row">
-                            <div class="col-md-5">
+                            <div class="col-md-3">
                                 <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="number" step="any" name="count[]" class="form-control count no-arrow" placeholder="Count">
                             </div>
-                            <div class="col-md-3">
-                                <input type="number" step="any" name="amount[]" class="form-control amount no-arrow" placeholder="Amount">
+                            <div class="col-md-2">
+                                <select name="unit[]" class="form-control unit-select">
+                                    <option value="" style="color:#6c757d;">Unit</option>
+                                    @foreach ($units as $u)
+                                        <option value="{{ $u->name }}">{{ $u->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" step="any" name="amount[]" class="form-control amount no-arrow" placeholder="Rate">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control row-total no-arrow" placeholder="0.00" readonly tabindex="-1">
                             </div>
                             <div class="col-md-1">
                                 <button type="button" class="btn btn-danger remove-row">X</button>
@@ -130,11 +152,30 @@
 
                     <div class="row align-items-center">
                         <div class="col-12 text-center">
-                            <button type="button" class="btn btn-outline-danger sales-bill-action-btn" id="resetFormButton">Reset</button>
+                            <button type="button" class="btn btn-outline-danger sales-bill-action-btn" id="resetFormButton" data-bs-toggle="modal" data-bs-target="#resetFormModal">Reset</button>
                         </div>
                     </div>
                 </form>
 
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirm Modal -->
+<div class="modal fade" id="resetFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Reset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Reset the form? All entered data will be lost.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmResetFormButton">Reset</button>
             </div>
         </div>
     </div>
@@ -148,6 +189,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+const unitOptions = @json($units->pluck('name'));
 let cachedSalesBillLinks = null;
 let salesBillDirty = true;
 
@@ -250,6 +292,7 @@ $(document).ready(function () {
     }
 
     $(document).on('input', '.count, .amount', function () {
+        updateRowTotal($(this).closest('.particular-row'));
         updateGrandTotal();
         markSalesBillDirty();
     });
@@ -258,17 +301,29 @@ $(document).ready(function () {
         markSalesBillDirty();
     });
 
+    $(document).on('change', '.unit-select', function () {
+        $(this).toggleClass('has-value', $(this).val() !== '');
+    });
+
     $('#addRow').on('click', function () {
+        const unitSelectOptions = '<option value="" style="color:#6c757d;">Unit</option>' +
+            unitOptions.map(u => `<option value="${u}">${u}</option>`).join('');
         const row = `
 <div class="row mb-2 particular-row">
-    <div class="col-md-5">
+    <div class="col-md-3">
         <input type="text" name="particular[]" class="form-control" placeholder="Particular (e.g. Bricks)" required>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <input type="number" step="any" name="count[]" class="form-control count no-arrow" placeholder="Count">
     </div>
-    <div class="col-md-3">
-        <input type="number" step="any" name="amount[]" class="form-control amount no-arrow" placeholder="Amount">
+    <div class="col-md-2">
+        <select name="unit[]" class="form-control unit-select">${unitSelectOptions}</select>
+    </div>
+    <div class="col-md-2">
+        <input type="number" step="any" name="amount[]" class="form-control amount no-arrow" placeholder="Rate">
+    </div>
+    <div class="col-md-2">
+        <input type="text" class="form-control row-total no-arrow" placeholder="0.00" readonly tabindex="-1">
     </div>
     <div class="col-md-1">
         <button type="button" class="btn btn-danger remove-row">X</button>
@@ -297,11 +352,9 @@ $(document).ready(function () {
         submitSalesBill('mail');
     });
 
-    $('#resetFormButton').on('click', function () {
-        if (confirm('Reset the form? All entered data will be lost.')) {
-            salesBillDirty = false;
-            window.location.reload();
-        }
+    $('#confirmResetFormButton').on('click', function () {
+        salesBillDirty = false;
+        window.location.reload();
     });
 
     $('#salesBillForm').on('submit', function (e) {
@@ -310,10 +363,20 @@ $(document).ready(function () {
     });
 });
 
+function updateRowTotal($row) {
+    const count = parseFloat($row.find('.count').val());
+    const amount = parseFloat($row.find('.amount').val()) || 0;
+    // Count is optional for lump-sum particulars — treat a blank/zero count as
+    // "not a quantity multiplier" so Rate alone still totals correctly.
+    const rowTotal = (count > 0 ? count : 1) * amount;
+    $row.find('.row-total').val(rowTotal ? rowTotal.toFixed(2) : '');
+    return rowTotal;
+}
+
 function updateGrandTotal() {
     let total = 0;
-    $('.amount').each(function () {
-        total += parseFloat($(this).val()) || 0;
+    $('.particular-row').each(function () {
+        total += updateRowTotal($(this));
     });
     $('#grandTotal').text(total.toFixed(2));
     $('#grandTotal_words').text(numberToWordsIndian(total));
@@ -321,6 +384,14 @@ function updateGrandTotal() {
 </script>
 
 <style>
+    .unit-select {
+        color: #6c757d;
+    }
+
+    .unit-select.has-value {
+        color: #212529;
+    }
+
     .sales-bill-action-row {
         margin-bottom: 6px;
     }

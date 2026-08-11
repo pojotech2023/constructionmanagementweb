@@ -83,18 +83,14 @@
                         <div class="row align-items-center mt-5">
                             <div class="col-lg-2">
                                 <div class="form-group">
-                                    <label for="gst">Vendor GST</label>
+                                    <label for="vendor_gstin">Vendor GST</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                        <input id="gst" name="gst" type="number" class="form-control no-arrow"
-                                            min="0" max="10" step="0.01" placeholder="Auto-filled on selecting vendor"
-                                            oninput="if (this.value !== '' && parseFloat(this.value) > 10) { this.value = 10; }" readonly />
+                                        <input id="vendor_gstin" name="vendor_gstin" type="text" class="form-control"
+                                            placeholder="Auto-filled on selecting vendor" readonly />
                                 </div>
-                                @error('gst')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
 
@@ -302,7 +298,7 @@
                 $('#vendor_mobile').val($(this).data('mobile'));
                 $('#vendor_id').val($(this).data('id'));
                 $('#vendor_address').val($(this).data('address'));
-                $('#gst').val($(this).data('gst'));
+                $('#vendor_gstin').val($(this).data('gst'));
                 $('#vendor_suggestions').hide();
             });
 

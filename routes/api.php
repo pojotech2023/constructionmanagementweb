@@ -93,8 +93,10 @@ Route::middleware('auth:api')->group(function () {
 
   //Sales Bill
   Route::get('/sales-bill-form/{siteId}', [SalesBillController::class, 'getDetails']);
+  Route::get('/sales-bills/{siteId}', [SalesBillController::class, 'index']); //history
   Route::post('/sales-bill-add', [SalesBillController::class, 'store']);
   Route::get('/sales-bill/{id}', [SalesBillController::class, 'show']);
+  Route::delete('/sales-bill-delete/{id}', [SalesBillController::class, 'destroy']);
 
   //Purchase Bill
   Route::get('/purchase-bill-form/{siteId}', [PurchaseBillController::class, 'getDetails']);

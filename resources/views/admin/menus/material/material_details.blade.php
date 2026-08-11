@@ -127,7 +127,7 @@
                                                     <td>{{ $brick->quantity }}</td>
                                                     <td>{{ $brick->vendor->name }}</td>
                                                     <td>{{ $brick->price }}</td>
-                                                    <td>{{ $brick->gst ?? '-' }}</td>
+                                                    <td>{{ $brick->vendor->gst ?? '-' }}</td>
                                                     <td>
                                                         @if ($brick->image_url)
                                                             @if (str_ends_with(strtolower($brick->image_url), '.pdf'))
@@ -150,7 +150,7 @@
                                                                 data-date="{{ $brick->date }}"
                                                                 data-quantity="{{ $brick->quantity }}"
                                                                 data-price="{{ $brick->price }}"
-                                                                data-gst="{{ $brick->gst }}"
+                                                                data-gst="{{ $brick->vendor->gst }}"
                                                                 data-image="{{ $brick->image_url }}"
                                                                 data-bs-toggle="modal" data-bs-target="#editOrderModal">
                                                                 <i class="fa fa-edit"></i>
@@ -229,7 +229,7 @@
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Vendor GST</label>
-                                            <input type="number" step="0.01" min="0" max="10" name="gst" id="edit_order_gst" class="form-control no-arrow" readonly>
+                                            <input type="text" id="edit_order_gst" class="form-control" readonly>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Invoice</label>

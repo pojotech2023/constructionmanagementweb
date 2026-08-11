@@ -13,6 +13,7 @@ class SalesBillDetail extends Model
         'sales_bill_id',
         'particular',
         'count',
+        'unit',
         'amount',
         'created_by',
         'updated_by',

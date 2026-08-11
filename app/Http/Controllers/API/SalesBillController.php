@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\SalesBill;
 use App\Models\SalesBillDetail;
 use App\Models\Site;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -38,6 +39,7 @@ class SalesBillController extends Controller
             'data' => [
                 'site' => $site,
                 'customer' => $customer,
+                'units' => Unit::orderBy('name')->pluck('name'),
             ],
         ]);
     }
@@ -55,6 +57,8 @@ class SalesBillController extends Controller
             'terms_conditions' => 'nullable|string',
             'particular' => 'required|array',
             'count' => 'required|array',
+            'unit' => 'nullable|array',
+            'unit.*' => 'nullable|string',
             'amount' => 'required|array',
         ]);
 
@@ -81,13 +85,16 @@ class SalesBillController extends Controller
 
             foreach ($request->particular as $index => $particular) {
                 $count = $request->count[$index];
+                $unit = $request->unit[$index] ?? null;
                 $amount = $request->amount[$index];
-                $totalAmount += (float) $amount;
+                // Amount is the rate per unit — the line total (and grand total) is count × rate.
+                $totalAmount += (float) $amount * ((float) $count > 0 ? (float) $count : 1);
 
                 SalesBillDetail::create([
                     'sales_bill_id' => $salesBill->id,
                     'particular' => $particular,
                     'count' => $count,
+                    'unit' => $unit,
                     'amount' => $amount,
                     'created_by' => auth('api')->id(),
                 ]);
@@ -138,10 +145,65 @@ class SalesBillController extends Controller
             return response()->json(['status' => false, 'message' => 'Sales bill not found.'], 404);
         }
 
+        $this->attachLinks($salesBill);
+
         return response()->json([
             'status' => true,
             'message' => 'Sales bill fetched successfully.',
             'data' => $salesBill,
+        ]);
+    }
+
+    // History: every sales bill generated for a site, most recent first.
+    // Each bill carries pdf_url (View) and whatsapp_url (WhatsApp) so the app
+    // doesn't need to know/rebuild the storage path itself; Delete uses the
+    // existing DELETE /sales-bill-delete/{id} endpoint below.
+    public function index($siteId)
+    {
+        $salesBills = SalesBill::with('details')
+            ->where('site_id', $siteId)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->each(fn ($bill) => $this->attachLinks($bill));
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Sales bills fetched successfully.',
+            'data' => $salesBills,
+        ]);
+    }
+
+    // Attach the PDF and WhatsApp links to a bill for View/WhatsApp actions in the app.
+    private function attachLinks(SalesBill $bill): void
+    {
+        $pdfPath = 'sales_bills/sales_bill_' . $bill->id . '.pdf';
+        $pdfUrl = asset('storage/' . $pdfPath);
+        $message = urlencode("Hi {$bill->name}, your sales bill is ready. Download here: $pdfUrl");
+
+        $bill->pdf_url = $pdfUrl;
+        $bill->whatsapp_url = "https://wa.me/91{$bill->mobile_no}?text=$message";
+    }
+
+    public function destroy($id)
+    {
+        $salesBill = SalesBill::find($id);
+
+        if (!$salesBill) {
+            return response()->json(['status' => false, 'message' => 'Sales bill not found.'], 404);
+        }
+
+        $pdfPath = 'sales_bills/sales_bill_' . $salesBill->id . '.pdf';
+        if (Storage::disk('public')->exists($pdfPath)) {
+            Storage::disk('public')->delete($pdfPath);
+        }
+
+        $salesBill->details()->delete();
+        $salesBill->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Sales bill deleted successfully.',
         ]);
     }
 }

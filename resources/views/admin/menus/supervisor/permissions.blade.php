@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+
 @section('content')
     <div class="container">
         <div class="page-inner">
@@ -52,7 +53,7 @@
                                     </div>
 
                                     <small class="text-muted d-block mb-2">
-                                        Select the sites this supervisor can view. A site can be assigned to only one supervisor at a time &mdash; checking a site here will move it away from any other supervisor.
+                                        Select the sites this supervisor can view. A site can be assigned to only one supervisor at a time &mdash; checking a site already held by someone else will move it away from that supervisor.
                                     </small>
 
                                     <div class="row row-cols-2 row-cols-sm-3 row-cols-lg-4 g-2 ms-1">
