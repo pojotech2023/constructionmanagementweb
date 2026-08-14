@@ -509,6 +509,7 @@ class SubcontractorController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'date' => 'required|date',
+            'no_counts' => 'nullable|string',
             'amount' => 'required|numeric',
             'remarks' => 'nullable|string'
         ]);
@@ -520,6 +521,7 @@ class SubcontractorController extends Controller
         $service = SubcontractorService::findOrFail($id);
         $service->update([
             'date' => $request->date,
+            'no_counts' => $request->no_counts,
             'amount' => $request->amount,
             'remarks' => $request->remarks,
         ]);

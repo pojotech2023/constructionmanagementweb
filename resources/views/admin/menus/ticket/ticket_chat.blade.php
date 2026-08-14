@@ -175,7 +175,7 @@ label[for="attachment"] {
     </a>
 @endif
                     <div class="chat-meta">
-                        Client | {{ \Carbon\Carbon::parse($ticket->created_at)->format('d M Y, h:i A') }}
+                        {{ $ticket->customer->name ?? 'Client' }} | {{ \Carbon\Carbon::parse($ticket->created_at)->format('d M Y, h:i A') }}
                     </div>
                 </div>
             </div>
@@ -208,7 +208,7 @@ label[for="attachment"] {
                     @endif
 
                     <div class="chat-meta">
-                        {{ ucfirst($msg->sender_type) }} | {{ $msg->created_at->format('d M Y, h:i A') }}
+                        {{ $msg->sender_name }} | {{ $msg->created_at->format('d M Y, h:i A') }}
                     </div>
                 </div>
             </div>
