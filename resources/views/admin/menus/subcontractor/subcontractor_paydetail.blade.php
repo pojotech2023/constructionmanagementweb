@@ -254,79 +254,53 @@
                             @csrf
                             <input type="hidden" name="subcontractor_id" value="{{ $subcontractorId }}">
 
-                            <div class="row align-items-center mt-4">
-                                <div class="col-lg-2">
-                                    <div class="form-group">
-                                        <label for="total_counts" class="fw-bold">Total Counts</label>
-                                    </div>
-                                </div>
-                                <div class="col-lg-10">
-                                    <div class="form-group">
-                                        <input type="text" id="total_counts" class="form-control"
-                                            value="{{ $totalCounts ?? 0 }}" readonly>
-                                    </div>
+                            <div class="row mb-3 align-items-center">
+                                <label for="total_counts" class="col-sm-3 col-md-2 col-form-label fw-bold text-sm-end">Total Counts</label>
+                                <div class="col-sm-9 col-md-10">
+                                    <input type="text" id="total_counts" class="form-control"
+                                        value="{{ $totalCounts ?? 0 }}" readonly>
                                 </div>
                             </div>
 
-                            <div class="row align-items-center mt-5">
-                                <div class="col-lg-2">
-                                    <div class="form-group">
-                                        <label for="total_amount" class="fw-bold">Total Amount</label>
-                                    </div>
-                                </div>
-                                <div class="col-lg-10">
-                                    <div class="form-group">
-                                        <input type="text" id="total_amount" name="total_amount" class="form-control"
-                                            value="{{ $totalAmount }}" readonly>
-                                        <small id="total_amount_words" class="form-text text-muted"></small>
-                                    </div>
+                            <div class="row mb-3 align-items-center">
+                                <label for="total_amount" class="col-sm-3 col-md-2 col-form-label fw-bold text-sm-end">Total Amount</label>
+                                <div class="col-sm-9 col-md-10">
+                                    <input type="text" id="total_amount" name="total_amount" class="form-control"
+                                        value="{{ $totalAmount }}" readonly>
+                                    <small id="total_amount_words" class="form-text text-muted"></small>
                                     @error('total_amount')
-                                        <div class="text-danger">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
-                            <div class="row align-items-center mt-4">
-                                <div class="col-lg-2">
-                                    <div class="form-group">
-                                        <label for="paid_amount" class="fw-bold">Paid Amount</label>
-                                    </div>
-                                </div>
-                                <div class="col-lg-10">
-                                    <div class="form-group">
-                                        <input type="text" id="paid_amount" name="paid_amount" class="form-control"
-                                            value="{{ $paidAmount ?? 0 }}" readonly>
-                                        <small id="paid_amount_words" class="form-text text-muted"></small>
-                                    </div>
+                            <div class="row mb-3 align-items-center">
+                                <label for="paid_amount" class="col-sm-3 col-md-2 col-form-label fw-bold text-sm-end">Paid Amount</label>
+                                <div class="col-sm-9 col-md-10">
+                                    <input type="text" id="paid_amount" name="paid_amount" class="form-control"
+                                        value="{{ $paidAmount ?? 0 }}" readonly>
+                                    <small id="paid_amount_words" class="form-text text-muted"></small>
                                     @error('paid_amount')
-                                        <div class="text-danger">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
-                            <div class="row align-items-center mt-4">
-                                <div class="col-lg-2">
-                                    <div class="form-group">
-                                        <label for="balance_amount" class="fw-bold">Balance Amount</label>
-                                    </div>
-                                </div>
-                                <div class="col-lg-10">
-                                    <div class="form-group">
-                                        <input type="text" id="balance_amount" name="balance_amount" class="form-control"
-                                            value="{{ $balanceAmount ?? 0 }}" readonly>
-                                        <small id="balance_amount_words" class="form-text text-muted"></small>
-                                    </div>
+                            <div class="row mb-3 align-items-center">
+                                <label for="balance_amount" class="col-sm-3 col-md-2 col-form-label fw-bold text-sm-end">Balance Amount</label>
+                                <div class="col-sm-9 col-md-10">
+                                    <input type="text" id="balance_amount" name="balance_amount" class="form-control"
+                                        value="{{ $balanceAmount ?? 0 }}" readonly>
+                                    <small id="balance_amount_words" class="form-text text-muted"></small>
                                     @error('balance_amount')
-                                        <div class="text-danger">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-lg-10 offset-lg-2">
-                                    <div class="form-group text-center">
-                                        <button type="submit" class="btn btn-primary px-5">Submit</button>
-                                    </div>
+                            <div class="row mt-4">
+                                <div class="offset-sm-3 offset-md-2 col-sm-9 col-md-10 text-center">
+                                    <button type="submit" class="btn btn-primary px-5">Submit</button>
                                 </div>
                             </div>
                         </form>
@@ -338,7 +312,7 @@
 
     <!-- Add/Edit Modal -->
     <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header border-0">
                     <h5 class="modal-title">
@@ -357,61 +331,53 @@
                             <input type="hidden" id="site_id" name="site_id" value="{{ $siteId }}">
                         @endisset
 
-                        <!-- Name -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="date">Date</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <!-- Date -->
+                        <div class="row mb-3 align-items-center">
+                            <label for="date" class="col-sm-4 col-form-label fw-bold text-sm-end">Date</label>
+                            <div class="col-sm-8">
                                 <input id="date" name="date" type="date" class="form-control" />
                                 @error('date')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
-                        <!-- Mobile -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="payment">Payment</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <!-- Payment -->
+                        <div class="row mb-3 align-items-center">
+                            <label for="payment" class="col-sm-4 col-form-label fw-bold text-sm-end">Payment</label>
+                            <div class="col-sm-8">
                                 <input id="payment" name="payment" type="text" class="form-control"
+                                placeholder="Enter payment"
                                 oninput="this.value = this.value.replace(/[^0-9.]/g, ''); document.getElementById('payment_words').innerText = numberToWordsIndian(this.value);"/>
                                 <small id="payment_words" class="form-text text-muted"></small>
                                 @error('payment')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
-                        <!-- Site Utilities -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="payment_mode">Payment Mode</label>
-                            </div>
-                            <div class="col-lg-10">
-                                <div class="form-group">
-                                    <select class="form-select form-control" name="payment_mode" id="payment_mode">
-                                        <option value="">Select Payment Mode</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Cheque">Cheque</option>
-                                        <option value="Check">Check</option>
-                                        <option value="Net Banking">Net Banking</option>
-                                        <option value="Cash">Cash</option>
-                                    </select>
-                                </div>
+                        <!-- Payment Mode -->
+                        <div class="row mb-3 align-items-center">
+                            <label for="payment_mode" class="col-sm-4 col-form-label fw-bold text-sm-end">Payment Mode</label>
+                            <div class="col-sm-8">
+                                <select class="form-select form-control" name="payment_mode" id="payment_mode">
+                                    <option value="">Select Payment Mode</option>
+                                    <option value="Online">Online</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Check">Check</option>
+                                    <option value="Net Banking">Net Banking</option>
+                                    <option value="Cash">Cash</option>
+                                </select>
                                 @error('payment_mode')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="remarks">Remarks</label>
-                            </div>
-                            <div class="col-lg-10">
-                                <textarea id="remarks" name="remarks" class="form-control" rows="3"></textarea>
+                        <!-- Remarks -->
+                        <div class="row mb-3 align-items-start">
+                            <label for="remarks" class="col-sm-4 col-form-label fw-bold text-sm-end pt-2">Remarks</label>
+                            <div class="col-sm-8">
+                                <textarea id="remarks" name="remarks" class="form-control" rows="3" placeholder="Enter remarks"></textarea>
                                 @error('remarks')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -459,7 +425,7 @@
     @isset($siteId)
         <!-- Edit Payment Modal -->
         <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <form id="editPaymentForm" method="POST">
                         @csrf
@@ -471,29 +437,24 @@
                             </button>
                         </div>
                         <div class="modal-body">
-                            <div class="row align-items-center mb-3">
-                                <div class="col-lg-2">
-                                    <label for="edit_date">Date</label>
-                                </div>
-                                <div class="col-lg-10">
+                            <div class="row mb-3 align-items-center">
+                                <label for="edit_date" class="col-sm-4 col-form-label fw-bold text-sm-end">Date</label>
+                                <div class="col-sm-8">
                                     <input id="edit_date" name="date" type="date" class="form-control" required>
                                 </div>
                             </div>
-                            <div class="row align-items-center mb-3">
-                                <div class="col-lg-2">
-                                    <label for="edit_payment">Payment</label>
-                                </div>
-                                <div class="col-lg-10">
+                            <div class="row mb-3 align-items-center">
+                                <label for="edit_payment" class="col-sm-4 col-form-label fw-bold text-sm-end">Payment</label>
+                                <div class="col-sm-8">
                                     <input id="edit_payment" name="payment" type="text" class="form-control"
+                                        placeholder="Enter payment"
                                         oninput="this.value = this.value.replace(/[^0-9.]/g, ''); document.getElementById('edit_payment_words').innerText = numberToWordsIndian(this.value);" required>
                                     <small id="edit_payment_words" class="form-text text-muted"></small>
                                 </div>
                             </div>
-                            <div class="row align-items-center mb-3">
-                                <div class="col-lg-2">
-                                    <label for="edit_payment_mode">Payment Mode</label>
-                                </div>
-                                <div class="col-lg-10">
+                            <div class="row mb-3 align-items-center">
+                                <label for="edit_payment_mode" class="col-sm-4 col-form-label fw-bold text-sm-end">Payment Mode</label>
+                                <div class="col-sm-8">
                                     <select class="form-select form-control" name="payment_mode" id="edit_payment_mode" required>
                                         <option value="">Select Payment Mode</option>
                                         <option value="Online">Online</option>
@@ -504,12 +465,10 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row align-items-center mb-3">
-                                <div class="col-lg-2">
-                                    <label for="edit_remarks">Remarks</label>
-                                </div>
-                                <div class="col-lg-10">
-                                    <textarea id="edit_remarks" name="remarks" class="form-control" rows="3"></textarea>
+                            <div class="row mb-3 align-items-start">
+                                <label for="edit_remarks" class="col-sm-4 col-form-label fw-bold text-sm-end pt-2">Remarks</label>
+                                <div class="col-sm-8">
+                                    <textarea id="edit_remarks" name="remarks" class="form-control" rows="3" placeholder="Enter remarks"></textarea>
                                 </div>
                             </div>
                         </div>

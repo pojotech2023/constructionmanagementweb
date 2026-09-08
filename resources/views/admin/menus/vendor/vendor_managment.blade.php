@@ -114,7 +114,7 @@
 
     <!-- Add/Edit Modal -->
     <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header border-0">
                     <h5 class="modal-title">
@@ -131,114 +131,99 @@
                         <input type="hidden" id="vendor_id" name="vendor_id">
 
                         <!-- Name -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="name">Name</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="name" class="col-sm-3 col-form-label fw-bold text-sm-end">Name</label>
+                            <div class="col-sm-9">
                                 <input id="name" name="name" type="text" class="form-control"
                                     placeholder="Enter name" />
                                 @error('name')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Site Utilities -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="site_utilities">Site Utilities</label>
-                            </div>
-                            <div class="col-lg-10">
-                                <div class="form-group">
-                                    <select class="form-select form-control" name="site_utilities" id="site_utilities">
-                                        <option value="">Select Site Utilities</option>
-                                        <option value="Bricks">Bricks</option>
-                                        <option value="Sand">Sand</option>
-                                        <option value="Cement">Cement</option>
-                                        <option value="Electrical Wires">Electrical Wires</option>
-                                        <option value="Plumber">Plumber</option>
-                                        <option value="Tea">Tea</option>
-                                        <option value="Water Can">Water Can</option>
-                                        <option value="Water Lorry">Water Lorry</option>
-                                        <option value="Tiles">Tiles</option>
-                                        <option value="Granite">Granite</option>
-                                        <option value="Jally">Jally</option>
-                                        <option value="Welding">Welding</option>
-                                        <option value="Lift">Lift</option>
-                                        <option value="RC Concrete">RC Concrete</option>
-                                        <option value="Transport">Transport</option>
-                                        <option value="Interior">Interior</option>
-                                        <option value="Painting">Painting</option>
-                                        <option value="Steel">Steel</option>
-                                        <option value="Aggregate">Aggregate</option>
-                                        <option value="RMC">RMC</option>
-                                        <option value="Gravel">Gravel</option>
-                                        @foreach ($sharedMaterialTypes as $materialType)
-                                            <option value="{{ $materialType->name }}">{{ $materialType->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                        <div class="row mb-3 align-items-center">
+                            <label for="site_utilities" class="col-sm-3 col-form-label fw-bold text-sm-end">Site Utilities</label>
+                            <div class="col-sm-9">
+                                <select class="form-select form-control" name="site_utilities" id="site_utilities">
+                                    <option value="">Select Site Utilities</option>
+                                    <option value="Bricks">Bricks</option>
+                                    <option value="Sand">Sand</option>
+                                    <option value="Cement">Cement</option>
+                                    <option value="Electrical Wires">Electrical Wires</option>
+                                    <option value="Plumber">Plumber</option>
+                                    <option value="Tea">Tea</option>
+                                    <option value="Water Can">Water Can</option>
+                                    <option value="Water Lorry">Water Lorry</option>
+                                    <option value="Tiles">Tiles</option>
+                                    <option value="Granite">Granite</option>
+                                    <option value="Jally">Jally</option>
+                                    <option value="Welding">Welding</option>
+                                    <option value="Lift">Lift</option>
+                                    <option value="RC Concrete">RC Concrete</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Interior">Interior</option>
+                                    <option value="Painting">Painting</option>
+                                    <option value="Steel">Steel</option>
+                                    <option value="Aggregate">Aggregate</option>
+                                    <option value="RMC">RMC</option>
+                                    <option value="Gravel">Gravel</option>
+                                    @foreach ($sharedMaterialTypes as $materialType)
+                                        <option value="{{ $materialType->name }}">{{ $materialType->name }}</option>
+                                    @endforeach
+                                </select>
                                 @error('site_utilities')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Mobile -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="mobile_no">Whatsapp Number</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="mobile" class="col-sm-3 col-form-label fw-bold text-sm-end">WhatsApp No</label>
+                            <div class="col-sm-9">
                                 <input id="mobile" name="mobile_no" type="text" class="form-control"
-                                    placeholder="Enter mobile number" maxlength="10"
+                                    placeholder="Enter mobile number" maxlength="10" minlength="10" pattern="\d{10}"
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"/>
                                 @error('mobile_no')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Email -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="email">Email Id</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="email" class="col-sm-3 col-form-label fw-bold text-sm-end">Email Id</label>
+                            <div class="col-sm-9">
                                 <input id="email" name="email" type="email" class="form-control"
                                     placeholder="Enter email" />
                                 @error('email')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Location -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="address">Address</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-start">
+                            <label for="address" class="col-sm-3 col-form-label fw-bold text-sm-end pt-2">Address</label>
+                            <div class="col-sm-9">
                                 <textarea id="address" name="address" class="form-control" rows="2" placeholder="Enter Address"></textarea>
                                 @error('address')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
-
                             </div>
                         </div>
 
                         <!-- Gst -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="gst">GST</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="gst" class="col-sm-3 col-form-label fw-bold text-sm-end">GST</label>
+                            <div class="col-sm-9">
                                 <input id="gst" name="gst" type="text" class="form-control text-uppercase"
                                     maxlength="15" placeholder="Enter GST number (optional)"
                                     oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);" />
                                 @error('gst')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>

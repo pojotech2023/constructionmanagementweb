@@ -112,7 +112,7 @@
 
     <!-- Add/Edit Modal -->
     <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header border-0">
                     <h5 class="modal-title">
@@ -129,103 +129,88 @@
                         <input type="hidden" id="subcontractor_id" name="subcontractor_id">
 
                         <!-- Name -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="name">Name</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="name" class="col-sm-3 col-form-label fw-bold text-sm-end">Name</label>
+                            <div class="col-sm-9">
                                 <input id="name" name="name" type="text" class="form-control"
                                     placeholder="Enter name" />
                                 @error('name')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Site Utilities -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="subcontractors">Subcontractors</label>
-                            </div>
-                            <div class="col-lg-10">
-                                <div class="form-group">
-                                    <select class="form-select form-control" name="subcontractors" id="subcontractors">
-                                        <option value="">Select Subcontractor</option>
-                                        <option value="Plumbers">Plumber</option>
-                                        <option value="Electrician">Electrician</option>
-                                        <option value="Painter">Painter</option>
-                                        <option value="Welder">Welder</option>
-                                        <option value="Tiles Layer">Tiles Layer</option>
-                                        <option value="Granite Layer">Granite Layer</option>
-                                        <option value="SS Welder">SS Welder</option>
-                                        <option value="Carpenter">Carpenter</option>
-                                        <option value="Centering Works">Centering Works</option>
-                                        <option value="Mason Works">Mason Works</option>
-                                        @foreach ($sharedSubcontractorTypes as $subcontractorType)
-                                            <option value="{{ $subcontractorType->name }}">{{ $subcontractorType->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                        <div class="row mb-3 align-items-center">
+                            <label for="subcontractors" class="col-sm-3 col-form-label fw-bold text-sm-end">Subcontractor</label>
+                            <div class="col-sm-9">
+                                <select class="form-select form-control" name="subcontractors" id="subcontractors">
+                                    <option value="">Select Subcontractor</option>
+                                    <option value="Plumbers">Plumber</option>
+                                    <option value="Electrician">Electrician</option>
+                                    <option value="Painter">Painter</option>
+                                    <option value="Welder">Welder</option>
+                                    <option value="Tiles Layer">Tiles Layer</option>
+                                    <option value="Granite Layer">Granite Layer</option>
+                                    <option value="SS Welder">SS Welder</option>
+                                    <option value="Carpenter">Carpenter</option>
+                                    <option value="Centering Works">Centering Works</option>
+                                    <option value="Mason Works">Mason Works</option>
+                                    @foreach ($sharedSubcontractorTypes as $subcontractorType)
+                                        <option value="{{ $subcontractorType->name }}">{{ $subcontractorType->name }}</option>
+                                    @endforeach
+                                </select>
                                 @error('subcontractors')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Mobile -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="mobile_no">Whatsapp Number</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="mobile" class="col-sm-3 col-form-label fw-bold text-sm-end">WhatsApp No</label>
+                            <div class="col-sm-9">
                                 <input id="mobile" name="mobile_no" type="text" class="form-control"
                                     placeholder="Enter mobile number" maxlength="10" minlength="10" pattern="\d{10}"
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"/>
                                 @error('mobile_no')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Email -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="email">Email Id</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="email" class="col-sm-3 col-form-label fw-bold text-sm-end">Email Id</label>
+                            <div class="col-sm-9">
                                 <input id="email" name="email" type="email" class="form-control"
                                     placeholder="Enter email" />
                                 @error('email')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Location -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="address">Address</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-start">
+                            <label for="address" class="col-sm-3 col-form-label fw-bold text-sm-end pt-2">Address</label>
+                            <div class="col-sm-9">
                                 <textarea id="address" name="address" class="form-control" rows="2" placeholder="Enter Address"></textarea>
                                 @error('address')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
-
                             </div>
                         </div>
 
                         <!-- Gst -->
-                        <div class="row align-items-center mb-3">
-                            <div class="col-lg-2">
-                                <label for="gst">GST</label>
-                            </div>
-                            <div class="col-lg-10">
+                        <div class="row mb-3 align-items-center">
+                            <label for="gst" class="col-sm-3 col-form-label fw-bold text-sm-end">GST</label>
+                            <div class="col-sm-9">
                                 <input id="gst" name="gst" type="text" class="form-control text-uppercase"
                                     maxlength="15" placeholder="Enter GST number (optional)"
                                     oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);" />
                                 @error('gst')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -287,9 +272,9 @@
             const saveButton = document.getElementById("saveButton");
             const spinner = document.getElementById("loadingSpinner");
 
-            // Add vendor Button Click
+            // Add subcontractor Button Click
             document.getElementById("addButton").addEventListener("click", function() {
-                modalTitle.innerText = "Add Vendor";
+                modalTitle.innerText = "Add Subcontractor";
                 saveButton.innerText = "Add";
                 subcontractorForm.action = "{{ route('subcontractor.add') }}";
                 subcontractorIdInput.value = "";
@@ -301,7 +286,7 @@
                 gstInput.value = "";
             });
 
-            // Edit vendor Button Click
+            // Edit subcontractor Button Click
             document.querySelectorAll(".editButton").forEach(button => {
                 button.addEventListener("click", function() {
                     const subcontractorId = this.getAttribute("data-id");
@@ -312,7 +297,7 @@
                     const vendorAddress = this.getAttribute("data-address");
                     const vendorGst = this.getAttribute("data-gst");
 
-                    modalTitle.innerText = "Edit Vendor";
+                    modalTitle.innerText = "Edit Subcontractor";
                     saveButton.innerText = "Update";
                     subcontractorForm.action = "{{ route('subcontractor.update') }}";
                     subcontractorIdInput.value = subcontractorId;

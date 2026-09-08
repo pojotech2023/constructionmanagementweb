@@ -2,15 +2,14 @@
 
 @section('content')
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-10 d-flex justify-content-center">
-                <h3 class="pb-4 mt-3 mb-0">Add {{ ucfirst($materialType) }} Request</h3>
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <h3 class="text-center pb-3 mt-3 mb-0">Add {{ ucfirst($materialType) }} Request</h3>
             </div>
-            
         </div>
-        <div class="row">
-            <div class="col-lg-11">
-                <div class="card shadow-lg p-4 ms-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <div class="card shadow-lg p-4 mt-2">
 
                     <!-- Blade alert for success -->
                     @if (session('success'))
@@ -21,244 +20,125 @@
                         {{ session()->forget('success') }} {{-- Clear session --}}
                     @endif
 
-                    <form id="requestForm" action="{{ route('add.request') }}" method="POST" class="container" enctype="multipart/form-data">
+                    <form id="requestForm" action="{{ route('add.request') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <input type="hidden" name="site_id" value="{{ $siteId }}">
-
                         <input type="hidden" name="vendor_id" id="vendor_id">
-
                         <input type="hidden" name="material_type" value="{{ ucfirst($materialType) }}">
 
-                        <div class="row align-items-center">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="vendor_name" class="fw-bold">Vendor Name</label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 position-relative">
-                                <div class="form-group">
-                                    <input type="text" id="vendor_name" name="vendor_name" class="form-control"
-                                        placeholder="Type Vendor Name..." autocomplete="off">
-                                    <div id="vendor_suggestions" class="list-group position-absolute w-100"
-                                        style="z-index: 1000; display: none;"></div>
-                                </div>
+                        <div class="row mb-3 align-items-center">
+                            <label for="vendor_name" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Vendor Name</label>
+                            <div class="col-sm-8 col-md-8 position-relative">
+                                <input type="text" id="vendor_name" name="vendor_name" class="form-control"
+                                    placeholder="Type Vendor Name..." autocomplete="off">
+                                <div id="vendor_suggestions" class="list-group position-absolute w-100"
+                                    style="z-index: 1000; display: none;"></div>
                                 @error('vendor_name')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
-                        <div class="row align-items-center mt-5">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="vendor_mobile" class="fw-bold">Vendor Mobile No</label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="form-group">
-                                    <input type="text" id="vendor_mobile" name="vendor_mobile" class="form-control"
-                                        placeholder="Mobile Number" maxlength="10" minlength="10" pattern="\d{10}"
-                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
-                                </div>
+                        <div class="row mb-3 align-items-center">
+                            <label for="vendor_mobile" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Vendor Mobile No</label>
+                            <div class="col-sm-8 col-md-8">
+                                <input type="text" id="vendor_mobile" name="vendor_mobile" class="form-control"
+                                    placeholder="Mobile Number" maxlength="10" minlength="10" pattern="\d{10}"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
                                 @error('vendor_mobile')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
-                        <div class="row align-items-center mt-5">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="vendor_address" class="fw-bold">Vendor Address</label>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="form-group">
-                                    <textarea id="vendor_address" name="vendor_address" class="form-control" rows="2" placeholder="Vendor Address"></textarea>
-                                </div>
+                        <div class="row mb-3 align-items-start">
+                            <label for="vendor_address" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end pt-2">Vendor Address</label>
+                            <div class="col-sm-8 col-md-8">
+                                <textarea id="vendor_address" name="vendor_address" class="form-control" rows="2" placeholder="Vendor Address"></textarea>
                                 @error('vendor_address')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
-
-<div class="row align-items-center mt-5">
-        <div class="col-lg-2">
-            <div class="form-group">
-                <label for="material_type" class="fw-bold">Items</label>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="form-group">
-                <input type="text" class="form-control" name="items"
-                    placeholder="Enter material type" value="{{ ucfirst($materialType) }}">
-            </div>
-            @error('items')
-                <div class="text-danger">{{ $message }}</div>
-            @enderror
-        </div>
-    </div>
-
-
-                        <div class="row align-items-center mt-5">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="quantity" class="fw-bold">Quantity</label>
-                                </div>
+                        <div class="row mb-3 align-items-center">
+                            <label for="items" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Items</label>
+                            <div class="col-sm-8 col-md-8">
+                                <input type="text" class="form-control" id="items" name="items"
+                                    placeholder="Enter material type" value="{{ ucfirst($materialType) }}">
+                                @error('items')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" name="quantity" placeholder="Enter quantity">
-                                </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label for="quantity" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Quantity</label>
+                            <div class="col-sm-8 col-md-8">
+                                <input type="text" class="form-control" id="quantity" name="quantity" placeholder="Enter quantity">
                                 @error('quantity')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
-                      
-                   <div id="dynamic-fields"></div>
+                        <div id="dynamic-fields"></div>
 
-                        
-                            <!-- <div class="col-md-4">
-                                <div class="form-group">
-                                   
-                                    <select class="form-select form-control" name="delivery_needed_by"
-                                        id="delivery_needed_by">
-                                        <option value="">Select Delivery Needed By</option>
-                                        <option value="Immediate">Immediate</option>
-                                        <option value="Later">Later</option>
-                                        <option value="One week">One week</option>
-                                    </select>
-                                </div>
-                                @error('delivery_needed_by')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div> -->
-                         <div class="row align-items-cente\r mt-5">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="delivery_needed_by" class="fw-bold">date of delivery</label>
-                                </div>
-                            </div>
-                         <div class="col-md-4">
-                                <div class="form-group">
-                                    <input type="date" class="form-control" name="date_of_delivery"
-                    value="" >
-                                    
-                                </div>
+                        <div class="row mb-3 align-items-center">
+                            <label for="date_of_delivery" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Date of Delivery</label>
+                            <div class="col-sm-8 col-md-8">
+                                <input type="date" class="form-control" id="date_of_delivery" name="date_of_delivery" value="">
                                 @error('date_of_delivery')
-                                    <div class="text-danger">{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
-
-                        <!--<div class="row align-items-center mt-4">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="amount" class="fw-bold">Amount</label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <input type="number" class="form-control no-arrow" min="0" step="0.01" name="amount" id="amount"
-                                        placeholder="Enter amount">
-                                </div>
-                                @error('amount')
-                                    <div class="text-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>-->
-                       <div class="row align-items-center mt-4">
-    <div class="col-lg-2">
-        <div class="form-group">
-            <label for="supervisor_name" class="fw-bold">Supervisor Name</label>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="form-group">
-            <input type="text" class="form-control" name="supervisor_name" id="supervisor_name"
-                placeholder="Enter supervisor name" 
-                value="{{ old('supervisor_name', $supervisor->name ?? '') }}">
-        </div>
-        @error('supervisor_name')
-            <div class="text-danger">{{ $message }}</div>
-        @enderror
-    </div>
-</div>
-
-<div class="row align-items-center mt-4">
-    <div class="col-lg-2">
-        <div class="form-group">
-            <label for="supervisor_phone" class="fw-bold">Supervisor Phone No</label>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="form-group">
-            <input type="text" class="form-control" name="supervisor_phone" id="supervisor_phone"
-                placeholder="Enter phone number" maxlength="10" minlength="10" pattern="\d{10}"
-                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
-                value="{{ old('supervisor_phone', $supervisor->mobile_no ?? '') }}">
-
-        </div>
-        @error('supervisor_phone')
-            <div class="text-danger">{{ $message }}</div>
-        @enderror
-    </div>
-</div>
-
-<div class="row align-items-center mt-4">
-    <div class="col-lg-2">
-        <div class="form-group">
-            <label for="price" class="fw-bold">Price</label>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="form-group">
-            <input type="text" class="form-control" name="price" id="price"
-                placeholder="Enter Price"
-                value=""
-                oninput="document.getElementById('price_words').innerText = numberToWordsIndian(this.value);">
-            <small id="price_words" class="form-text text-muted"></small>
-        </div>
-        @error('price')
-            <div class="text-danger">{{ $message }}</div>
-        @enderror
-    </div>
-</div>
-
- <!-- <div class="row align-items-center">
-                            <div class="col-lg-2">
-                                <div class="form-group">
-                                    <label for="remarks" class="fw-bold">Remarks</label>
-                                </div>
-                            </div>
-                            <div class="col-lg-8">
-                                <div class="form-group">
-                                    <textarea id="remarks" name="remarks" class="form-control" rows="4" placeholder="Enter remarks here..."></textarea>
-                                </div>
-                                @error('remarks')
-                                    <div class="text-danger">{{ $message }}</div>
+                        <div class="row mb-3 align-items-center">
+                            <label for="supervisor_name" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Supervisor Name</label>
+                            <div class="col-sm-8 col-md-8">
+                                <input type="text" class="form-control" name="supervisor_name" id="supervisor_name"
+                                    placeholder="Enter supervisor name" 
+                                    value="{{ old('supervisor_name', $supervisor->name ?? '') }}">
+                                @error('supervisor_name')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
-                        <div class="form-group text-center">
-                            @if (session('pdf_download_link'))
-                                <p>Click the link below to download the PDF:</p>
-                                <a href="{{ session('pdf_download_link') }}" target="_blank"
-                                    class="btn btn-primary">Download PDF</a>
-                            @endif
-                        </div> -->
-                        <div class="row justify-content-center mt-4">
-                            <div class="col-lg-4">
-                                <div class="form-group text-center">
-                                    <button type="submit" class="btn btn-primary w-100">Send Request to Vendor WhatsApp
-                                         <i class="fab fa-whatsapp me-1"></i>  </button>
-                                </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label for="supervisor_phone" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Supervisor Phone No</label>
+                            <div class="col-sm-8 col-md-8">
+                                <input type="text" class="form-control" name="supervisor_phone" id="supervisor_phone"
+                                    placeholder="Enter phone number" maxlength="10" minlength="10" pattern="\d{10}"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
+                                    value="{{ old('supervisor_phone', $supervisor->mobile_no ?? '') }}">
+                                @error('supervisor_phone')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label for="price" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Price</label>
+                            <div class="col-sm-8 col-md-8">
+                                <input type="text" class="form-control" name="price" id="price"
+                                    placeholder="Enter Price"
+                                    value=""
+                                    oninput="document.getElementById('price_words').innerText = numberToWordsIndian(this.value);">
+                                <small id="price_words" class="form-text text-muted"></small>
+                                @error('price')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-sm-8 col-md-8 offset-sm-4 offset-md-3">
+                                <button type="submit" class="btn btn-primary w-100">Send Request to Vendor WhatsApp
+                                    <i class="fab fa-whatsapp me-1"></i>
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -457,9 +337,9 @@ function loadUnitField(materialType) {
     if (config) {
         let optionsHtml = config.options.map(o => `<option value="${o}">${o}</option>`).join('');
         categoryHtml = `
-            <div class="row align-items-center mt-5">
-                <div class="col-lg-2"><label class="fw-bold">${config.label}</label></div>
-                <div class="col-md-4">
+            <div class="row mb-3 align-items-center">
+                <label for="category_name" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">${config.label}</label>
+                <div class="col-sm-8 col-md-8">
                     <select class="form-select" name="category_name" id="category_name">
                         <option value="">Select ${config.label}</option>
                         ${optionsHtml}
@@ -469,9 +349,9 @@ function loadUnitField(materialType) {
     }
 
     let unitHtml = `
-            <div class="row align-items-center mt-5">
-                <div class="col-lg-2"><label class="fw-bold">Unit</label></div>
-                <div class="col-md-4">
+            <div class="row mb-3 align-items-center">
+                <label for="unit" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Unit</label>
+                <div class="col-sm-8 col-md-8">
                     <select class="form-select" name="unit" id="unit">${unitOptions}</select>
                 </div>
             </div>`;
@@ -479,9 +359,9 @@ function loadUnitField(materialType) {
     let attachmentHtml = '';
     if (config && config.attachment) {
         attachmentHtml = `
-            <div class="row align-items-center mt-5">
-                <div class="col-lg-2"><label class="fw-bold">File Attachment</label></div>
-                <div class="col-md-4">
+            <div class="row mb-3 align-items-center">
+                <label for="attachment" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">File Attachment</label>
+                <div class="col-sm-8 col-md-8">
                     <input type="file" name="attachment" id="attachment" class="form-control">
                 </div>
             </div>`;
