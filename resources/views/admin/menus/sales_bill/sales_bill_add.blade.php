@@ -131,10 +131,116 @@
                     <div class="row mt-2">
                         <div class="col-md-2 fw-bold">Terms &amp; Conditions</div>
                         <div class="col-md-8">
-                            <textarea name="terms_conditions" class="form-control" rows="4" placeholder="Enter terms &amp; conditions to include in the PDF (optional)">{{ old('terms_conditions') }}</textarea>
+                            <div class="position-relative">
+                                <input type="text" id="terms_title" class="form-control mb-2"
+                                    placeholder="Type a saved title to auto-fill (optional)" autocomplete="off">
+                                <ul id="terms_title_suggestions" class="terms-title-suggestions"></ul>
+                            </div>
+                            <textarea name="terms_conditions" id="terms_conditions" class="form-control" rows="4" placeholder="Enter terms &amp; conditions to include in the PDF (optional)">{{ old('terms_conditions') }}</textarea>
                             @error('terms_conditions') <div class="text-danger">{{ $message }}</div> @enderror
                         </div>
                     </div>
+
+                    <style>
+                        .terms-title-suggestions {
+                            display: none;
+                            position: absolute;
+                            top: 100%;
+                            left: 0;
+                            right: 0;
+                            z-index: 1000;
+                            margin: -8px 0 0;
+                            padding: 4px 0;
+                            list-style: none;
+                            background: #fff;
+                            border: 1px solid #dee2e6;
+                            border-radius: 6px;
+                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+                            max-height: 220px;
+                            overflow-y: auto;
+                        }
+
+                        .terms-title-suggestions li {
+                            padding: 8px 14px;
+                            cursor: pointer;
+                            color: #212529;
+                        }
+
+                        .terms-title-suggestions li:hover {
+                            background: #f1f3f5;
+                        }
+                    </style>
+
+                    <script>
+                    (function () {
+                        var titleInput = document.getElementById('terms_title');
+                        var list = document.getElementById('terms_title_suggestions');
+                        var descBox = document.getElementById('terms_conditions');
+                        var searchUrl = "{{ route('terms-condition.search') }}";
+                        var descUrl = "{{ route('terms-condition.description') }}";
+                        var debounceTimer = null;
+
+                        if (!titleInput) return;
+
+                        function hideList() {
+                            list.style.display = 'none';
+                            list.innerHTML = '';
+                        }
+
+                        titleInput.addEventListener('input', function () {
+                            var term = titleInput.value.trim();
+
+                            clearTimeout(debounceTimer);
+
+                            if (term.length < 1) {
+                                hideList();
+                                return;
+                            }
+
+                            debounceTimer = setTimeout(function () {
+                                fetch(searchUrl + '?term=' + encodeURIComponent(term))
+                                    .then(function (res) { return res.json(); })
+                                    .then(function (json) {
+                                        var results = json.data || [];
+
+                                        if (!results.length) {
+                                            hideList();
+                                            return;
+                                        }
+
+                                        list.innerHTML = results.map(function (r) {
+                                            return '<li data-title="' + r.title.replace(/"/g, '&quot;') + '">' +
+                                                r.title.replace(/</g, '&lt;') + '</li>';
+                                        }).join('');
+                                        list.style.display = 'block';
+                                    })
+                                    .catch(function () { hideList(); });
+                            }, 250);
+                        });
+
+                        list.addEventListener('click', function (e) {
+                            if (e.target && e.target.nodeName === 'LI') {
+                                var title = e.target.getAttribute('data-title');
+                                titleInput.value = title;
+                                hideList();
+                                fillDescription(title);
+                            }
+                        });
+
+                        document.addEventListener('click', function (e) {
+                            if (e.target !== titleInput) hideList();
+                        });
+
+                        function fillDescription(title) {
+                            fetch(descUrl + '?title=' + encodeURIComponent(title))
+                                .then(function (res) { return res.json(); })
+                                .then(function (json) {
+                                    if (json.description) descBox.value = json.description;
+                                })
+                                .catch(function () {});
+                        }
+                    })();
+                    </script>
 
                     <div class="row align-items-center mt-4 g-3 sales-bill-action-row">
                         <div class="col-md-4 text-start">

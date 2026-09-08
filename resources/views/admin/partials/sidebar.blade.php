@@ -161,6 +161,13 @@
                 </li>
                 @endif
 
+                <li class="nav-item {{ request()->routeIs('terms-condition.*') ? 'active' : '' }}">
+                    <a href="{{ route('terms-condition.manage') }}" class="collapsed" aria-expanded="false">
+                        <i class="fa-solid fa-file-contract"></i>
+                        <p>Terms &amp; Conditions</p>
+                    </a>
+                </li>
+
                 @if (session('role_name') == 'Admin')
                 <li class="nav-item {{ request()->routeIs('admin.control.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.control.index') }}" class="collapsed" aria-expanded="false">

@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\SubcontractorController;
 use App\Http\Controllers\Admin\SupervisorCreationController;
 use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\TermsConditionController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\API\TicketController;
 use App\Http\Controllers\ChecklistController;
@@ -299,6 +300,14 @@ Route::prefix('admin')->group(function () {
         Route::get('/quotation-form', [QuotationController::class, 'getForm'])->name('quotation.form');
         Route::post('/quotation-add', [QuotationController::class, 'store'])->name('quotation.add');
         Route::get('/quotation-history', [QuotationController::class, 'history'])->name('quotation.history');
+
+        //Terms & Conditions
+        Route::get('/terms-condition', [TermsConditionController::class, 'manage'])->name('terms-condition.manage');
+        Route::post('/terms-condition-add', [TermsConditionController::class, 'store'])->name('terms-condition.add');
+        Route::match(['post', 'patch'], '/terms-condition-update/{id}', [TermsConditionController::class, 'update'])->name('terms-condition.update');
+        Route::delete('/terms-condition-delete/{id}', [TermsConditionController::class, 'destroy'])->name('terms-condition.delete');
+        Route::get('/terms-condition-search', [TermsConditionController::class, 'searchTitles'])->name('terms-condition.search');
+        Route::get('/terms-condition-description', [TermsConditionController::class, 'getDescription'])->name('terms-condition.description');
 
         //Profile setting
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile');

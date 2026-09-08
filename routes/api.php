@@ -26,6 +26,7 @@ use App\Http\Controllers\API\SiteController;
 use App\Http\Controllers\API\SubContractorController;
 use App\Http\Controllers\API\SubcontractorTypeController;
 use App\Http\Controllers\API\SupervisorController;
+use App\Http\Controllers\API\TermsConditionController;
 use App\Http\Controllers\API\VendorController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\API\DrawingController;
@@ -244,7 +245,16 @@ Route::middleware('auth:api')->group(function () {
 
   //Quotation
   Route::post('/quotation-add', [GenerateQuotationController::class, 'store']);
-Route::get('/quotations', [GenerateQuotationController::class, 'index']);
+  Route::get('/quotations', [GenerateQuotationController::class, 'index']);
+
+  //Terms & Conditions
+  Route::get('/terms-condition', [TermsConditionController::class, 'index']);
+  Route::post('/terms-condition-add', [TermsConditionController::class, 'store']);
+  Route::match(['post', 'patch'], '/terms-condition-update/{id}', [TermsConditionController::class, 'update']);
+  Route::delete('/terms-condition-delete/{id}', [TermsConditionController::class, 'destroy']);
+  Route::get('/terms-condition-search', [TermsConditionController::class, 'searchTitles']);
+  Route::get('/terms-condition-description', [TermsConditionController::class, 'getDescription']);
+
   //Profile setting
   Route::get('/profile', [ProfileController::class, 'show']);
   Route::post('/profile-update', [ProfileController::class, 'update']);
