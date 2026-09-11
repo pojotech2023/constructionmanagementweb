@@ -2,14 +2,15 @@
 
 @section('content')
     <div class="container">
-        <div class="row">
-            <div class="col-lg-10">
-                <h3 class="text-center pb-4 mt-3">Add Bricks Order</h3>
+        <div class="page-inner">
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h3 class="text-center fw-bold pb-2 mb-0">Add Bricks Order</h3>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-11">
-                <div class="card shadow-lg p-4 ms-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm p-4">
 
                     <!-- Blade alert for success -->
                     @if (session('success'))
@@ -189,6 +190,7 @@
             </div>
         </div>
     </div>
+</div>
     <!-- Spinner -->
     <div class="d-flex justify-content-center mt-3">
         <div class="spinner-border text-primary d-none" role="status" id="loadingSpinner">

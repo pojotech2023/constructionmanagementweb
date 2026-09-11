@@ -222,7 +222,12 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>{{ ucfirst($order->material_type) }} @if ($order->unit) ({{ $order->unit }}) @endif</td>
+                    <td>
+                        {{ ucfirst($order->material_type) }}
+                        @if ($order->category_name) - {{ $order->category_name }} @endif
+                        @if ($order->spec) ({{ $order->spec }}) @endif
+                        @if ($order->unit) [{{ $order->unit }}] @endif
+                    </td>
                     <td>{{ rtrim(rtrim(number_format($quantity, 2), '0'), '.') }}</td>
                     <td>{{ number_format($unitPrice, 2) }}</td>
                     <td>{{ number_format($gst, 2) }}</td>

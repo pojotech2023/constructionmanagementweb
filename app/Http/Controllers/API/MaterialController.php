@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use App\Services\FirebaseService;
 
 class MaterialController extends Controller
 {
@@ -208,6 +209,7 @@ public function materialRequest(Request $request)
         'vendor_id'          => $vendorId,
         'items'              => $items,
         'material_type'      => $request->material_type,
+        'category_name'      => $request->category_name ?? null,
         'quantity'           => $request->quantity,
         'unit'               => $request->unit,
         'date_of_delivery'   => $dateOfDelivery,
@@ -220,6 +222,18 @@ public function materialRequest(Request $request)
             ? MaterialRequest::SOURCE_SUPERVISOR
             : MaterialRequest::SOURCE_ADMIN,
     ]);
+
+    if (strtolower((string) $role) === 'supervisor') {
+        try {
+            $requester = auth('api')->user();
+            app(FirebaseService::class)->notifyAdminsOfMaterialRequest($materialRequest, $requester);
+        } catch (\Exception $e) {
+            \Log::error('FCM failed for new material request submission', [
+                'id' => $materialRequest->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 
     // Site details
     $site = Site::with('supervisor')
@@ -273,7 +287,7 @@ public function materialRequest(Request $request)
     // Admin: approve a supervisor-submitted material request
     public function approveRequest($id)
     {
-        $materialRequest = MaterialRequest::findOrFail($id);
+        $materialRequest = MaterialRequest::with('site')->findOrFail($id);
 
         $materialRequest->update([
             'status' => MaterialRequest::STATUS_APPROVED,
@@ -281,6 +295,15 @@ public function materialRequest(Request $request)
             'reviewed_at' => now(),
             'updated_by' => auth('api')->id(),
         ]);
+
+        try {
+            app(FirebaseService::class)->notifyMaterialRequestDecision($materialRequest, 'approved');
+        } catch (\Exception $e) {
+            \Log::error('FCM failed for material request approval', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'response_code' => 200,
@@ -304,7 +327,7 @@ public function materialRequest(Request $request)
             ], 422);
         }
 
-        $materialRequest = MaterialRequest::findOrFail($id);
+        $materialRequest = MaterialRequest::with('site')->findOrFail($id);
 
         $materialRequest->update([
             'status' => MaterialRequest::STATUS_REJECTED,
@@ -312,6 +335,15 @@ public function materialRequest(Request $request)
             'reviewed_at' => now(),
             'updated_by' => auth('api')->id(),
         ]);
+
+        try {
+            app(FirebaseService::class)->notifyMaterialRequestDecision($materialRequest, 'rejected', $request->admin_remark);
+        } catch (\Exception $e) {
+            \Log::error('FCM failed for material request rejection', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'response_code' => 200,
@@ -396,6 +428,8 @@ public function materialRequest(Request $request)
         'site_id' => $request->site_id,
         'vendor_id' => $request->vendor_id,
         'material_type' => $request->material_type,
+        'category_name' => $request->category_name ?? null,
+        'spec' => $request->spec ?? null,
         'date' => $date,
         'quantity' => $request->quantity,
         'unit' => $request->unit,
@@ -661,57 +695,331 @@ public function materialPayment(Request $request)
             [
                 'id' => 1,
                 'material_type' => 'bricks',
-                'category_name' => ['Red Brick', 'Fly Ash Bricks', 'AAC block', 'Solid block'],
-                'unit' => ['Units', 'Kg', 'Ton', 'Size','Inch','Dia','No'],
+                'name' => 'Bricks & Blocks',
+                'category_name' => ['Red Clay Brick', 'Fly Ash Bricks', 'AAC Blocks', 'Solid Concrete Blocks', 'Hollow Concrete Blocks', 'Wire Cut Bricks', 'Clay Paver Bricks', 'Stone'],
+                'spec_label' => 'Size / Specification',
+                'spec_options' => ['9" x 4" x 3"', '4" AAC Block', '6" AAC Block', '8" AAC Block', '4" Solid Block', '6" Solid Block', '9" Solid Block'],
+                'unit' => ['Nos', 'Pieces', 'Load', 'Thousand'],
                 'attachment' => false,
             ],
             [
                 'id' => 2,
-                'material_type' => 'steel',
-                'unit' => ['Units', 'Kg', 'Tone', 'Size', 'Inch', 'Dia','No'],
+                'material_type' => 'sand',
+                'name' => 'Sand',
+                'category_name' => ['River Sand', 'M-Sand (Manufactured Sand - Concreting)', 'P-Sand (Plastering Sand)', 'Filling Sand / Pit Sand'],
+                'spec_label' => 'Zone / Source',
+                'spec_options' => ['Zone II Concreting Sand', 'Double Washed M-Sand', 'Fine Plastering P-Sand', 'Pit Sand / Earth Filling'],
+                'unit' => ['CFT', 'Ton', 'Brass', 'Units', 'Load'],
                 'attachment' => false,
             ],
             [
                 'id' => 3,
-                'material_type' => 'aggregate',
-                'unit' => ['Unit', 'Tone', 'Cft', 'M sand', 'P sand', '20mm', '40mm'],
+                'material_type' => 'cement',
+                'name' => 'Cement',
+                'category_name' => ['OPC 53 Grade', 'OPC 43 Grade', 'PPC (Portland Pozzolana)', 'PSC (Portland Slag Cement)', 'White Cement', 'Waterproof Cement'],
+                'spec_label' => 'Brand / Manufacturer',
+                'spec_options' => ['UltraTech', 'ACC', 'Ambuja', 'Dalmia', 'Ramco', 'Chettinad', 'Birla A1', 'Priya Cement', 'Maha Cement', 'Zuari', 'Coromandel'],
+                'unit' => ['Bags', 'Ton', 'Kg'],
                 'attachment' => false,
             ],
             [
                 'id' => 4,
-                'material_type' => 'cement',
-                'unit' => ['In Bags'],
+                'material_type' => 'aggregate',
+                'name' => 'Aggregate',
+                'category_name' => ['6mm Aggregate', '10mm Aggregate', '12mm Aggregate', '20mm Aggregate', '40mm Aggregate', 'GSB (Granular Sub Base)', 'WMM (Wet Mix Macadam)', 'Quarry Dust / Stone Dust'],
+                'spec_label' => 'Stone Type / Spec',
+                'spec_options' => ['Blue Metal Crushed Stone', 'Hard Granite Aggregate', 'Washed Aggregate', 'Quarry Dust'],
+                'unit' => ['CFT', 'Ton', 'Brass', 'Units', 'Load'],
                 'attachment' => false,
             ],
             [
                 'id' => 5,
-                'material_type' => 'electricalwire',
-                'unit' => null,
-                'attachment' => true,
+                'material_type' => 'jally',
+                'name' => 'Jally',
+                'category_name' => ['6mm Jally', '12mm Jally', '20mm Jally', '40mm Jally', 'Stone Dust'],
+                'spec_label' => 'Type',
+                'spec_options' => ['Blue Metal Jally', 'Hand Broken Jally', 'Crusher Run'],
+                'unit' => ['CFT', 'Ton', 'Brass', 'Units', 'Load'],
+                'attachment' => false,
             ],
             [
                 'id' => 6,
-                'material_type' => 'plumber',
-                'unit' => null,
-                'attachment' => true,
+                'material_type' => 'gravel',
+                'name' => 'Gravel & Earth',
+                'category_name' => ['Gravel', 'Red Earth / Soil', 'Moorum', 'Quarry Dust', 'Filling Soil'],
+                'spec_label' => 'Application',
+                'spec_options' => ['Foundation Filling', 'Plinth Filling', 'Road Base Compaction', 'Landscaping'],
+                'unit' => ['CFT', 'Ton', 'Brass', 'Load', 'Trips'],
+                'attachment' => false,
             ],
             [
                 'id' => 7,
-                'material_type' => 'rmc',
-                'unit' => ['m cube'],
+                'material_type' => 'steel',
+                'name' => 'Steel & TMT',
+                'category_name' => ['TMT Steel Bars', 'Binding Wire', 'Mild Steel (MS) Rods', 'GI Wire', 'Steel Angles', 'Steel Channels', 'Steel Plates', 'MS Pipes', 'GI Pipes', 'Stainless Steel (SS)'],
+                'spec_label' => 'Diameter / Grade',
+                'spec_options' => ['8mm TMT Bar', '10mm TMT Bar', '12mm TMT Bar', '16mm TMT Bar', '20mm TMT Bar', '25mm TMT Bar', '32mm TMT Bar', 'Fe 500D', 'Fe 550D'],
+                'unit' => ['Ton', 'Tons', 'Kg', 'Bundles', 'Nos'],
                 'attachment' => false,
             ],
             [
                 'id' => 8,
-                'material_type' => 'painting',
-                'unit' => null,
-                'attachment' => true,
+                'material_type' => 'rmc',
+                'name' => 'Ready-Mix Concrete (RMC)',
+                'category_name' => ['M10', 'M15', 'M20', 'M25', 'M30', 'M35', 'M40', 'M45', 'M50', 'Ready-Mix Concrete (RMC)', 'Precast Concrete'],
+                'spec_label' => 'Pour Structure / Slump',
+                'spec_options' => ['Footing / Raft Foundation', 'Columns', 'Plinth Beams', 'Roof Slab & Beams', 'Retaining Wall'],
+                'unit' => ['M Cube', 'Load'],
+                'attachment' => false,
             ],
             [
                 'id' => 9,
+                'material_type' => 'rcconcrete',
+                'name' => 'RC Concrete',
+                'category_name' => ['M15', 'M20', 'M25', 'M30', 'M35'],
+                'spec_label' => 'Structure Element',
+                'spec_options' => ['Columns', 'Beams', 'Roof Slab', 'Lintel & Sunshade', 'Foundation'],
+                'unit' => ['M Cube', 'CFT'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 10,
+                'material_type' => 'woodcarpentry',
+                'name' => 'Wood & Carpentry',
+                'category_name' => ['Plywood (Commercial MR)', 'Waterproof Plywood (BWP/BWR)', 'Marine Plywood', 'MDF Board', 'HDF Board', 'Particle Board', 'Teak Wood', 'Sal Wood', 'Neem Wood', 'Pine Wood', 'Wooden Frames', 'Wooden Doors', 'Laminates (Mica)', 'Veneers'],
+                'spec_label' => 'Thickness / Size',
+                'spec_options' => ['6mm (8x4 ft)', '8mm (8x4 ft)', '12mm (8x4 ft)', '16mm (8x4 ft)', '18mm (8x4 ft)', '1mm Laminate'],
+                'unit' => ['Sqft', 'CFT', 'Sheets', 'Rft', 'Nos'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 11,
+                'material_type' => 'doorswindows',
+                'name' => 'Doors & Windows',
+                'category_name' => ['Main Entrance Wooden Door', 'Bedroom Flush Door', 'UPVC Sliding Windows', 'UPVC Casement Windows', 'Aluminium Sliding Windows', 'Aluminium Doors', 'Glass Partition', 'Toughened Glass', 'Door Frames', 'Window Frames', 'Mosquito Mesh Doors', 'Bathroom PVC Doors'],
+                'spec_label' => 'Dimension / Spec',
+                'spec_options' => ['7\' x 3\'6"', '7\' x 3\'', '4\' x 4\'', '5\' x 4\'', '6\' x 4\'', '5mm Glass', '8mm Toughened Glass'],
+                'unit' => ['Nos', 'Sets', 'Sqft'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 12,
+                'material_type' => 'tiles',
+                'name' => 'Tiles',
+                'category_name' => ['Vitrified Floor Tiles', 'Ceramic Wall Tiles', 'Anti-skid Bathroom Tiles', 'Parking Paver Tiles', 'Kitchen Glazed Tiles', 'Subway / Decorative Tiles', 'Step & Riser Tiles', 'Interlocking Paver Blocks'],
+                'spec_label' => 'Size / Finish',
+                'spec_options' => ['2x2 ft (600x600mm)', '4x2 ft (1200x600mm)', '2x1 ft (600x300mm)', '1x1 ft (300x300mm)', '800x1600mm', 'Glossy Finish', 'Matt Finish'],
+                'unit' => ['Boxes', 'Sqft', 'Pieces'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 13,
+                'material_type' => 'granite',
+                'name' => 'Granite & Marble',
+                'category_name' => ['Granite', 'Black Galaxy Granite', 'Jet Black Granite', 'Steel Grey Granite', 'Tan Brown Granite', 'Indian White Marble', 'Italian Marble', 'Kota Stone', 'Kadappa Stone'],
+                'spec_label' => 'Thickness / Application',
+                'spec_options' => ['18mm Polished Slab', '20mm Polished Slab', 'Kitchen Platform Slab', 'Staircase Treads & Risers'],
+                'unit' => ['Sqft', 'Slabs', 'Rft'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 14,
+                'material_type' => 'painting',
+                'name' => 'Painting & Wall Finishes',
+                'category_name' => ['Wall Putty', 'Interior Primer', 'Exterior Primer', 'Interior Acrylic Emulsion', 'Exterior Weatherproof Emulsion', 'Enamel Paint (Oil Based)', 'PU / Wood Polish', 'Waterproof Paint', 'Texture Paint', 'Thinner'],
+                'spec_label' => 'Brand / Shade',
+                'spec_options' => ['Asian Paints Royale', 'Asian Paints Apex Ultima', 'Asian Paints Tractor', 'Berger WeatherCoat', 'Nerolac Beauty', 'Birla White Putty'],
+                'unit' => ['Litres', 'Ltr', 'Kg', 'Pack', 'Buckets', 'Tins'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 15,
+                'material_type' => 'plumber',
+                'name' => 'Plumbing & Pipes',
+                'category_name' => ['CPVC Pipes', 'CPVC Fittings (Elbow/Tee/Coupler)', 'UPVC Pipes', 'UPVC Fittings', 'PVC SWR Drainage Pipes', 'HDPE Pipes', 'GI Pipes', 'Ball Valves / Concealed Valves', 'Overhead Water Tanks', 'Wash Basins', 'Toilets (EWC/IWC)', 'Faucets / Taps'],
+                'spec_label' => 'Diameter / Size',
+                'spec_options' => ['1/2" (15mm)', '3/4" (20mm)', '1" (25mm)', '1.25" (32mm)', '1.5" (40mm)', '2" (50mm)', '3" (75mm)', '4" (110mm)', '500 Litre Tank', '1000 Litre Tank'],
+                'unit' => ['Nos', 'Meter', 'Bundles', 'Pieces', 'Sets'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 16,
+                'material_type' => 'electricalwire',
+                'name' => 'Electrical & Wiring',
+                'category_name' => ['House Wires (FR/FRLS)', 'Armoured Power Cables', 'PVC Conduits & Accessories', 'Modular Switches & Sockets', 'Distribution Boards (DB)', 'Miniature Circuit Breakers (MCB)', 'RCCB / ELCB', 'LED Ceiling Lights', 'Ceiling Fans', 'Exhaust Fans', 'Junction Boxes'],
+                'spec_label' => 'Spec / Gauge / Rating',
+                'spec_options' => ['0.75 sq mm Wire', '1.0 sq mm Wire', '1.5 sq mm Wire', '2.5 sq mm Wire', '4.0 sq mm Wire', '6.0 sq mm Wire', '10 sq mm Wire', '6A Switch', '16A Socket', '32A DP MCB'],
+                'unit' => ['Meter', 'Nos', 'Roll', 'Coil', 'Pack', 'Boxes', 'Sets'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 17,
+                'material_type' => 'hardware',
+                'name' => 'Hardware & Fasteners',
+                'category_name' => ['Drywall Screws', 'Wood Screws', 'Self-Tapping Screws', 'Wire Nails', 'Concrete Nails', 'Nuts & Bolts', 'Washers', 'Anchor Fasteners / Rawlplugs', 'Tower Bolts', 'Mortise Locks & Handles', 'Hinges (Butt/Concealed)', 'Drawer Slides', 'Brackets & Clamps'],
+                'spec_label' => 'Size / Spec',
+                'spec_options' => ['1 inch', '1.5 inch', '2 inch', '2.5 inch', '3 inch', '4 inch', '5 inch', '6 inch', 'SS 304 Grade', 'MS Zinc Plated'],
+                'unit' => ['Pack', 'Boxes', 'Nos', 'Kg', 'Pairs', 'Pieces'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 18,
+                'material_type' => 'waterproofinginsulation',
+                'name' => 'Waterproofing & Insulation',
+                'category_name' => ['Integral Liquid Waterproofing (LW+)', '2K Acrylic Polymer Coating', 'Bitumen Sheet / Membrane', 'APP Membrane', 'Bituminous Primer', 'PVC Waterproofing Sheet', 'Tile Adhesive', 'Epoxy Tile Grout', 'Silicone Sealant', 'Concrete Curing Compound'],
+                'spec_label' => 'Brand / Spec',
+                'spec_options' => ['Dr. Fixit 101 LW+', 'Dr. Fixit Fastflex', 'Dr. Fixit Pidifin 2K', 'Fosroc Nitoproof', 'SikaTop Seal 107', 'Roff Tile Adhesive'],
+                'unit' => ['Litres', 'Kg', 'Pack', 'Bags', 'Roll', 'Buckets'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 19,
+                'material_type' => 'roofing',
+                'name' => 'Roofing Materials',
+                'category_name' => ['Colour-Coated Galvalume Sheets', 'GI Corrugated Sheets', 'Polycarbonate Multiwall Sheets', 'Polycarbonate Corrugated Sheets', 'Mangalore Clay Roof Tiles', 'UPVC Roofing Sheets', 'Bitumen Roofing Sheets', 'Fibre Cement Sheets', 'Ridge Caps', 'Gutter & Downpipes'],
+                'spec_label' => 'Thickness / Length',
+                'spec_options' => ['0.35mm', '0.40mm', '0.45mm', '0.50mm', '8 Feet Length', '10 Feet Length', '12 Feet Length', '14 Feet Length', '16 Feet Length'],
+                'unit' => ['Rft', 'Meter', 'Sheets', 'Sqft', 'Nos'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 20,
+                'material_type' => 'finishingmaterials',
+                'name' => 'Finishing Materials & False Ceiling',
+                'category_name' => ['Wall Putty', 'Gypsum Plaster (One Coat)', 'Gypsum Ceiling Boards', 'Cement Fibre Boards', 'GI False Ceiling Perimeter Channel', 'GI Ceiling Section', 'POP (Plaster of Paris)', 'PVC Wall Panels', 'Acoustic Ceiling Tiles'],
+                'spec_label' => 'Brand / Thickness',
+                'spec_options' => ['Saint-Gobain Gyproc', 'USG Boral', 'Armstrong', 'Birla White', '12.5mm Gypsum Board', '9.5mm Gypsum Board'],
+                'unit' => ['Bags', 'Sheets', 'Bundles', 'Sqft', 'Nos'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 21,
+                'material_type' => 'externaloutdoor',
+                'name' => 'External & Outdoor Infrastructure',
+                'category_name' => ['Interlocking Paver Blocks', 'Kerb Stones', 'Precast Compound Wall Slabs & Posts', 'Chain Link Fencing', 'Barbed Wire', 'RCC Hume Drainage Pipes', 'Manhole Covers & Frames', 'Landscaping Stones'],
+                'spec_label' => 'Grade / Dimension',
+                'spec_options' => ['60mm Paver (M30)', '80mm Heavy Paver (M40)', '100mm Kerb Stone', '150mm Kerb Stone', '300mm Hume Pipe (NP2)', '450mm Hume Pipe (NP2)'],
+                'unit' => ['Sqft', 'Nos', 'Rft', 'Meter', 'Pairs'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 22,
+                'material_type' => 'scaffoldingformwork',
+                'name' => 'Scaffolding & Formwork',
+                'category_name' => ['MS Adjustable Props', 'Cuplock Verticals', 'Cuplock Ledgers', 'Film-Faced Shuttering Plywood', 'MS Shuttering Plates', 'Tie Rods & Wing Nuts', 'Scaffolding Couplers/Clamps', 'Adjustable Base Jacks', 'U-Head Jacks', 'Scaffolding Pipes (40mm)'],
+                'spec_label' => 'Size / Spec',
+                'spec_options' => ['2m x 3m Adjustable Props', '2m x 3.5m Adjustable Props', '12mm Film-Faced Plywood (8x4 ft)', '900 x 600mm MS Plates', '1200 x 600mm MS Plates'],
+                'unit' => ['Nos', 'Sheets', 'Sets', 'Sqft', 'Ton'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 23,
+                'material_type' => 'safetyppe',
+                'name' => 'Safety & PPE',
+                'category_name' => ['Safety Helmets (ISI Mark)', 'Safety Shoes (Steel Toe)', 'High-Visibility Reflective Jackets', 'Full Body Safety Harness', 'Safety Fall Protection Nets', 'Heavy Duty Gloves', 'Safety Protective Goggles', 'Caution / Barricade Tape'],
+                'spec_label' => 'Rating / Spec',
+                'spec_options' => ['ISI Marked HDPE Shell', 'Class A / Class B', 'Steel Toe Cap (Size 7-11)', 'Double Lanyard Safety Harness', '50mm Retroreflective Tape'],
+                'unit' => ['Nos', 'Pairs', 'Roll', 'Sets'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 24,
+                'material_type' => 'sanitarybathfittings',
+                'name' => 'Sanitaryware & Bath Fittings',
+                'category_name' => ['European Water Closet (EWC)', 'Indian Water Closet (IWC)', 'Wall Hung Toilet with Concealed Cistern', 'Countertop Wash Basin', 'Pedestal Wash Basin', 'Urinals', 'Health Faucets', 'Basin Mixers', 'Wall Mixers / Diverters', 'Overhead Showers', 'CP Bath Fittings'],
+                'spec_label' => 'Brand / Model',
+                'spec_options' => ['Jaquar', 'Parryware', 'Hindware', 'Cera', 'Kohler', 'Grohe', 'White Ceramic', 'Chrome Finish'],
+                'unit' => ['Nos', 'Sets', 'Pieces'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 25,
+                'material_type' => 'glassaluminium',
+                'name' => 'Glass & Aluminium',
+                'category_name' => ['Toughened Glass', 'Laminated Safety Glass', 'Clear Float Glass', 'Frosted / Tinted Glass', 'Aluminium Partition Sections', 'Aluminium Window Sections', 'Structural Glazing Profiles', 'Spider Glazing Fittings', 'Silicone Weather Sealants'],
+                'spec_label' => 'Thickness / Profile',
+                'spec_options' => ['5mm Clear Glass', '6mm Toughened Glass', '8mm Toughened Glass', '10mm Toughened Glass', '12mm Toughened Glass', '63.5 x 38.1mm Alu Section'],
+                'unit' => ['Sqft', 'Sheets', 'Nos', 'Rft'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 26,
+                'material_type' => 'welding',
+                'name' => 'Welding & Fabrication',
+                'category_name' => ['Welding Electrodes / Rods', 'MS Rods', 'MS Angles', 'MS Channels', 'MS Flats', 'MS Square Tubes', 'MS Round Pipes', 'Cutting Wheels', 'Grinding Wheels'],
+                'spec_label' => 'Size / Gauge',
+                'spec_options' => ['8 SWG Electrode', '10 SWG Electrode', '12 SWG Electrode', '25x25x3 mm Angle', '40x40x5 mm Angle', '50x50x6 mm Angle'],
+                'unit' => ['Kg', 'Pack', 'Nos', 'Ton', 'Pieces'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 27,
+                'material_type' => 'lift',
+                'name' => 'Lift / Elevator',
+                'category_name' => ['Passenger Lift (6 Passengers)', 'Passenger Lift (8 Passengers)', 'Goods Lift / Material Hoist', 'Hydraulic Home Lift', 'Capsule Glass Lift', 'Dumbwaiter Lift'],
+                'spec_label' => 'Stops / Capacity',
+                'spec_options' => ['G+1 (2 Stops)', 'G+2 (3 Stops)', 'G+3 (4 Stops)', 'G+4 (5 Stops)', 'G+5 (6 Stops)', '408 Kg Capacity', '544 Kg Capacity'],
+                'unit' => ['Nos', 'Sets'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 28,
+                'material_type' => 'transport',
+                'name' => 'Transport & Machinery Rental',
+                'category_name' => ['Tipper / Lorry (6 Wheeler)', 'Tipper / Lorry (10 Wheeler)', 'JCB Excavator (3DX)', 'Hitachi / Poclain Heavy Excavator', 'Bobcat Compact Loader', 'Concrete Boom Pump', 'Tractor with Trolley', 'Hydra Mobile Crane', 'Road Roller'],
+                'spec_label' => 'Billing Basis / Shift',
+                'spec_options' => ['Per Hour (with Diesel & Driver)', 'Per Day (8 Hours)', 'Per Trip / Load', 'Per Month Contract'],
+                'unit' => ['Load', 'Unit', 'Hours', 'Days', 'Trips'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 29,
+                'material_type' => 'interior',
+                'name' => 'Interior Works',
+                'category_name' => ['Modular Kitchen Cabinets', 'Bedroom Wardrobes', 'TV Unit & Wall Panelling', 'False Ceiling Design', 'Glass Partitions', 'Loose Furniture & Bed Units', 'Wall Paper & Texture Finish'],
+                'spec_label' => 'Finish / Material Spec',
+                'spec_options' => ['High-Gloss Acrylic Finish', 'Anti-Fingerprint Laminate', 'PU Polish Finish', 'Natural Wood Veneer'],
+                'unit' => ['Sqft', 'Rft', 'Sets', 'Ls'],
+                'attachment' => true,
+            ],
+            [
+                'id' => 30,
+                'material_type' => 'watercan',
+                'name' => 'Drinking Watercan',
+                'category_name' => ['20 Litre Can', '25 Litre Can'],
+                'spec_label' => 'Type',
+                'spec_options' => ['Commercial RO Purified Water', 'Packaged Drinking Water'],
+                'unit' => ['Nos', 'Pack', 'Units'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 31,
+                'material_type' => 'lorrywater',
+                'name' => 'Lorry Water (Tanker)',
+                'category_name' => ['6,000 Litre Tanker', '8,000 Litre Tanker', '12,000 Litre Tanker', '18,000 Litre Tanker'],
+                'spec_label' => 'Water Purpose',
+                'spec_options' => ['Construction Curing & Concrete Mixing Water', 'Ground Raw Water', 'Drinking Supply'],
+                'unit' => ['Load', 'Litres', 'Unit'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 32,
+                'material_type' => 'tea',
+                'name' => 'Tea & Site Refreshments',
+                'category_name' => ['Morning Tea / Coffee', 'Afternoon Tea / Coffee', 'Snacks & Biscuits', 'Drinking Water Supply'],
+                'spec_label' => 'Supply Schedule',
+                'spec_options' => ['Daily Site Supply', 'Weekly Supply', 'Overtime Snacks'],
+                'unit' => ['Cups', 'Nos', 'Pack', 'Days'],
+                'attachment' => false,
+            ],
+            [
+                'id' => 33,
                 'material_type' => 'default',
-                // 'unit' => ['Load', 'Pack', 'Ltr', 'Kg', 'Pieces', 'M cube', 'CFT', 'Unit', 'Bag', 'Tone', 'Numbers'],
-                'unit' => ['Units', 'Kg', 'Ton', 'Size', 'Inch', 'Dia', 'NO'],
+                'name' => 'Other / Custom Material',
+                'category_name' => ['General Construction Material', 'Tools & Consumables', 'Site Utilities'],
+                'spec_label' => 'Specification',
+                'spec_options' => [],
+                'unit' => ['Units', 'Kg', 'Ton', 'Size', 'Inch', 'Dia', 'Nos', 'Pieces', 'Load', 'Pack', 'Sets'],
                 'attachment' => false,
             ],
         ];

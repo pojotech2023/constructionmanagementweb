@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\MaterialType;
+use App\Models\Unit;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -11,52 +12,65 @@ use Illuminate\Support\Str;
  * Adds the broad construction-material categories that don't already have
  * a built-in card on the Materials grid (Wood & Carpentry, Doors & Windows,
  * Hardware, Waterproofing & Insulation, Roofing, Finishing Materials,
- * External/Outdoor). Item-level options for these (and for the existing
- * cards) live in the `materialCategoryConfig` JS object in
- * resources/views/admin/menus/material/add_order.blade.php and
- * add_request.blade.php.
- *
- * Each new type needs an image (required by MaterialTypeController::store's
- * validation for admin-added types), so this generates a simple labelled
- * placeholder icon — replace it any time from the Materials grid by
- * deleting the card and re-adding it with a real image.
+ * External/Outdoor, Scaffolding & Formwork, Safety & PPE, Sanitaryware, Glass & Aluminium).
  */
 class ConstructionMaterialTypesSeeder extends Seeder
 {
     /**
-     * name => [background colour hex, emoji-ish short label for the icon]
+     * name => [background colour hex, source image in public/images/sri]
      */
     protected array $types = [
-        'Wood & Carpentry'           => '8B5A2B',
-        'Doors & Windows'            => '4A6FA5',
-        'Hardware'                   => '6B7280',
-        'Waterproofing & Insulation' => '1E7A5F',
-        'Roofing'                    => 'B23A2F',
-        'Finishing Materials'        => 'A0522D',
-        'External/Outdoor'           => '2F7D32',
+        'Wood & Carpentry'           => ['color' => '8B5A2B', 'src' => 'woodcarpenter.avif'],
+        'Doors & Windows'            => ['color' => '4A6FA5', 'src' => 'doors.jpg'],
+        'Hardware'                   => ['color' => '6B7280', 'src' => 'Hardware.avif'],
+        'Waterproofing & Insulation' => ['color' => '1E7A5F', 'src' => 'waterproofing.webp'],
+        'Roofing'                    => ['color' => 'B23A2F', 'src' => 'roofing.avif'],
+        'Finishing Materials'        => ['color' => 'A0522D', 'src' => 'finishing.jfif'],
+        'External/Outdoor'           => ['color' => '2F7D32', 'src' => 'outdoor.jfif'],
+        'Scaffolding & Formwork'     => ['color' => 'D97706', 'src' => 'scaffolding.jfif'],
+        'Safety & PPE'               => ['color' => 'DC2626', 'src' => 'safety.jfif'],
+        'Sanitary & Bath Fittings'   => ['color' => '0284C7', 'src' => 'bath_fitting.jfif'],
+        'Glass & Aluminium'          => ['color' => '0D9488', 'src' => 'glass.jpg'],
     ];
 
     public function run(): void
     {
         Storage::disk('public')->makeDirectory('material_types');
 
-        foreach ($this->types as $name => $hexColor) {
+        foreach ($this->types as $name => $meta) {
             $slug = Str::slug($name, '');
+            $sriPath = public_path('images/sri/' . $meta['src']);
 
-            if (MaterialType::where('slug', $slug)->exists()) {
-                continue;
+            if (file_exists($sriPath)) {
+                $ext = pathinfo($meta['src'], PATHINFO_EXTENSION);
+                $relativePath = 'material_types/' . $slug . '.' . $ext;
+                $destinationPath = Storage::disk('public')->path($relativePath);
+
+                if (!file_exists($destinationPath)) {
+                    copy($sriPath, $destinationPath);
+                }
+            } else {
+                $relativePath = 'material_types/' . $slug . '.png';
+                $fullPath = Storage::disk('public')->path($relativePath);
+                $this->makePlaceholderIcon($fullPath, $name, $meta['color']);
             }
 
-            $relativePath = 'material_types/' . $slug . '.png';
-            $fullPath = Storage::disk('public')->path($relativePath);
+            MaterialType::updateOrCreate(
+                ['slug' => $slug],
+                ['name' => $name, 'image' => $relativePath]
+            );
+        }
 
-            $this->makePlaceholderIcon($fullPath, $name, $hexColor);
+        // Standard construction measurement units
+        $standardUnits = [
+            'Bags', 'Ton', 'Tons', 'Kg', 'CFT', 'Brass', 'Sqft', 'Rft', 'Meter',
+            'M Cube', 'Nos', 'Pieces', 'Bundles', 'Boxes', 'Slabs', 'Sheets',
+            'Roll', 'Coil', 'Pack', 'Litres', 'Ltr', 'Buckets', 'Tins', 'Load',
+            'Unit', 'Units', 'Hours', 'Days', 'Trips', 'Cups', 'Sets', 'Pairs'
+        ];
 
-            MaterialType::create([
-                'name' => $name,
-                'slug' => $slug,
-                'image' => $relativePath,
-            ]);
+        foreach ($standardUnits as $unitName) {
+            Unit::firstOrCreate(['name' => $unitName]);
         }
     }
 

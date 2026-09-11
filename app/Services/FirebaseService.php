@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Site;
+use App\Models\MaterialRequest;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
@@ -121,5 +122,94 @@ class FirebaseService
         ]);
 
         return $this->sendToTokens($tokens, $title, $body, $data);
+    }
+
+    /**
+     * Notify one or more specific users by user ID(s) on all of their registered devices.
+     */
+    public function notifyUsers($userIds, string $title, string $body, array $data = [])
+    {
+        $userIds = is_array($userIds) ? $userIds : [$userIds];
+        $userIds = array_values(array_filter(array_unique($userIds)));
+
+        if (empty($userIds)) {
+            return null;
+        }
+
+        $tokens = User::whereIn('id', $userIds)
+            ->with('deviceToken')
+            ->get()
+            ->pluck('deviceToken')
+            ->flatten()
+            ->pluck('device_token')
+            ->all();
+
+        \Log::info('notifyUsers resolved recipients', [
+            'user_ids'      => $userIds,
+            'tokens_count'  => count($tokens),
+        ]);
+
+        return $this->sendToTokens($tokens, $title, $body, $data);
+    }
+
+    /**
+     * Notify the supervisor who created the material request (and/or site supervisor)
+     * when an admin approves or rejects the request.
+     */
+    public function notifyMaterialRequestDecision(MaterialRequest $materialRequest, string $decision, ?string $adminRemark = null)
+    {
+        $site = $materialRequest->site ?? Site::find($materialRequest->site_id);
+        $siteName = $site->site_name ?? 'the site';
+        $materialType = $materialRequest->material_type ?? 'Material';
+
+        $recipients = array_filter([
+            $materialRequest->created_by,
+            $site->supervisor_id ?? null,
+        ]);
+
+        $isApproved = strtolower($decision) === 'approved';
+        $title = $isApproved ? 'Material Request Approved' : 'Material Request Rejected';
+
+        if ($isApproved) {
+            $body = "Your request for {$materialType} at {$siteName} has been approved.";
+        } else {
+            $body = "Your request for {$materialType} at {$siteName} was rejected" .
+                ($adminRemark ? ": {$adminRemark}" : ".");
+        }
+
+        $payload = [
+            'type'                => 'material_request',
+            'material_request_id' => (string) $materialRequest->id,
+            'site_id'             => (string) $materialRequest->site_id,
+            'status'              => $isApproved ? 'approved' : 'rejected',
+            'material_type'       => (string) $materialType,
+            'admin_remark'        => (string) ($adminRemark ?? ''),
+        ];
+
+        return $this->notifyUsers($recipients, $title, $body, $payload);
+    }
+
+    /**
+     * Notify all admins when a supervisor submits a new material request.
+     */
+    public function notifyAdminsOfMaterialRequest(MaterialRequest $materialRequest, ?User $requester = null)
+    {
+        $site = $materialRequest->site ?? Site::find($materialRequest->site_id);
+        $siteName = $site->site_name ?? 'a site';
+        $materialType = $materialRequest->material_type ?? 'material';
+        $requesterName = $requester->name ?? 'A supervisor';
+
+        $title = 'New Material Request';
+        $body = "{$requesterName} submitted a request for {$materialType} at {$siteName}.";
+
+        $payload = [
+            'type'                => 'material_request',
+            'material_request_id' => (string) $materialRequest->id,
+            'site_id'             => (string) $materialRequest->site_id,
+            'status'              => 'pending',
+            'material_type'       => (string) $materialType,
+        ];
+
+        return $this->notifyAdmins($title, $body, $payload);
     }
 }

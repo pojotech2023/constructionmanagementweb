@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use App\Exports\AttendanceExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -115,6 +116,41 @@ class AttendanceController extends Controller
             ];
         }
 
+        // Fallback: check Wages table for any check-in/out times/photos if missing in AttendanceCheckin
+        $allWagesWithCheckin = Wages::where('site_id', $siteId)
+            ->where(function ($q) {
+                $q->whereNotNull('check_in_time')
+                  ->orWhereNotNull('check_in_photo')
+                  ->orWhereNotNull('check_out_time')
+                  ->orWhereNotNull('check_out_photo');
+            })
+            ->get();
+
+        foreach ($allWagesWithCheckin as $w) {
+            $wDate = Carbon::parse($w->date)->toDateString();
+            if (!isset($dayPhotos[$wDate])) {
+                $dayPhotos[$wDate] = [
+                    'check_in_photo'  => $w->check_in_photo,
+                    'check_in_time'   => $w->check_in_time,
+                    'check_out_photo' => $w->check_out_photo,
+                    'check_out_time'  => $w->check_out_time,
+                ];
+            } else {
+                if (empty($dayPhotos[$wDate]['check_in_time']) && !empty($w->check_in_time)) {
+                    $dayPhotos[$wDate]['check_in_time'] = $w->check_in_time;
+                }
+                if (empty($dayPhotos[$wDate]['check_in_photo']) && !empty($w->check_in_photo)) {
+                    $dayPhotos[$wDate]['check_in_photo'] = $w->check_in_photo;
+                }
+                if (empty($dayPhotos[$wDate]['check_out_time']) && !empty($w->check_out_time)) {
+                    $dayPhotos[$wDate]['check_out_time'] = $w->check_out_time;
+                }
+                if (empty($dayPhotos[$wDate]['check_out_photo']) && !empty($w->check_out_photo)) {
+                    $dayPhotos[$wDate]['check_out_photo'] = $w->check_out_photo;
+                }
+            }
+        }
+
         return view('admin.menus.attendance.attendance_management', compact(
             'siteName',
             'siteId',
@@ -159,6 +195,24 @@ private function getGroupedAttendance($attendances, $wages, &$allCategories)
         }
         return $dayData;
     })->values()->toArray();
+}
+
+private function normalizeTime($value): ?string
+{
+    if (!$value) {
+        return null;
+    }
+
+    $str = is_string($value) ? trim($value) : (string) $value;
+    if ($str === '' || strtolower($str) === 'null') {
+        return null;
+    }
+
+    try {
+        return Carbon::parse($str)->format('H:i:s');
+    } catch (\Exception $e) {
+        return null;
+    }
 }
 
    
@@ -749,26 +803,38 @@ public function updateAttendanceAndWages(Request $request)
     }
 
     // Check-in / check-out time & photo for this site/date
-    if ($request->filled('checkin_time') || $request->hasFile('checkin_photo')
-        || $request->filled('time') || $request->hasFile('photo')) {
-        $checkInOutUpdate = [];
+    $rawCheckinTime = $request->check_in_time ?? $request->checkin_time;
+    $rawCheckoutTime = $request->check_out_time ?? $request->checkout_time;
+    if (empty($rawCheckoutTime) && $request->filled('time') && empty($rawCheckinTime)) {
+        $rawCheckoutTime = $request->time;
+    }
 
-        if ($request->filled('checkin_time')) {
-            $checkInOutUpdate['check_in_time'] = $request->checkin_time;
+    $checkinPhotoFile = $request->hasFile('check_in_photo') ? $request->file('check_in_photo') : ($request->hasFile('checkin_photo') ? $request->file('checkin_photo') : null);
+    $checkoutPhotoFile = $request->hasFile('check_out_photo') ? $request->file('check_out_photo') : ($request->hasFile('checkout_photo') ? $request->file('checkout_photo') : ($request->hasFile('photo') ? $request->file('photo') : null));
+
+    $checkInOutUpdate = [];
+    if (!empty($rawCheckinTime)) {
+        $normCheckin = $this->normalizeTime($rawCheckinTime);
+        if ($normCheckin !== null) {
+            $checkInOutUpdate['check_in_time'] = $normCheckin;
         }
-
-        if ($request->hasFile('checkin_photo')) {
-            $checkInOutUpdate['check_in_photo'] = $request->file('checkin_photo')->store('wages_checkin', 'public');
+    }
+    if ($checkinPhotoFile && $checkinPhotoFile->isValid()) {
+        $checkInOutUpdate['check_in_photo'] = $checkinPhotoFile->store('wages_checkin', 'public');
+    }
+    if (!empty($rawCheckoutTime)) {
+        $normCheckout = $this->normalizeTime($rawCheckoutTime);
+        if ($normCheckout !== null) {
+            $checkInOutUpdate['check_out_time'] = $normCheckout;
         }
+    }
+    if ($checkoutPhotoFile && $checkoutPhotoFile->isValid()) {
+        $checkInOutUpdate['check_out_photo'] = $checkoutPhotoFile->store('wages_checkout', 'public');
+    } elseif ($request->has('check_out_photo') || $request->has('checkout_photo')) {
+        $checkInOutUpdate['check_out_photo'] = null;
+    }
 
-        if ($request->filled('time')) {
-            $checkInOutUpdate['check_out_time'] = $request->time;
-        }
-
-        if ($request->hasFile('photo')) {
-            $checkInOutUpdate['check_out_photo'] = $request->file('photo')->store('wages_checkout', 'public');
-        }
-
+    if (!empty($checkInOutUpdate)) {
         AttendanceCheckin::updateOrCreate(
             [
                 'site_id' => $request->site_id,
@@ -776,6 +842,18 @@ public function updateAttendanceAndWages(Request $request)
             ],
             $checkInOutUpdate + ['created_by' => auth('admin')->id()]
         );
+
+        $wagesCheckinUpdate = array_intersect_key($checkInOutUpdate, array_flip([
+            'check_in_time',
+            'check_in_photo',
+            'check_out_time',
+            'check_out_photo',
+        ]));
+        if (!empty($wagesCheckinUpdate)) {
+            Wages::where('site_id', $request->site_id)
+                ->where('date', $request->date)
+                ->update($wagesCheckinUpdate);
+        }
     }
 
     return redirect()->route('attendance', [
@@ -790,8 +868,40 @@ public function updateAttendanceAndWages(Request $request)
     {
         $attendance = Attendance::findOrFail($id);
         $siteId = $attendance->site_id;
-        $date = $attendance->date;
+        $date = Carbon::parse($attendance->date)->toDateString();
         $attendance->delete();
+
+        $remaining = Attendance::where('site_id', $siteId)
+            ->whereDate('date', $date)
+            ->count();
+
+        if ($remaining === 0) {
+            $checkins = AttendanceCheckin::where('site_id', $siteId)
+                ->whereDate('date', $date)
+                ->get();
+            foreach ($checkins as $checkin) {
+                if ($checkin->check_in_photo && Storage::disk('public')->exists($checkin->check_in_photo)) {
+                    Storage::disk('public')->delete($checkin->check_in_photo);
+                }
+                if ($checkin->check_out_photo && Storage::disk('public')->exists($checkin->check_out_photo)) {
+                    Storage::disk('public')->delete($checkin->check_out_photo);
+                }
+                $checkin->delete();
+            }
+
+            $wages = Wages::where('site_id', $siteId)
+                ->whereDate('date', $date)
+                ->get();
+            foreach ($wages as $wage) {
+                if ($wage->check_in_photo && Storage::disk('public')->exists($wage->check_in_photo)) {
+                    Storage::disk('public')->delete($wage->check_in_photo);
+                }
+                if ($wage->check_out_photo && Storage::disk('public')->exists($wage->check_out_photo)) {
+                    Storage::disk('public')->delete($wage->check_out_photo);
+                }
+                $wage->delete();
+            }
+        }
 
         return redirect()->route('attendance', ['siteId' => $siteId, 'date' => $date])
             ->with('success', 'Attendance deleted successfully!');
@@ -800,19 +910,36 @@ public function updateAttendanceAndWages(Request $request)
     // Delete all attendance records for a specific date (used from month view)
     public function deleteByDate($siteId, $date)
     {
-        // Clear Attendance AND Wages (plus the check-in/out record) for this date —
-        // leaving Wages behind caused the duplicate-entry check in addWages() to
-        // still see the old rows and block re-adding after a "delete this date".
+        $parsedDate = Carbon::parse($date)->toDateString();
+
+        $checkins = AttendanceCheckin::where('site_id', $siteId)
+            ->whereDate('date', $parsedDate)
+            ->get();
+        foreach ($checkins as $checkin) {
+            if ($checkin->check_in_photo && Storage::disk('public')->exists($checkin->check_in_photo)) {
+                Storage::disk('public')->delete($checkin->check_in_photo);
+            }
+            if ($checkin->check_out_photo && Storage::disk('public')->exists($checkin->check_out_photo)) {
+                Storage::disk('public')->delete($checkin->check_out_photo);
+            }
+            $checkin->delete();
+        }
+
+        $wages = Wages::where('site_id', $siteId)
+            ->whereDate('date', $parsedDate)
+            ->get();
+        foreach ($wages as $wage) {
+            if ($wage->check_in_photo && Storage::disk('public')->exists($wage->check_in_photo)) {
+                Storage::disk('public')->delete($wage->check_in_photo);
+            }
+            if ($wage->check_out_photo && Storage::disk('public')->exists($wage->check_out_photo)) {
+                Storage::disk('public')->delete($wage->check_out_photo);
+            }
+            $wage->delete();
+        }
+
         Attendance::where('site_id', $siteId)
-            ->whereDate('date', $date)
-            ->delete();
-
-        Wages::where('site_id', $siteId)
-            ->whereDate('date', $date)
-            ->delete();
-
-        AttendanceCheckin::where('site_id', $siteId)
-            ->whereDate('date', $date)
+            ->whereDate('date', $parsedDate)
             ->delete();
 
         return redirect()->route('attendance', [

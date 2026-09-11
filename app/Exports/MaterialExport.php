@@ -52,9 +52,14 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
 
         foreach ($records as $order) {
             $this->grandTotal += $order->price;
+            $itemDesc = $order->category_name ?? ucfirst($order->material_type);
+            if (!empty($order->spec)) {
+                $itemDesc .= ' (' . $order->spec . ')';
+            }
             $this->rows[] = [
                 Carbon::parse($order->date)->format('d-m-Y'),
-                $order->material_type,
+                ucfirst($order->material_type),
+                $itemDesc,
                 $order->quantity . ($order->unit ? ' ' . $order->unit : ''),
                 $order->price,
                 $order->vendor->name ?? '-',
@@ -63,14 +68,14 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
             ];
         }
 
-        $this->rows[] = ['', '', '', 'Grand Total (₹)', $this->grandTotal, '', ''];
+        $this->rows[] = ['', '', '', '', 'Grand Total (₹)', $this->grandTotal, '', ''];
 
         return new Collection($this->rows);
     }
 
     public function headings(): array
     {
-        return ['Date', 'Material Type', 'Quantity', 'Price (₹)', 'Vendor', 'Remarks', 'Invoice Link'];
+        return ['Date', 'Material Type', 'Category / Item', 'Quantity', 'Price (₹)', 'Vendor', 'Remarks', 'Invoice Link'];
     }
 
     public function map($row): array
@@ -84,22 +89,22 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                $sheet->mergeCells('A1:G1');
+                $sheet->mergeCells('A1:H1');
                 $sheet->setCellValue('A1', 'Material Report - ' . $this->siteName);
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
                 $sheet->getRowDimension(1)->setRowHeight(25);
 
-                $sheet->getStyle('A3:G3')->getFont()->setBold(true);
-                $sheet->getStyle('A3:G3')->getAlignment()->setHorizontal('center');
-                $sheet->getStyle('A3:G3')->getFill()
+                $sheet->getStyle('A3:H3')->getFont()->setBold(true);
+                $sheet->getStyle('A3:H3')->getAlignment()->setHorizontal('center');
+                $sheet->getStyle('A3:H3')->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('FFE5E5E5');
 
                 $highestRow = $sheet->getHighestRow();
-                $sheet->getStyle("D{$highestRow}:E{$highestRow}")->getFont()->setBold(true);
+                $sheet->getStyle("E{$highestRow}:F{$highestRow}")->getFont()->setBold(true);
 
-                foreach (range('A', 'G') as $col) {
+                foreach (range('A', 'H') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
             },

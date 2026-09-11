@@ -110,6 +110,7 @@
                                             <tr>
                                                 <th>S.No</th>
                                                 <th>Date</th>
+                                                <th>Category / Item</th>
                                                 <th>Quantity</th>
                                                 <th>Vendor</th>
                                                 <th>Price</th>
@@ -124,9 +125,15 @@
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
-                                                    <td>{{ $brick->quantity }}</td>
-                                                    <td>{{ $brick->vendor->name }}</td>
-                                                    <td>{{ $brick->price }}</td>
+                                                    <td>
+                                                        <strong>{{ $brick->category_name ?? ucfirst($materialType) }}</strong>
+                                                        @if (!empty($brick->spec))
+                                                            <br><small class="text-muted">{{ $brick->spec }}</small>
+                                                        @endif
+                                                    </td>
+                                                    <td>{{ $brick->quantity }} @if ($brick->unit) <small class="text-muted">({{ $brick->unit }})</small> @endif</td>
+                                                    <td>{{ $brick->vendor->name ?? '-' }}</td>
+                                                    <td>₹{{ number_format((float) $brick->price, 2) }}</td>
                                                     <td>{{ $brick->vendor->gst ?? '-' }}</td>
                                                     <td>
                                                         @if ($brick->image_url)
@@ -148,9 +155,11 @@
                                                             <button type="button" class="btn btn-link btn-primary btn-sm editOrderBtn"
                                                                 data-id="{{ $brick->id }}"
                                                                 data-date="{{ $brick->date }}"
+                                                                data-category="{{ $brick->category_name }}"
+                                                                data-spec="{{ $brick->spec }}"
                                                                 data-quantity="{{ $brick->quantity }}"
                                                                 data-price="{{ $brick->price }}"
-                                                                data-gst="{{ $brick->vendor->gst }}"
+                                                                data-gst="{{ $brick->vendor->gst ?? '' }}"
                                                                 data-image="{{ $brick->image_url }}"
                                                                 data-bs-toggle="modal" data-bs-target="#editOrderModal">
                                                                 <i class="fa fa-edit"></i>
@@ -213,6 +222,14 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Category / Item</label>
+                                            <input type="text" name="category_name" id="edit_order_category_name" class="form-control" placeholder="Enter Category or Item Type">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Specification / Brand</label>
+                                            <input type="text" name="spec" id="edit_order_spec" class="form-control" placeholder="Enter Brand, Size, or Grade">
+                                        </div>
                                         <div class="mb-3">
                                             <label class="form-label">Date</label>
                                             <input type="date" name="date" id="edit_order_date" class="form-control" required>
@@ -387,6 +404,8 @@
                 if (editBtn) {
                     const id = editBtn.getAttribute('data-id');
                     const date = editBtn.getAttribute('data-date');
+                    const category = editBtn.getAttribute('data-category');
+                    const spec = editBtn.getAttribute('data-spec');
                     const quantity = editBtn.getAttribute('data-quantity');
                     const price = editBtn.getAttribute('data-price');
                     const gst = editBtn.getAttribute('data-gst');
@@ -394,6 +413,8 @@
                     const form = document.getElementById('editOrderForm');
                     form.action = '/admin/material-order-update/' + id;
                     document.getElementById('edit_order_date').value = toIsoDate(date);
+                    document.getElementById('edit_order_category_name').value = category || '';
+                    document.getElementById('edit_order_spec').value = spec || '';
                     document.getElementById('edit_order_quantity').value = quantity;
                     document.getElementById('edit_order_price').value = price;
                     document.getElementById('edit_order_gst').value = gst || '';

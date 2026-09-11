@@ -501,7 +501,7 @@
                             </button>
                             <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                 <div class="h1 m-0">
-                                    <img src="{{ asset('storage/' . $materialType->image) }}" class="w-75">
+                                    <img src="{{ $materialType->image_url }}" onerror="this.onerror=null;this.src='{{ asset('images/sri/material.jpg') }}';" class="w-75" style="max-height: 80px; object-fit: contain;">
                                 </div>
                                 <div class="text-muted mb-3">{{ $materialType->name }}</div>
                                 <div class="text-success fw-bold">

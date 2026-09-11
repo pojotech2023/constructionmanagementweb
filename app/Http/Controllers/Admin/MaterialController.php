@@ -16,7 +16,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use App\Models\User;
-
+use App\Services\FirebaseService;
 
 class MaterialController extends Controller
 {
@@ -286,12 +286,13 @@ public function materialRequest(Request $request)
     // ✅ Save only selected fields to DB
     $materialRequest = MaterialRequest::create([
         'site_id'             => $request->site_id,
+        'category_name'       => $request->category_name ?? null,
         'quantity'            => $request->quantity,
         'unit'                => $request->unit ?? null,
         'image_url'           => $imageUrl,
-        'date_of_delivery'  => $request->date_of_delivery,
-        'price'             => $request->price,
-        'items'             =>$request->items,
+        'date_of_delivery'    => $request->date_of_delivery,
+        'price'               => $request->price,
+        'items'               => $request->items,
         'created_by'          => auth('admin')->id(),
         'source'              => MaterialRequest::SOURCE_ADMIN,
     ]);
@@ -350,16 +351,29 @@ public function materialRequest(Request $request)
             return redirect()->back()->withErrors($validate)->withInput();
         }
 
-        $materialRequest = MaterialRequest::findOrFail($id);
+        $materialRequest = MaterialRequest::with('site')->findOrFail($id);
+
+        $statusValue = $request->status === 'approved'
+            ? MaterialRequest::STATUS_APPROVED
+            : MaterialRequest::STATUS_REJECTED;
+
+        $adminRemark = $request->status === 'rejected' ? $request->admin_remark : null;
 
         $materialRequest->update([
-            'status' => $request->status === 'approved'
-                ? MaterialRequest::STATUS_APPROVED
-                : MaterialRequest::STATUS_REJECTED,
-            'admin_remark' => $request->status === 'rejected' ? $request->admin_remark : null,
+            'status' => $statusValue,
+            'admin_remark' => $adminRemark,
             'reviewed_at' => now(),
             'updated_by' => auth('admin')->id(),
         ]);
+
+        try {
+            app(FirebaseService::class)->notifyMaterialRequestDecision($materialRequest, $request->status, $adminRemark);
+        } catch (\Exception $e) {
+            \Log::error('FCM failed for material request status update', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Request ' . $request->status . ' successfully.');
     }
@@ -409,6 +423,8 @@ public function materialRequest(Request $request)
             'site_id' => $request->site_id,
             'vendor_id' => $request->vendor_id,
             'material_type' => $request->material_type,
+            'category_name' => $request->category_name ?? null,
+            'spec' => $request->spec ?? null,
             'date' => $request->date,
             'quantity' => $request->quantity,
             'unit' => $request->unit,
@@ -445,8 +461,9 @@ public function materialRequest(Request $request)
             . "Vendor Address: {$request->vendor_address}\n"
             . "Mobile Number: {$request->vendor_mobile}\n"
             . "Material Type: {$request->material_type}\n"
-            . (!empty($request->category_name) ? "Category: {$request->category_name}" : "")
-            . (!empty($request->unit) ? " ({$request->unit})" : "") . "\n"
+            . (!empty($request->category_name) ? "Category: {$request->category_name}\n" : "")
+            . (!empty($request->spec) ? "Spec/Brand: {$request->spec}\n" : "")
+            . (!empty($request->unit) ? "Unit: {$request->unit}\n" : "")
             . "Date: " . \Carbon\Carbon::parse($request->date)->format('d-m-Y') . "\n"
             . "Quantity: {$request->quantity}\n"
             . "Price: ₹{$request->price}\n"
@@ -539,6 +556,8 @@ public function materialRequest(Request $request)
 
         $updateData = [
             'date' => $request->date,
+            'category_name' => $request->category_name ?? $order->category_name,
+            'spec' => $request->spec ?? $order->spec,
             'quantity' => $request->quantity,
             'price' => $request->price,
             'gst' => $request->gst,

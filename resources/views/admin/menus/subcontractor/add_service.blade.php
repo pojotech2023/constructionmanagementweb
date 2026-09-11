@@ -2,14 +2,15 @@
 
 @section('content')
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-9 col-xl-8">
-                <h3 class="text-center pb-3 mt-3 mb-0">Add {{ ucfirst($subcontractorType) }} Service</h3>
+        <div class="page-inner">
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h3 class="text-center fw-bold pb-2 mb-0">Add {{ ucfirst($subcontractorType) }} Service</h3>
+                </div>
             </div>
-        </div>
-        <div class="row justify-content-center">
-            <div class="col-lg-9 col-xl-8">
-                <div class="card shadow-lg p-4 mt-2">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm p-4">
 
                     <!-- Blade alert for success -->
                     @if (session('success'))
@@ -30,8 +31,8 @@
                         <input type="hidden" name="subcontractor_type" value="{{ ucfirst($subcontractorType) }}">
 
                         <div class="row mb-3 align-items-center">
-                            <label for="subcontractor_name" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Subcontractor Name</label>
-                            <div class="col-sm-8 col-md-8 position-relative">
+                            <label for="subcontractor_name" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Subcontractor Name</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap position-relative">
                                 <input type="text" id="subcontractor_name" name="subcontractor_name" class="form-control"
                                     placeholder="Type Subcontractor Name..." autocomplete="off">
                                 <div id="subcontractor_suggestions" class="list-group position-absolute w-100"
@@ -43,8 +44,8 @@
                         </div>
 
                         <div class="row mb-3 align-items-center">
-                            <label for="subcontractor_mobile" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Subcontractor Mobile No</label>
-                            <div class="col-sm-8 col-md-8">
+                            <label for="subcontractor_mobile" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Subcontractor Mobile No</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <input type="text" id="subcontractor_mobile" name="subcontractor_mobile" class="form-control"
                                     placeholder="Mobile Number" maxlength="10" minlength="10" pattern="\d{10}"
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
@@ -55,8 +56,8 @@
                         </div>
 
                         <div class="row mb-3 align-items-center">
-                            <label for="no_counts" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">No Of Counts</label>
-                            <div class="col-sm-8 col-md-8">
+                            <label for="no_counts" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">No Of Counts</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <input type="text" id="no_counts" name="no_counts" class="form-control"
                                     placeholder="No Of Counts">
                                 @error('no_counts')
@@ -66,8 +67,8 @@
                         </div>
 
                         <div class="row mb-3 align-items-start">
-                            <label for="subcontractor_address" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end pt-2">Subcontractor Address</label>
-                            <div class="col-sm-8 col-md-8">
+                            <label for="subcontractor_address" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end pt-2">Subcontractor Address</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <textarea id="subcontractor_address" name="subcontractor_address" class="form-control" rows="2" placeholder="Subcontractor Address"></textarea>
                                 @error('subcontractor_address')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -79,8 +80,8 @@
                             $today = \Carbon\Carbon::today()->format('Y-m-d');
                         @endphp
                         <div class="row mb-3 align-items-center">
-                            <label for="date" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Date</label>
-                            <div class="col-sm-8 col-md-8">
+                            <label for="date" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Date</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <input type="date" class="form-control" name="date" id="date">
                                 @error('date')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -90,8 +91,8 @@
 
                         <!-- Price -->
                         <div class="row mb-3 align-items-center">
-                            <label for="amount" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end">Amount</label>
-                            <div class="col-sm-8 col-md-8">
+                            <label for="amount" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Amount</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <input id="amount" name="amount" type="number" class="form-control no-arrow"
                                     min="0" step="0.01" placeholder="Enter Amount"
                                     oninput="document.getElementById('amount_words').innerText = numberToWordsIndian(this.value);" />
@@ -103,8 +104,8 @@
                         </div>
 
                         <div class="row mb-3 align-items-start">
-                            <label for="remarks" class="col-sm-4 col-md-3 col-form-label fw-bold text-sm-end pt-2">Remarks</label>
-                            <div class="col-sm-8 col-md-8">
+                            <label for="remarks" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end pt-2">Remarks</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <textarea id="remarks" name="remarks" class="form-control" rows="3"
                                     placeholder="Enter remarks">{{ old('remarks') }}</textarea>
                                 @error('remarks')
@@ -114,7 +115,7 @@
                         </div>
 
                         <div class="row mt-4">
-                            <div class="col-sm-8 col-md-8 offset-sm-4 offset-md-3">
+                            <div class="col-sm-8 col-md-8 col-lg-6 offset-sm-4 offset-md-3 offset-lg-2 form-input-wrap">
                                 <button type="submit" class="btn btn-primary w-100">Send Service to SubContractor WhatsApp
                                     <i class="fab fa-whatsapp me-1"></i>
                                 </button>
@@ -125,6 +126,7 @@
             </div>
         </div>
     </div>
+</div>
     <!-- Spinner -->
     <div class="d-flex justify-content-center mt-3">
         <div class="spinner-border text-primary d-none" role="status" id="loadingSpinner">
@@ -234,4 +236,10 @@
             });
         });
     </script>
+
+    <style>
+        .form-input-wrap {
+            max-width: 540px;
+        }
+    </style>
 @endsection
