@@ -75,6 +75,10 @@
             color: white;
         }
 
+        .plan-card p:not(.price-note) {
+            min-height: 72px;
+        }
+
         .price {
             font-size: 2rem;
             font-weight: bold;
@@ -198,9 +202,9 @@
         {
             title: 'Basic',
             yearly: '4,999',
-            sites: '5 Sites',
+            sites: '5 Projects',
             desc: 'Essential tools for small projects and daily site management.',
-            features: ['Admin Panel - Web', 'Dashboard', 'Attendance Tracker', 'Materials Management', 'Sub Contractor Management', 'Payment Status', 'Purchase / Sales Bill', 'Customer Management', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Order Summary', 'Customer Payment Summary', 'Profile', 'Settings'],
+            features: ['Admin Panel - Web', 'Dashboard', 'Attendance Tracker', 'Attendance Report Download', 'Materials Management', 'Materials Report Download', 'Sub Contractor Management', 'Sub Contractor Report Download', 'Client Payment Summary', 'Purchase Bill', 'Sales Bill', 'Customer Management', 'Customer Wishes Reminder', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Petty Cash Management', 'Rental Management', 'GST Management', 'Settings', 'Profile'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
@@ -208,31 +212,23 @@
             yearly: '9,999',
             sites: '10 Sites',
             desc: 'Everything in Basic, plus quotation workflows for growing teams.',
-            features: ['Everything in Basic Plan', 'Quotation Generator', 'Quotation Share Via Email, WA', 'Payment Receipt Via Email, WA', 'Order Summary Report'],
+            features: ['Everything in Basic Plan', 'Quotation Generator', 'Quotation Version History', 'Add New Material', 'Add New Sub Contractor', 'Material Inward Receipt Download', 'Quotation Share Via Email, WA', 'Payment Receipt Via Email, WA', 'Full Expense Report Download'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
             title: 'Advance',
-            yearly: '14,999',
+            yearly: '17,999',
             sites: '15 Sites',
-            desc: 'Everything in Basic, Starter, plus reminders and mobile access.',
-            features: ['Everything in Basic, Starter Plan', 'Customer Wishes Reminder', 'Admin Mobile App', 'Full Report Download'],
+            desc: 'Everything in Basic, Starter, plus supervisor tools and mobile access.',
+            features: ['Everything in Basic, Starter Plan', 'Admin Mobile App - Android', 'Supervisor Mobile App - Android', 'Supervisor Management', 'Admin Approval Permission', 'Supervisor Live Location Tracking', 'Supervisor Role Permission', 'Checklist', 'Drawings'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
             title: 'Professional',
-            yearly: '21,999',
-            sites: '20 Sites',
-            desc: 'Everything in Basic, Starter, Advance, plus supervisor tools.',
-            features: ['Everything in Basic, Starter, Advance Plan', 'Supervisor Management', 'Supervisor Mobile App'],
-            supportLink: 'https://wa.me/918072515050'
-        },
-        {
-            title: 'Business',
-            yearly: '29,999',
+            yearly: '26,999',
             sites: '30 Sites',
-            desc: 'Everything in Basic, Starter, Advance, Professional, plus drawings and client tools.',
-            features: ['Everything in Basic, Starter, Advance, Professional Plan', 'Drawings', 'Check List (50 Nos)', 'Client Ticket Creation', 'Client Mobile App'],
+            desc: 'Everything in Basic, Starter, Advance, plus client tools & full mobile access.',
+            features: ['Everything in Basic, Starter, Advance Plan', 'Admin - Web', 'Admin Mobile App - Android & iOS', 'Supervisor Mobile App - Android & iOS', 'Client Mobile App - Android & iOS', 'Client Ticket Creation'],
             supportLink: 'https://wa.me/918072515050'
         },
         {
