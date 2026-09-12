@@ -15,7 +15,7 @@
                             <i class="icon-arrow-right"></i>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('vendor.dashboard') }}">Vendor Dashboard</a>
+                            <a href="{{ route('vendor.dashboard') }}">Vendor Payment</a>
                         </li>
                         <li class="separator">
                             <i class="icon-arrow-right"></i>

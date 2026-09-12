@@ -69,15 +69,13 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row align-items-center mt-3">
-                                <div class="col-12 col-md-6 mb-2 mb-md-0">
-                                    <h4 class="card-title mb-0">{{ ucfirst($subcontractorType) }} Overview</h4>
+                            <div class="d-flex align-items-center flex-wrap mt-3">
+                                <h4 class="card-title mb-2 mb-md-0 me-auto">{{ ucfirst($subcontractorType) }} Overview</h4>
+                                <div class="col-6 col-md-2 ms-3">
+                                    <a href="{{ route('subcontractor.serviceForm', ['siteId' => $siteId, 'subcontractorType' => $subcontractorType]) }}" class="btn btn-primary w-100">Add Service</a>
                                 </div>
-                                <div class="col-12 col-md-6">
-                                    <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-                                        <a href="{{ route('subcontractor.serviceForm', ['siteId' => $siteId, 'subcontractorType' => $subcontractorType]) }}" class="btn btn-primary w-100 w-md-auto">Add Service</a>
-                                        <button type="button" class="btn btn-success w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#subcontractorExportModal">Export</button>
-                                    </div>
+                                <div class="col-6 col-md-2 ms-3">
+                                    <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#subcontractorExportModal">Export</button>
                                 </div>
                             </div>
                         </div>

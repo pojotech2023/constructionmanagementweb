@@ -25,11 +25,6 @@
                     </li>
                 </ul>
                 </div>
-                @if ($sharedMenuVisibility['export'] ?? true)
-                <a href="{{ route('site.full-report.export', $site->id) }}" class="btn btn-success mb-3">
-                    <i class="fas fa-file-excel me-1"></i> Download Full Report
-                </a>
-                @endif
             </div>
             <div class="row g-4">
                 <!-- Blade alert for success -->
@@ -160,6 +155,18 @@
                             <div class="text-muted">Material Estimation Request</div>
                         </div>
 
+                    </div>
+                </div>
+                @endif
+                @if ($sharedMenuVisibility['export'] ?? true)
+                <div class="col-6 col-sm-4 col-lg-2">
+                    <div class="card h-100 w-100 site-card" data-route="{{ route('site.full-report.export', $site->id) }}" onclick="redirectToDetails(event, this)">
+                        <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                            <div class="h1 m-0">
+                                <img src="{{ asset('images/sri/excel_icon.jpg') }}" class="w-75">
+                            </div>
+                            <div class="text-muted">Download Full Report</div>
+                        </div>
                     </div>
                 </div>
                 @endif

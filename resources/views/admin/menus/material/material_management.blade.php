@@ -493,17 +493,11 @@
                         <div class="card h-100 w-100 site-card position-relative"
                             data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => $materialType->slug]) }}"
                             onclick="redirectToDetails(event, this)">
-                            <button type="button"
-                                class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 deleteMaterialTypeBtn"
-                                style="z-index: 2;" data-id="{{ $materialType->id }}"
-                                title="Remove material type">
-                                <i class="fa fa-times"></i>
-                            </button>
                             <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                 <div class="h1 m-0">
-                                    <img src="{{ $materialType->image_url }}" onerror="this.onerror=null;this.src='{{ asset('images/sri/material.jpg') }}';" class="w-75" style="max-height: 80px; object-fit: contain;">
+                                    <img src="{{ $materialType->image_url }}" onerror="this.onerror=null;this.src='{{ asset('images/sri/material.jpg') }}';" class="w-75">
                                 </div>
-                                <div class="text-muted mb-3">{{ $materialType->name }}</div>
+                                <div class="text-muted">{{ $materialType->name }}</div>
                                 <div class="text-success fw-bold">
                                     Qnty - {{ $materials[$materialType->slug]['units'] ?? 0 }}
                                 </div>
@@ -514,23 +508,15 @@
                         </div>
                     </div>
                 @endforeach
-            </div>
-</div>
 
-            <div class="row justify-content-center mt-4 g-3">
-                <div class="col-12 col-md-4 col-lg-3" id="addButton" data-bs-toggle="modal"
-                    data-bs-target="#addModal" data-site-id="{{ $site->id }}" style="cursor: pointer;">
-                    <div class="card border border-primary shadow" style="min-height: 140px;">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-6 text-center">
-                                    <img src="{{ asset('images/sri/othershand.webp') }}"
-                                        style="width: 200px; height: 100px; object-fit: cover;">
-                                </div>
-                                <div class="col-6 text-start">
-                                    <h3 class="fw-bold mb-0">OTHERS</h3>
-                                </div>
+                <div class="col-6 col-sm-4 col-lg-2 mt-4">
+                    <div class="card h-100 w-100 site-card" id="addButton" data-bs-toggle="modal"
+                        data-bs-target="#addModal" data-site-id="{{ $site->id }}">
+                        <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                            <div class="h1 m-0">
+                                <img src="{{ asset('images/sri/othershand.jpg') }}" class="w-100">
                             </div>
+                            <div class="text-muted">OTHERS</div>
                         </div>
                     </div>
                 </div>

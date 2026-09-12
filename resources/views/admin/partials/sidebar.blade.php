@@ -102,7 +102,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('vendor.dashboard') }}">
-                                    <span class="sub-item">Vendor Dashboard</span>
+                                    <span class="sub-item">Vendor Payment</span>
                                 </a>
                             </li>
                         </ul>
@@ -126,7 +126,7 @@
                             </li>
                             <li>
                                 <a href="{{ route('subcontractor.dashboard') }}">
-                                    <span class="sub-item">SubContractor Dashboard</span>
+                                    <span class="sub-item">SubContractor Payment</span>
                                 </a>
                             </li>
                         </ul>
