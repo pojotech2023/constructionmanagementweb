@@ -13,6 +13,7 @@ class SubcontractorService extends Model
         'site_id',
         'subcontractor_id',
         'subcontractor_type',
+        'category_name',
         'date',
         'amount',
         'remarks',

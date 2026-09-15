@@ -172,9 +172,7 @@
                     </div>
                 </div>
 @endunless
-            </div>
 
-            <div class="row mt-5">
                 @unless(in_array('watercan', $sharedHiddenMaterialTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
@@ -295,9 +293,7 @@
                     </div>
                 </div>
 @endunless
-            </div>
 
-            <div class="row mt-5">
                 @unless(in_array('lift', $sharedHiddenMaterialTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
@@ -423,7 +419,7 @@
            
 
              @unless(in_array('aggregate', $sharedHiddenMaterialTypes))
-             <div class="col-6 col-sm-4 col-lg-2 mt-4">
+             <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'aggregate']) }}"
                         onclick="redirectToDetails(event, this)">
@@ -445,7 +441,7 @@
             </div>
 @endunless
 			@unless(in_array('rmc', $sharedHiddenMaterialTypes))
-			<div class="col-6 col-sm-4 col-lg-2 mt-4">
+			<div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'rmc']) }}"
                         onclick="redirectToDetails(event, this)">
@@ -467,7 +463,7 @@
 @endunless
            
             @unless(in_array('gravel', $sharedHiddenMaterialTypes))
-            <div class="col-6 col-sm-4 col-lg-2 mt-4">
+            <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'gravel']) }}"
                         onclick="redirectToDetails(event, this)">
@@ -489,7 +485,7 @@
 @endunless
 
                 @foreach ($sharedMaterialTypes as $materialType)
-                    <div class="col-6 col-sm-4 col-lg-2 mt-4">
+                    <div class="col-6 col-sm-4 col-lg-2">
                         <div class="card h-100 w-100 site-card position-relative"
                             data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => $materialType->slug]) }}"
                             onclick="redirectToDetails(event, this)">
@@ -515,7 +511,7 @@
                     </div>
                 @endforeach
 
-                <div class="col-6 col-sm-4 col-lg-2 mt-4">
+                <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" id="addButton" data-bs-toggle="modal"
                         data-bs-target="#addModal" data-site-id="{{ $site->id }}">
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">

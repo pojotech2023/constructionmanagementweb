@@ -30,6 +30,8 @@
 
                         <input type="hidden" name="subcontractor_type" value="{{ ucfirst($subcontractorType) }}">
 
+                        <div id="dynamic-fields"></div>
+
                         <div class="row mb-3 align-items-center">
                             <label for="subcontractor_name" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Subcontractor Name</label>
                             <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap position-relative">
@@ -235,6 +237,119 @@
                 });
             });
         });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let subcontractorType = "{{ $subcontractorType }}";
+            loadCategoryField(subcontractorType);
+        });
+
+        // Sub-work-type options per subcontractor trade (construction subcontractor catalog)
+        const subcontractorCategoryConfig = {
+            civilworks: {
+                label: 'Work Type',
+                options: ['Excavation', 'Earthwork', 'Foundation', 'RCC works', 'Concrete works'],
+            },
+            masonworks: {
+                label: 'Work Type',
+                options: ['Brickwork', 'Blockwork', 'Stone masonry'],
+            },
+            steelstructural: {
+                label: 'Work Type',
+                options: ['Structural steel', 'Steel fabrication', 'Steel erection', 'Reinforcement steel work'],
+            },
+            carpenter: {
+                label: 'Work Type',
+                options: ['Formwork / shuttering', 'Doors', 'Wooden works', 'Interior carpentry'],
+            },
+            plumber: {
+                label: 'Work Type',
+                options: ['Water supply', 'Drainage', 'Sanitary works', 'Plumbing fixtures'],
+            },
+            electrician: {
+                label: 'Work Type',
+                options: ['Electrical wiring', 'DB/panel installation', 'Lighting', 'Power systems', 'Earthing'],
+            },
+            painter: {
+                label: 'Work Type',
+                options: ['Interior painting', 'Exterior painting', 'Texture coating', 'Waterproof coating'],
+            },
+            waterproofingcontractor: {
+                label: 'Work Type',
+                options: ['Terrace waterproofing', 'Basement waterproofing', 'Toilet waterproofing', 'Swimming pool waterproofing'],
+            },
+            flooringcontractor: {
+                label: 'Work Type',
+                options: ['Tiles', 'Marble', 'Granite', 'Vinyl', 'Epoxy flooring'],
+            },
+            falseceiling: {
+                label: 'Work Type',
+                options: ['Gypsum ceiling', 'Grid ceiling', 'PVC ceiling', 'Decorative ceiling'],
+            },
+            aluminiumglass: {
+                label: 'Work Type',
+                options: ['Aluminium windows', 'Glass doors', 'Curtain walls', 'Glass partitions'],
+            },
+            hvac: {
+                label: 'Work Type',
+                options: ['Air-conditioning', 'Ducting', 'Ventilation', 'HVAC maintenance'],
+            },
+            firesafety: {
+                label: 'Work Type',
+                options: ['Fire alarm', 'Fire fighting system', 'Sprinkler system', 'Fire extinguishers'],
+            },
+            fabricationcontractor: {
+                label: 'Work Type',
+                options: ['Gates', 'Railings', 'Grills', 'Staircase fabrication'],
+            },
+            roadpaving: {
+                label: 'Work Type',
+                options: ['Asphalt works', 'Concrete roads', 'Interlock paving', 'Kerb works'],
+            },
+            landscaping: {
+                label: 'Work Type',
+                options: ['Garden works', 'Irrigation', 'Plantation', 'Outdoor landscaping'],
+            },
+            interiorworkscontractor: {
+                label: 'Work Type',
+                options: ['Modular furniture', 'Partitions', 'Interior finishing', 'Office interiors'],
+            },
+            demolitioncontractor: {
+                label: 'Work Type',
+                options: ['Building demolition', 'Concrete breaking', 'Debris removal'],
+            },
+            heavyequipment: {
+                label: 'Work Type',
+                options: ['Excavator', 'JCB', 'Crane', 'Bulldozer', 'Machinery rental'],
+            },
+            mep: {
+                label: 'Work Type',
+                options: ['Mechanical', 'Electrical', 'Plumbing', 'Building services'],
+            },
+        };
+
+        function loadCategoryField(subcontractorType) {
+            const config = subcontractorCategoryConfig[subcontractorType];
+
+            if (!config) {
+                document.getElementById('dynamic-fields').innerHTML = '';
+                return;
+            }
+
+            const optionsHtml = config.options.map(o => `<option value="${o}">${o}</option>`).join('');
+            const html = `
+                <div class="row mb-3 align-items-center">
+                    <label for="category_name" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">${config.label}</label>
+                    <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
+                        <select class="form-select" name="category_name" id="category_name">
+                            <option value="">Select ${config.label}</option>
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                </div>`;
+
+            document.getElementById('dynamic-fields').innerHTML = html;
+        }
     </script>
 
     <style>

@@ -146,7 +146,6 @@
                 </div>
 @endunless
 
-                <div class="row mt-5">
                     @unless(in_array('sswelder', $sharedHiddenSubcontractorTypes))
                     <div class="col-6 col-sm-4 col-lg-2">
                         <div class="card h-100 w-100 site-card position-relative"
@@ -207,6 +206,246 @@
                                 <div class="text-muted">Mason Works</div>
                                 <div class="text-success fw-bold">Total Amount -
                                     {{ $subcontractors['masonworks']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('civilworks', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'civilworks']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/rc.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Civil Works Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['civilworks']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('steelstructural', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'steelstructural']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/steel.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Steel & Structural Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['steelstructural']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('waterproofingcontractor', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'waterproofingcontractor']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/waterproofing.webp') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Waterproofing Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['waterproofingcontractor']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('flooringcontractor', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'flooringcontractor']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/granite.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Flooring Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['flooringcontractor']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('falseceiling', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'falseceiling']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/finishing.jfif') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">False Ceiling Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['falseceiling']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('aluminiumglass', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'aluminiumglass']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/glass.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Aluminium & Glass Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['aluminiumglass']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('hvac', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'hvac']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/Hardware.avif') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">HVAC Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['hvac']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('firesafety', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'firesafety']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/safety.jfif') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Fire & Safety Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['firesafety']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('fabricationcontractor', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'fabricationcontractor']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/welding.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Fabrication Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['fabricationcontractor']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('roadpaving', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'roadpaving']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/concrete-truck-isometric-yellow-white-260nw-2339929455.webp') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Road & Paving Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['roadpaving']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('landscaping', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'landscaping']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/outdoor.jfif') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Landscaping Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['landscaping']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('interiorworkscontractor', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'interiorworkscontractor']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/interior.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Interior Works Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['interiorworkscontractor']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('demolitioncontractor', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'demolitioncontractor']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/concrete.webp') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Demolition Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['demolitioncontractor']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('heavyequipment', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'heavyequipment']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/transport.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">Heavy Equipment Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['heavyequipment']['totalAmounts'] ?? 0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+@endunless
+                    @unless(in_array('mep', $sharedHiddenSubcontractorTypes))
+                    <div class="col-6 col-sm-4 col-lg-2">
+                        <div class="card h-100 w-100 site-card position-relative"
+                            data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => 'mep']) }}"
+                            onclick="redirectToDetails(event, this)">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div class="h1 m-0">
+                                    <img src="{{ asset('images/sri/lift.jpg') }}" class="w-75">
+                                </div>
+                                <div class="text-muted">MEP Contractor</div>
+                                <div class="text-success fw-bold">Total Amount -
+                                    {{ $subcontractors['mep']['totalAmounts'] ?? 0 }}</div>
                             </div>
                         </div>
                     </div>
@@ -272,7 +511,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
 

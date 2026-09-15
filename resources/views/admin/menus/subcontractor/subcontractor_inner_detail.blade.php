@@ -101,6 +101,7 @@
                                                 <th>S.No</th>
                                                 <th>Date</th>
                                                 <th>Subcontractor</th>
+                                                <th>Work Type</th>
                                                 <th>Counts</th>
                                                 <th>Amount</th>
                                                 <th>Remarks</th>
@@ -114,6 +115,7 @@
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>{{ $sub->date ? \Carbon\Carbon::parse($sub->date)->format('d-m-Y') : '-' }}</td>
                                                     <td>{{ $sub->subcontractor->name }}</td>
+                                                    <td>{{ $sub->category_name ?? '-' }}</td>
                                                     <td>{{ $sub->no_counts ?? '-' }}</td>
                                                     <td>{{ $sub->amount }}</td>
                                                     <td>{{ $sub->remarks ?? '-' }}</td>
@@ -122,6 +124,7 @@
                                                             <button type="button" class="btn btn-link btn-primary btn-sm editServiceBtn"
                                                                 data-id="{{ $sub->id }}"
                                                                 data-date="{{ $sub->date }}"
+                                                                data-category="{{ $sub->category_name }}"
                                                                 data-counts="{{ $sub->no_counts }}"
                                                                 data-amount="{{ $sub->amount }}"
                                                                 data-remarks="{{ $sub->remarks }}"
@@ -185,6 +188,10 @@
                                         <div class="mb-3">
                                             <label class="form-label">Date</label>
                                             <input type="date" name="date" id="edit_service_date" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Work Type</label>
+                                            <input type="text" name="category_name" id="edit_service_category" class="form-control" placeholder="Enter work type">
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">No Of Counts</label>
@@ -330,12 +337,14 @@
             if (editBtn) {
                 const id = editBtn.getAttribute('data-id');
                 const date = editBtn.getAttribute('data-date');
+                const category = editBtn.getAttribute('data-category') || '';
                 const counts = editBtn.getAttribute('data-counts') || '';
                 const amount = editBtn.getAttribute('data-amount');
                 const remarks = editBtn.getAttribute('data-remarks') || '';
                 const form = document.getElementById('editServiceForm');
                 form.action = '/admin/subcontractor-service-update/' + id;
                 document.getElementById('edit_service_date').value = toIsoDate(date);
+                document.getElementById('edit_service_category').value = category;
                 document.getElementById('edit_service_counts').value = counts;
                 document.getElementById('edit_service_amount').value = amount;
                 document.getElementById('edit_service_remarks').value = remarks;

@@ -256,6 +256,7 @@ class SubContractorController extends Controller
             'site_id'  => 'required|exists:sites,id',
             'subcontractor_id' => 'required|exists:subcontractors,id',
             'subcontractor_type' => 'required|string',
+            'category_name' => 'nullable|string',
             'date' => 'required',
             'amount' => 'required|numeric',
             'no_counts'=> 'required',
@@ -275,6 +276,7 @@ class SubContractorController extends Controller
             'site_id' => $request->site_id,
             'subcontractor_id' => $request->subcontractor_id,
             'subcontractor_type' => $request->subcontractor_type,
+            'category_name' => $request->category_name ?? null,
             'date' => $date,
             'amount' => $request->amount,
             'no_counts' => $request->no_counts,
@@ -654,6 +656,7 @@ class SubContractorController extends Controller
 
         $validate = Validator::make($request->all(), [
             'subcontractor_type' => 'required|string',
+            'category_name'      => 'nullable|string',
             'date'               => 'required',
             'amount'             => 'required|numeric',
             'no_counts'          => 'required',
@@ -675,6 +678,7 @@ class SubContractorController extends Controller
 
         $service->update([
             'subcontractor_type' => $request->subcontractor_type,
+            'category_name'      => $request->category_name ?? $service->category_name,
             'date'               => $date,
             'amount'             => $newAmount,
             'no_counts'          => $request->no_counts,
@@ -864,4 +868,42 @@ class SubContractorController extends Controller
         }
     }
 
+
+    // Static catalog of construction subcontractor trades + their work-type sub-options
+    // (mirrors MaterialController::index() for materials) — used by the mobile app to
+    // render the "fixed" subcontractor tiles introduced alongside the original
+    // Plumber/Electrician/... set, without needing a SubcontractorType DB row per tile.
+    public function categories()
+    {
+        $categories = [
+            ['slug' => 'civilworks', 'name' => 'Civil Works Contractor', 'options' => ['Excavation', 'Earthwork', 'Foundation', 'RCC works', 'Concrete works']],
+            // Masonry/Carpentry/Plumbing/Electrical/Painting work-type options are merged onto the
+            // existing Mason Works/Carpenter/Plumber/Electrician/Painter tiles (see their slugs below)
+            // instead of separate "... Contractor" tiles, to avoid duplicating those trades.
+            ['slug' => 'masonworks', 'name' => 'Mason Works', 'options' => ['Brickwork', 'Blockwork', 'Stone masonry']],
+            ['slug' => 'steelstructural', 'name' => 'Steel & Structural Contractor', 'options' => ['Structural steel', 'Steel fabrication', 'Steel erection', 'Reinforcement steel work']],
+            ['slug' => 'carpenter', 'name' => 'Carpenter', 'options' => ['Formwork / shuttering', 'Doors', 'Wooden works', 'Interior carpentry']],
+            ['slug' => 'plumber', 'name' => 'Plumber', 'options' => ['Water supply', 'Drainage', 'Sanitary works', 'Plumbing fixtures']],
+            ['slug' => 'electrician', 'name' => 'Electrician', 'options' => ['Electrical wiring', 'DB/panel installation', 'Lighting', 'Power systems', 'Earthing']],
+            ['slug' => 'painter', 'name' => 'Painter', 'options' => ['Interior painting', 'Exterior painting', 'Texture coating', 'Waterproof coating']],
+            ['slug' => 'waterproofingcontractor', 'name' => 'Waterproofing Contractor', 'options' => ['Terrace waterproofing', 'Basement waterproofing', 'Toilet waterproofing', 'Swimming pool waterproofing']],
+            ['slug' => 'flooringcontractor', 'name' => 'Flooring Contractor', 'options' => ['Tiles', 'Marble', 'Granite', 'Vinyl', 'Epoxy flooring']],
+            ['slug' => 'falseceiling', 'name' => 'False Ceiling Contractor', 'options' => ['Gypsum ceiling', 'Grid ceiling', 'PVC ceiling', 'Decorative ceiling']],
+            ['slug' => 'aluminiumglass', 'name' => 'Aluminium & Glass Contractor', 'options' => ['Aluminium windows', 'Glass doors', 'Curtain walls', 'Glass partitions']],
+            ['slug' => 'hvac', 'name' => 'HVAC Contractor', 'options' => ['Air-conditioning', 'Ducting', 'Ventilation', 'HVAC maintenance']],
+            ['slug' => 'firesafety', 'name' => 'Fire & Safety Contractor', 'options' => ['Fire alarm', 'Fire fighting system', 'Sprinkler system', 'Fire extinguishers']],
+            ['slug' => 'fabricationcontractor', 'name' => 'Fabrication Contractor', 'options' => ['Gates', 'Railings', 'Grills', 'Staircase fabrication']],
+            ['slug' => 'roadpaving', 'name' => 'Road & Paving Contractor', 'options' => ['Asphalt works', 'Concrete roads', 'Interlock paving', 'Kerb works']],
+            ['slug' => 'landscaping', 'name' => 'Landscaping Contractor', 'options' => ['Garden works', 'Irrigation', 'Plantation', 'Outdoor landscaping']],
+            ['slug' => 'interiorworkscontractor', 'name' => 'Interior Works Contractor', 'options' => ['Modular furniture', 'Partitions', 'Interior finishing', 'Office interiors']],
+            ['slug' => 'demolitioncontractor', 'name' => 'Demolition Contractor', 'options' => ['Building demolition', 'Concrete breaking', 'Debris removal']],
+            ['slug' => 'heavyequipment', 'name' => 'Heavy Equipment Contractor', 'options' => ['Excavator', 'JCB', 'Crane', 'Bulldozer', 'Machinery rental']],
+            ['slug' => 'mep', 'name' => 'MEP Contractor', 'options' => ['Mechanical', 'Electrical', 'Plumbing', 'Building services']],
+        ];
+
+        return response()->json([
+            'status' => true,
+            'data' => $categories,
+        ]);
+    }
 }

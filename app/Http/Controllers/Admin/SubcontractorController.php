@@ -450,6 +450,7 @@ class SubcontractorController extends Controller
             'subcontractor_mobile'       => 'required',
             'subcontractor_address' => 'required',
             'subcontractor_type' => 'required|string',
+            'category_name' => 'nullable|string',
              'no_counts' => 'required|string',
             'date' => 'required',
             'amount' => 'required|numeric',
@@ -464,6 +465,7 @@ class SubcontractorController extends Controller
             'site_id' => $request->site_id,
             'subcontractor_id' => $request->subcontractor_id,
             'subcontractor_type' => $request->subcontractor_type,
+            'category_name' => $request->category_name ?? null,
             'date' => $request->date,
             'amount' => $request->amount,
             'no_counts'=>$request->no_counts,
@@ -509,6 +511,7 @@ class SubcontractorController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'date' => 'required|date',
+            'category_name' => 'nullable|string',
             'no_counts' => 'nullable|string',
             'amount' => 'required|numeric',
             'remarks' => 'nullable|string'
@@ -521,6 +524,7 @@ class SubcontractorController extends Controller
         $service = SubcontractorService::findOrFail($id);
         $service->update([
             'date' => $request->date,
+            'category_name' => $request->category_name,
             'no_counts' => $request->no_counts,
             'amount' => $request->amount,
             'remarks' => $request->remarks,

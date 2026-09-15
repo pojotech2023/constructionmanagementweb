@@ -163,6 +163,7 @@ Route::middleware('auth:api')->group(function () {
   Route::post('/service-update/{id}', [SubContractorController::class, 'updateService']);
   Route::delete('/service-delete/{id}', [SubContractorController::class, 'destroyService']);
   Route::get('/subcontractor-export', [SubContractorController::class, 'exportSubcontractor']);
+  Route::get('/subcontractor-categories', [SubContractorController::class, 'categories']);
 
   //Subcontractor Types (dynamic subcontractor categories shown on SubContractor Details grid)
   Route::post('/subcontractor-type-add', [SubcontractorTypeController::class, 'store']); //"+ Add SubContractor" button, multipart: name, image
