@@ -84,14 +84,19 @@ class SiteReportExport implements FromArray, WithEvents, WithTitle
         $materialRows = [];
         $materialTotal = 0;
         foreach ($materials as $material) {
-            $materialTotal += (float) $material->price;
+            $price = (float) $material->price;
+            $gst = (float) ($material->gst ?? 0);
+            $totalWithGst = $material->total_amount !== null ? (float) $material->total_amount : $price + ($price * $gst / 100);
+            $materialTotal += $totalWithGst;
             $materialRows[] = [
                 Carbon::parse($material->date)->format('d-m-Y'),
                 ucfirst($material->material_type),
                 optional($material->vendor)->name ?: '-',
                 (float) $material->quantity,
                 $material->unit ?: '-',
-                (float) $material->price,
+                $price,
+                $gst,
+                $totalWithGst,
             ];
         }
 
@@ -144,42 +149,44 @@ class SiteReportExport implements FromArray, WithEvents, WithTitle
             ];
         }
 
+        // Column layout: Attendance A-E (5), gap F, Materials G-N (8, incl. GST% and Total incl. GST),
+        // gap O, Subcontractor P-U (6). Total width = 21 columns (A-U).
         $rows = [
             [$this->site->site_name],
             ['Generated On', now()->format('d-m-Y h:i A')],
-            ['ATTENDANCE REPORT', '', '', '', '', '', 'MATERIALS REPORT', '', '', '', '', '', '', 'SUBCONTRACTOR REPORT'],
-            ['Date', 'Category', 'Count', 'Wage', 'Amount', '', 'Date', 'Material', 'Vendor', 'Quantity', 'Unit', 'Amount', '', 'Date', 'Type', 'Subcontractor', 'Count', 'Remarks', 'Amount'],
+            ['ATTENDANCE REPORT', '', '', '', '', '', 'MATERIALS REPORT', '', '', '', '', '', '', '', '', 'SUBCONTRACTOR REPORT'],
+            ['Date', 'Category', 'Count', 'Wage', 'Amount', '', 'Date', 'Material', 'Vendor', 'Quantity', 'Unit', 'Price', 'GST (%)', 'Total (incl. GST)', '', 'Date', 'Type', 'Subcontractor', 'Count', 'Remarks', 'Amount'],
         ];
 
         $recordCount = max(count($attendanceRows), count($materialRows), count($serviceRows), 1);
         for ($index = 0; $index < $recordCount; $index++) {
             $attendance = $attendanceRows[$index] ?? ($index === 0 && !$attendanceRows ? ['No records', '', '', '', ''] : array_fill(0, 5, ''));
-            $material = $materialRows[$index] ?? ($index === 0 && !$materialRows ? ['No records', '', '', '', '', ''] : array_fill(0, 6, ''));
+            $material = $materialRows[$index] ?? ($index === 0 && !$materialRows ? ['No records', '', '', '', '', '', '', ''] : array_fill(0, 8, ''));
             $service = $serviceRows[$index] ?? ($index === 0 && !$serviceRows ? ['No records', '', '', '', '', ''] : array_fill(0, 6, ''));
             $rows[] = array_merge($attendance, [''], $material, [''], $service);
         }
 
         $rows[] = [
             'ATTENDANCE SUBTOTAL', '', '', '', $attendanceTotal, '',
-            'MATERIALS SUBTOTAL', '', '', '', '', $materialTotal, '',
+            'MATERIALS SUBTOTAL', '', '', '', '', '', '', $materialTotal, '',
             'SUBCONTRACTOR SUBTOTAL', '', '', '', '', $subcontractorTotal,
         ];
         $this->totalRow = count($rows);
 
-        $rows[] = array_fill(0, 19, '');
-        $utilityTitle = array_fill(0, 19, '');
+        $rows[] = array_fill(0, 21, '');
+        $utilityTitle = array_fill(0, 21, '');
         $utilityTitle[6] = 'MATERIALS OTHERS';
-        $utilityTitle[13] = 'SUBCONTRACTOR OTHERS';
+        $utilityTitle[15] = 'SUBCONTRACTOR OTHERS';
         $rows[] = $utilityTitle;
         $this->utilityTitleRow = count($rows);
 
-        $utilityHeader = array_fill(0, 19, '');
+        $utilityHeader = array_fill(0, 21, '');
         $utilityHeader[6] = 'Date';
         $utilityHeader[7] = 'Remarks';
-        $utilityHeader[11] = 'Amount';
-        $utilityHeader[13] = 'Date';
-        $utilityHeader[14] = 'Remarks';
-        $utilityHeader[18] = 'Amount';
+        $utilityHeader[13] = 'Amount';
+        $utilityHeader[15] = 'Date';
+        $utilityHeader[16] = 'Remarks';
+        $utilityHeader[20] = 'Amount';
         $rows[] = $utilityHeader;
         $this->utilityHeaderRow = count($rows);
 
@@ -187,48 +194,48 @@ class SiteReportExport implements FromArray, WithEvents, WithTitle
         $subcontractorUtilityTotal = (float) $subcontractorUtilities->sum('amount');
         $utilityCount = max($materialUtilities->count(), $subcontractorUtilities->count(), 1);
         for ($index = 0; $index < $utilityCount; $index++) {
-            $row = array_fill(0, 19, '');
+            $row = array_fill(0, 21, '');
 
             if ($materialUtility = $materialUtilities->get($index)) {
                 $row[6] = Carbon::parse($materialUtility->created_at)->format('d-m-Y');
                 $row[7] = $materialUtility->remarks ?: '-';
-                $row[11] = (float) $materialUtility->amount;
+                $row[13] = (float) $materialUtility->amount;
             } elseif ($index === 0) {
                 $row[6] = 'No records';
             }
 
             if ($subcontractorUtility = $subcontractorUtilities->get($index)) {
-                $row[13] = Carbon::parse($subcontractorUtility->created_at)->format('d-m-Y');
-                $row[14] = $subcontractorUtility->remarks ?: '-';
-                $row[18] = (float) $subcontractorUtility->amount;
+                $row[15] = Carbon::parse($subcontractorUtility->created_at)->format('d-m-Y');
+                $row[16] = $subcontractorUtility->remarks ?: '-';
+                $row[20] = (float) $subcontractorUtility->amount;
             } elseif ($index === 0) {
-                $row[13] = 'No records';
+                $row[15] = 'No records';
             }
 
             $rows[] = $row;
         }
 
-        $utilityTotal = array_fill(0, 19, '');
+        $utilityTotal = array_fill(0, 21, '');
         $utilityTotal[6] = 'MATERIALS OTHERS SUBTOTAL';
-        $utilityTotal[11] = $materialUtilityTotal;
-        $utilityTotal[13] = 'SUBCONTRACTOR OTHERS SUBTOTAL';
-        $utilityTotal[18] = $subcontractorUtilityTotal;
+        $utilityTotal[13] = $materialUtilityTotal;
+        $utilityTotal[15] = 'SUBCONTRACTOR OTHERS SUBTOTAL';
+        $utilityTotal[20] = $subcontractorUtilityTotal;
         $rows[] = $utilityTotal;
         $this->utilityTotalRow = count($rows);
 
-        $rows[] = array_fill(0, 19, '');
+        $rows[] = array_fill(0, 21, '');
 
-        $sectionTotal = array_fill(0, 19, '');
-        $sectionTotal[6] = 'MATERIALS TOTAL';
-        $sectionTotal[11] = $materialTotal + $materialUtilityTotal;
-        $sectionTotal[13] = 'SUBCONTRACTOR TOTAL';
-        $sectionTotal[18] = $subcontractorTotal + $subcontractorUtilityTotal;
+        $sectionTotal = array_fill(0, 21, '');
+        $sectionTotal[6] = 'MATERIALS TOTAL (incl. GST)';
+        $sectionTotal[13] = $materialTotal + $materialUtilityTotal;
+        $sectionTotal[15] = 'SUBCONTRACTOR TOTAL';
+        $sectionTotal[20] = $subcontractorTotal + $subcontractorUtilityTotal;
         $rows[] = $sectionTotal;
         $this->sectionTotalRow = count($rows);
 
         $grandTotal = $attendanceTotal + $materialTotal + $materialUtilityTotal
             + $subcontractorTotal + $subcontractorUtilityTotal;
-        $rows[] = array_fill(0, 19, '');
+        $rows[] = array_fill(0, 21, '');
         $rows[] = ['EXPENSES TOTAL: Rs. ' . number_format($grandTotal, 2)];
         $this->grandTotalRow = count($rows);
 
@@ -241,68 +248,71 @@ class SiteReportExport implements FromArray, WithEvents, WithTitle
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                $sheet->mergeCells('A1:S1');
-                $sheet->getStyle('A1:S1')->getFont()->setBold(true)->setSize(16);
-                $sheet->getStyle('A1:S1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->mergeCells('A1:U1');
+                $sheet->getStyle('A1:U1')->getFont()->setBold(true)->setSize(16);
+                $sheet->getStyle('A1:U1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getRowDimension(1)->setRowHeight(28);
                 $sheet->getStyle('A2:B2')->getFont()->setBold(true);
 
-                foreach (['A3:E3', 'G3:L3', 'N3:S3'] as $range) {
+                foreach (['A3:E3', 'G3:N3', 'P3:U3'] as $range) {
                     $sheet->mergeCells($range);
                     $sheet->getStyle($range)->getFont()->setBold(true)->setSize(12);
                     $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
-                foreach (['A4:E4', 'G4:L4', 'N4:S4'] as $range) {
+                foreach (['A4:E4', 'G4:N4', 'P4:U4'] as $range) {
                     $sheet->getStyle($range)->getFont()->setBold(true);
                     $sheet->getStyle($range)->getBorders()->getBottom()->setBorderStyle(Border::BORDER_MEDIUM);
                     $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
-                foreach (["A{$this->totalRow}:E{$this->totalRow}", "G{$this->totalRow}:L{$this->totalRow}", "N{$this->totalRow}:S{$this->totalRow}"] as $range) {
+                foreach (["A{$this->totalRow}:E{$this->totalRow}", "G{$this->totalRow}:N{$this->totalRow}", "P{$this->totalRow}:U{$this->totalRow}"] as $range) {
                     $sheet->getStyle($range)->getFont()->setBold(true);
                     $sheet->getStyle($range)->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
                 }
 
-                foreach (["G{$this->utilityTitleRow}:L{$this->utilityTitleRow}", "N{$this->utilityTitleRow}:S{$this->utilityTitleRow}"] as $range) {
+                foreach (["G{$this->utilityTitleRow}:N{$this->utilityTitleRow}", "P{$this->utilityTitleRow}:U{$this->utilityTitleRow}"] as $range) {
                     $sheet->mergeCells($range);
                     $sheet->getStyle($range)->getFont()->setBold(true)->setSize(12);
                     $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
-                foreach (["G{$this->utilityHeaderRow}:L{$this->utilityHeaderRow}", "N{$this->utilityHeaderRow}:S{$this->utilityHeaderRow}"] as $range) {
+                foreach (["G{$this->utilityHeaderRow}:N{$this->utilityHeaderRow}", "P{$this->utilityHeaderRow}:U{$this->utilityHeaderRow}"] as $range) {
                     $sheet->getStyle($range)->getFont()->setBold(true);
                     $sheet->getStyle($range)->getBorders()->getBottom()->setBorderStyle(Border::BORDER_MEDIUM);
                     $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
-                foreach (["G{$this->utilityTotalRow}:L{$this->utilityTotalRow}", "N{$this->utilityTotalRow}:S{$this->utilityTotalRow}"] as $range) {
+                foreach (["G{$this->utilityTotalRow}:N{$this->utilityTotalRow}", "P{$this->utilityTotalRow}:U{$this->utilityTotalRow}"] as $range) {
                     $sheet->getStyle($range)->getFont()->setBold(true);
                     $sheet->getStyle($range)->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
                 }
 
-                foreach (["G{$this->sectionTotalRow}:L{$this->sectionTotalRow}", "N{$this->sectionTotalRow}:S{$this->sectionTotalRow}"] as $range) {
+                foreach (["G{$this->sectionTotalRow}:N{$this->sectionTotalRow}", "P{$this->sectionTotalRow}:U{$this->sectionTotalRow}"] as $range) {
                     $sheet->getStyle($range)->getFont()->setBold(true)->setSize(12);
                     $sheet->getStyle($range)->getBorders()->getTop()->setBorderStyle(Border::BORDER_DOUBLE);
                 }
 
-                $sheet->mergeCells("A{$this->grandTotalRow}:S{$this->grandTotalRow}");
-                $sheet->getStyle("A{$this->grandTotalRow}:S{$this->grandTotalRow}")->getFont()->setBold(true)->setSize(16);
-                $sheet->getStyle("A{$this->grandTotalRow}:S{$this->grandTotalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("A{$this->grandTotalRow}:S{$this->grandTotalRow}")->getBorders()->getTop()->setBorderStyle(Border::BORDER_DOUBLE);
+                $sheet->mergeCells("A{$this->grandTotalRow}:U{$this->grandTotalRow}");
+                $sheet->getStyle("A{$this->grandTotalRow}:U{$this->grandTotalRow}")->getFont()->setBold(true)->setSize(16);
+                $sheet->getStyle("A{$this->grandTotalRow}:U{$this->grandTotalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("A{$this->grandTotalRow}:U{$this->grandTotalRow}")->getBorders()->getTop()->setBorderStyle(Border::BORDER_DOUBLE);
 
-                foreach (['D5:E' . $this->totalRow, 'L5:L' . $this->totalRow, 'S5:S' . $this->totalRow] as $range) {
+                foreach (['D5:E' . $this->totalRow, 'L5:L' . $this->totalRow, 'N5:N' . $this->totalRow, 'U5:U' . $this->totalRow] as $range) {
                     $sheet->getStyle($range)->getNumberFormat()->setFormatCode('#,##0.00');
                 }
-                foreach (["L{$this->utilityHeaderRow}:L{$this->sectionTotalRow}", "S{$this->utilityHeaderRow}:S{$this->sectionTotalRow}"] as $range) {
+                foreach (['M5:M' . $this->totalRow] as $range) {
+                    $sheet->getStyle($range)->getNumberFormat()->setFormatCode('0"%"');
+                }
+                foreach (["N{$this->utilityHeaderRow}:N{$this->sectionTotalRow}", "U{$this->utilityHeaderRow}:U{$this->sectionTotalRow}"] as $range) {
                     $sheet->getStyle($range)->getNumberFormat()->setFormatCode('#,##0.00');
                 }
-                $sheet->getStyle("A1:S{$this->grandTotalRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER)->setWrapText(true);
-                foreach (range('A', 'S') as $column) {
+                $sheet->getStyle("A1:U{$this->grandTotalRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER)->setWrapText(true);
+                foreach (range('A', 'U') as $column) {
                     $sheet->getColumnDimension($column)->setAutoSize(true);
                 }
                 $sheet->getColumnDimension('F')->setWidth(3);
-                $sheet->getColumnDimension('M')->setWidth(3);
+                $sheet->getColumnDimension('O')->setWidth(3);
                 $sheet->freezePane('A5');
             },
         ];

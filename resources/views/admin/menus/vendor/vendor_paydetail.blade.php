@@ -60,6 +60,8 @@
                                             <th>SITE NAME</th>
                                             <th>QUANTITY</th>
                                             <th>AMOUNT</th>
+                                            <th>GST</th>
+                                            <th>TOTAL (incl. GST)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -70,41 +72,26 @@
                                                 <td>{{ optional($order->site)->site_name ?? '-' }}</td>
                                                 <td>{{ $order->quantity }}</td>
                                                 <td>{{ number_format((float) $order->price, 2) }}</td>
+                                                <td>{{ $order->gst !== null ? number_format((float) $order->gst, 0) . '%' : '-' }}</td>
+                                                <td>{{ number_format((float) ($order->total_amount ?? $order->price), 2) }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
+                                    <tfoot>
+                                        <tr class="table-totals-row">
+                                            <td colspan="3" class="text-end"><strong>TOTAL</strong></td>
+                                            <td><strong>{{ $totalUnits }}</strong></td>
+                                            <td><strong>{{ number_format((float) $totalAmount, 2) }}</strong></td>
+                                            <td><strong>{{ number_format((float) $totalGstAmount, 2) }}</strong></td>
+                                            <td><strong>{{ number_format((float) $totalAmountWithGst, 2) }}</strong></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         @endif
                     </div>
                 </div>
 
-                @unless ($orders->isEmpty())
-                    <div class="card vendor-history-card mt-4">
-                        <div class="card-body d-flex justify-content-center">
-                            <table class="table mt-3 vendor-total-table">
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <h5 class="fw-bold text-info">TOTAL UNITS</h5>
-                                        </td>
-                                        <td>
-                                            <h5 class="fw-bold text-info">{{ $totalUnits }}</h5>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <h5 class="fw-bold text-info">TOTAL AMOUNT</h5>
-                                        </td>
-                                        <td>
-                                            <h5 class="fw-bold text-info">{{ number_format((float) $totalAmount, 2) }}</h5>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                @endunless
             @endunless
 
             @if ($showPayment)
@@ -145,10 +132,10 @@
                         </div>
 
                         <div class="row mb-3 align-items-center">
-                            <label for="total_unit_price" class="col-sm-3 col-md-2 col-form-label fw-bold text-sm-end">Total Amount</label>
+                            <label for="total_unit_price" class="col-sm-3 col-md-2 col-form-label fw-bold text-sm-end">Total Amount (incl. GST)</label>
                             <div class="col-sm-9 col-md-10">
                                 <input type="text" class="form-control" name="total_unit_price" id="total_unit_price"
-                                    value="{{ $totalAmount }}" readonly>
+                                    value="{{ number_format((float) $totalAmountWithGst, 2) }}" readonly>
                                 <small id="total_unit_price_words" class="form-text text-muted"></small>
                                 @error('total_unit_price')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -478,6 +465,13 @@
         .vendor-history-card {
             border-radius: 8px;
             box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+        }
+
+        .table-totals-row td {
+            background: #f1f5f9;
+            color: #0d6efd;
+            border-top: 2px solid #cbd5e1;
+            padding: 16px 24px;
         }
     </style>
 @endsection

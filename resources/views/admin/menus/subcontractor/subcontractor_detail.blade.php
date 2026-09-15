@@ -243,6 +243,12 @@
                             <div class="card h-100 w-100 site-card position-relative"
                                 data-route="{{ route('subcontractor.detailList', ['siteId' => $site->id, 'subcontractorType' => $subcontractorType->slug]) }}"
                                 onclick="redirectToDetails(event, this)">
+                                @if ($subcontractorType->created_by)
+                                    <button type="button" class="btn btn-danger btn-sm remove-tile-btn deleteSubcontractorTypeBtn"
+                                        data-id="{{ $subcontractorType->id }}" title="Remove subcontractor type">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                @endif
                                 <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                     <div class="h1 m-0">
                                         <img src="{{ asset('storage/' . $subcontractorType->image) }}" class="w-75">
@@ -546,6 +552,21 @@
 
             .site-card .card-body .text-muted {
                 margin-bottom: 0 !important;
+            }
+
+            .remove-tile-btn {
+                position: absolute;
+                top: 4px;
+                right: 4px;
+                z-index: 5;
+                width: 24px;
+                height: 24px;
+                padding: 0;
+                line-height: 24px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
         </style>
     @endsection

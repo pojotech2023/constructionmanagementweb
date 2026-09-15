@@ -109,11 +109,13 @@
                                         <thead>
                                             <tr>
                                                 <th>S.No</th>
-                                                <th>Date</th>
+                                                <th class="text-nowrap">Date</th>
                                                 <th>Category / Item</th>
                                                 <th>Quantity</th>
                                                 <th>Vendor</th>
                                                 <th>Price</th>
+                                                <th>GST</th>
+                                                <th>Total (incl. GST)</th>
                                                 <th>Vendor GST</th>
                                                 <th>Invoice</th>
                                                 <th style="width:10%">Action</th>
@@ -124,7 +126,7 @@
                                             @foreach ($materials as $index => $brick)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
+                                                    <td class="text-nowrap">{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
                                                     <td>
                                                         <strong>{{ $brick->category_name ?? ucfirst($materialType) }}</strong>
                                                         @if (!empty($brick->spec))
@@ -134,6 +136,8 @@
                                                     <td>{{ $brick->quantity }} @if ($brick->unit) <small class="text-muted">({{ $brick->unit }})</small> @endif</td>
                                                     <td>{{ $brick->vendor->name ?? '-' }}</td>
                                                     <td>₹{{ number_format((float) $brick->price, 2) }}</td>
+                                                    <td>{{ $brick->gst !== null ? number_format((float) $brick->gst, 0) . '%' : '-' }}</td>
+                                                    <td>₹{{ number_format((float) ($brick->total_amount ?? $brick->price), 2) }}</td>
                                                     <td>{{ $brick->vendor->gst ?? '-' }}</td>
                                                     <td>
                                                         @if ($brick->image_url)
@@ -159,6 +163,8 @@
                                                                 data-spec="{{ $brick->spec }}"
                                                                 data-quantity="{{ $brick->quantity }}"
                                                                 data-price="{{ $brick->price }}"
+                                                                data-gst-percent="{{ $brick->gst ?? '' }}"
+                                                                data-total-amount="{{ $brick->total_amount ?? '' }}"
                                                                 data-gst="{{ $brick->vendor->gst ?? '' }}"
                                                                 data-image="{{ $brick->image_url }}"
                                                                 data-bs-toggle="modal" data-bs-target="#editOrderModal">
@@ -177,6 +183,17 @@
                                                 </tr>
                                             @endforeach
                                         </tbody>
+                                        <tfoot>
+                                            <tr class="table-totals-row">
+                                                <td colspan="3" class="text-end"><strong>TOTAL</strong></td>
+                                                <td><strong id="totalUnits">{{ $totalUnits }} Units</strong></td>
+                                                <td></td>
+                                                <td><strong id="totalAmount">₹{{ number_format((float) $totalAmount, 2) }}</strong></td>
+                                                <td><strong id="totalGstAmount">₹{{ number_format((float) $totalGstAmount, 2) }}</strong></td>
+                                                <td><strong id="totalAmountWithGst">₹{{ number_format((float) $totalAmountWithGst, 2) }}</strong></td>
+                                                <td colspan="3"></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -212,7 +229,7 @@
 
                     <!-- Edit Order Modal -->
                     <div class="modal fade" id="editOrderModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
                                 <form id="editOrderForm" method="POST" enctype="multipart/form-data">
                                     @csrf
@@ -222,36 +239,63 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label class="form-label">Category / Item</label>
-                                            <input type="text" name="category_name" id="edit_order_category_name" class="form-control" placeholder="Enter Category or Item Type">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Category / Item</label>
+                                                <input type="text" name="category_name" id="edit_order_category_name" class="form-control" placeholder="Enter Category or Item Type">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Specification / Brand</label>
+                                                <input type="text" name="spec" id="edit_order_spec" class="form-control" placeholder="Enter Brand, Size, or Grade">
+                                            </div>
                                         </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Specification / Brand</label>
-                                            <input type="text" name="spec" id="edit_order_spec" class="form-control" placeholder="Enter Brand, Size, or Grade">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Date</label>
+                                                <input type="date" name="date" id="edit_order_date" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Quantity</label>
+                                                <input type="number" step="1" name="quantity" id="edit_order_quantity" class="form-control" required>
+                                            </div>
                                         </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Date</label>
-                                            <input type="date" name="date" id="edit_order_date" class="form-control" required>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Price</label>
+                                                <input type="number" step="0.01" name="price" id="edit_order_price" class="form-control" required
+                                                    oninput="document.getElementById('edit_order_price_words').innerText = numberToWordsIndian(this.value); calculateEditTotalWithGst();">
+                                                <small id="edit_order_price_words" class="form-text text-muted"></small>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">GST</label>
+                                                <select name="gst" id="edit_order_gst_percent" class="form-select" onchange="calculateEditTotalWithGst();">
+                                                    <option value="0">0% (No GST)</option>
+                                                    <option value="5">5%</option>
+                                                    <option value="12">12%</option>
+                                                    <option value="18">18%</option>
+                                                    <option value="28">28%</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Quantity</label>
-                                            <input type="number" step="1" name="quantity" id="edit_order_quantity" class="form-control" required>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Total Amount (incl. GST)</label>
+                                                <input type="number" step="0.01" name="total_amount" id="edit_order_total_amount" class="form-control" readonly>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Vendor GST</label>
+                                                <input type="text" id="edit_order_gst" class="form-control" readonly>
+                                            </div>
                                         </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Price</label>
-                                            <input type="number" step="0.01" name="price" id="edit_order_price" class="form-control" required
-                                                oninput="document.getElementById('edit_order_price_words').innerText = numberToWordsIndian(this.value);">
-                                            <small id="edit_order_price_words" class="form-text text-muted"></small>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Vendor GST</label>
-                                            <input type="text" id="edit_order_gst" class="form-control" readonly>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Invoice</label>
-                                            <div id="edit_order_current_image" class="mb-2"></div>
-                                            <input type="file" name="attachment" id="edit_order_attachment" class="form-control" accept="image/*,.pdf">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Invoice</label>
+                                                <input type="file" name="attachment" id="edit_order_attachment" class="form-control" accept="image/*,.pdf">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Current Invoice</label>
+                                                <div id="edit_order_current_image"></div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -285,43 +329,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-body d-flex justify-content-center">
-                            <table class="table mt-3" style="width: 50%">
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <h6 class="fw-bold text-info">TOTAL</h6>
-                                        </td>
-                                        <td>
-                                            <h6 class="fw-bold text-info" id="totalUnits">{{ $totalUnits }} Units</h6>
-                                        </td>
-                                        <td>
-                                            <h6 class="fw-bold text-info" id="totalAmount">{{ $totalAmount }}</h6>
-                                        </td>
-                                    </tr>
-                                    {{-- <tr>
-                                        <td>
-                                            <p class="text-success fw-bold">Settled Amount</p>
-                                        </td>
-                                        <td></td>
-                                        <td>
-                                            <p class="text-success fw-bold" id="settledAmount">{{ $settledAmount }}</p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <p class="text-danger fw-bold">Pending Amount</p>
-                                        </td>
-                                        <td></td>
-                                        <td>
-                                            <p class="text-danger fw-bold" id="pendingAmount">{{ $pendingAmount }}</p>
-                                        </td>
-                                    </tr> --}}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -335,6 +342,18 @@
     </div>
 
     <script>
+        function calculateEditTotalWithGst() {
+            const priceInput = document.getElementById('edit_order_price');
+            const gstInput = document.getElementById('edit_order_gst_percent');
+            const totalInput = document.getElementById('edit_order_total_amount');
+
+            const price = parseFloat(priceInput.value) || 0;
+            const gstPercent = parseFloat(gstInput.value) || 0;
+            const total = price + (price * gstPercent / 100);
+
+            totalInput.value = total ? total.toFixed(2) : '';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.js-export-modal-form').forEach(function(form) {
                 form.addEventListener('submit', function() {
@@ -409,6 +428,8 @@
                     const quantity = editBtn.getAttribute('data-quantity');
                     const price = editBtn.getAttribute('data-price');
                     const gst = editBtn.getAttribute('data-gst');
+                    const gstPercent = editBtn.getAttribute('data-gst-percent');
+                    const totalAmount = editBtn.getAttribute('data-total-amount');
                     const image = editBtn.getAttribute('data-image');
                     const form = document.getElementById('editOrderForm');
                     form.action = '/admin/material-order-update/' + id;
@@ -417,6 +438,8 @@
                     document.getElementById('edit_order_spec').value = spec || '';
                     document.getElementById('edit_order_quantity').value = quantity;
                     document.getElementById('edit_order_price').value = price;
+                    document.getElementById('edit_order_gst_percent').value = gstPercent || '0';
+                    document.getElementById('edit_order_total_amount').value = totalAmount || price;
                     document.getElementById('edit_order_gst').value = gst || '';
                     document.getElementById('edit_order_attachment').value = '';
 
@@ -466,6 +489,12 @@
             object-fit: cover;
             border-radius: 4px;
             border: 1px solid #dee2e6;
+        }
+
+        .table-totals-row td {
+            background: #f1f5f9;
+            color: #0d6efd;
+            border-top: 2px solid #cbd5e1;
         }
     </style>
 @endsection

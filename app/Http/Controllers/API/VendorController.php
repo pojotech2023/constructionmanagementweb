@@ -172,7 +172,14 @@ class VendorController extends Controller
                 'site_name' => optional($order->site)->site_name,
                 'quantity' => $order->quantity,
                 'amount' => $order->price,
+                'gst' => $order->gst,
+                'total_amount' => $order->total_amount ?? $order->price,
             ];
+        });
+
+        $totalAmount = $orders->sum('price');
+        $totalAmountWithGst = $orders->sum(function ($order) {
+            return $order->total_amount ?? $order->price;
         });
 
         return response()->json([
@@ -182,7 +189,9 @@ class VendorController extends Controller
                 'vendor' => $vendor,
                 'orders' => $orderList,
                 'total_units' => $orders->sum('quantity'),
-                'total_amount' => $orders->sum('price'),
+                'total_amount' => $totalAmount,
+                'total_gst_amount' => $totalAmountWithGst - $totalAmount,
+                'total_amount_with_gst' => $totalAmountWithGst,
             ],
             'message' => 'Vendor material order details fetched successfully!.'
         ]);
@@ -193,7 +202,9 @@ class VendorController extends Controller
         $vendor = Vendor::findOrFail($vendorId);
 
         $totalUnits = MaterialOrder::where('vendor_id', $vendorId)->sum('quantity');
-        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
 
         $paydetail = VendorPayDetail::where('vendor_id', $vendorId)->first();
         $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
@@ -355,7 +366,9 @@ class VendorController extends Controller
 
         $vendorId = $payment->vendor_id;
         $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
-        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
 
         $payDetail = VendorPayDetail::updateOrCreate(
             ['vendor_id' => $vendorId],
@@ -393,7 +406,9 @@ class VendorController extends Controller
         $payment->delete();
 
         $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
-        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
 
         VendorPayDetail::updateOrCreate(
             ['vendor_id' => $vendorId],
@@ -436,7 +451,9 @@ class VendorController extends Controller
         });
 
         $paidAmount = $histories->sum('payment');
-        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
 
         return response()->json([
             'response code' => 200,

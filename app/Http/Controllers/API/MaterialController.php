@@ -67,6 +67,9 @@ class MaterialController extends Controller
                     'name' => $type->name,
                     'slug' => $type->slug,
                     'image_url' => $type->image ? asset('storage/' . $type->image) : null,
+                    // false for base catalog tiles seeded with no admin (created_by is null) —
+                    // same defaults as Sand/Bricks; true only for tiles added via "+ Add Material"
+                    'is_removable' => $type->created_by !== null,
                 ];
             }),
             // Slugs of default/fixed material cards the admin has hidden (via material-type-hide/{slug}),
@@ -114,6 +117,10 @@ public function materialData(Request $request, $siteId, $materialType)
 
     $totalUnits = $materials->sum('quantity');
     $totalAmount = $materials->sum('price');
+    $totalAmountWithGst = $materials->sum(function ($order) {
+        return $order->total_amount ?? $order->price;
+    });
+    $totalGstAmount = $totalAmountWithGst - $totalAmount;
 
     // Payments
     $paymentQuery = MaterialPayment::where('site_id', $siteId)
@@ -136,6 +143,8 @@ public function materialData(Request $request, $siteId, $materialType)
         'materials' => $materials,
         'totalUnits' => $totalUnits,
         'totalAmount' => $totalAmount,
+        'totalGstAmount' => $totalGstAmount,
+        'totalAmountWithGst' => $totalAmountWithGst,
         'settledAmount' => $settledAmount,
         'pendingAmount' => $pendingAmount,
     ]);
@@ -394,6 +403,7 @@ public function materialRequest(Request $request)
         'date' => 'required',
         'quantity' => 'required|numeric',
         'price' => 'required|numeric',
+        'gst' => 'nullable|numeric|min:0|max:100', // ✅ GST percentage (0, 5, 12, 18, 28 ...)
         'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // ✅ optional file
         'category_name' => 'nullable|string', // ✅ not stored but shown in response
     ]);
@@ -423,6 +433,10 @@ public function materialRequest(Request $request)
         $imageUrl = asset('storage/' . $path);
     }
 
+    // ✅ Compute GST-inclusive total
+    $gstPercent = (float) ($request->gst ?? 0);
+    $totalAmountWithGst = (float) $request->price + ((float) $request->price * $gstPercent / 100);
+
     // ✅ Create material order record
     $materialOrder = MaterialOrder::create([
         'site_id' => $request->site_id,
@@ -434,25 +448,27 @@ public function materialRequest(Request $request)
         'quantity' => $request->quantity,
         'unit' => $request->unit,
         'price' => $request->price,
+        'gst' => $request->gst,
+        'total_amount' => $totalAmountWithGst,
         'available_unit_count' => $request->available_unit_count,
         'image_url' => $imageUrl, // ✅ store image URL
         'created_by' => auth('api')->id(),
     ]);
 
-    // ✅ Update vendor payment details
+    // ✅ Update vendor payment details (GST-inclusive)
     $paydetail = VendorPayDetail::where('vendor_id', $request->vendor_id)->first();
     if ($paydetail) {
         $paydetail->update([
             'total_units' => $paydetail->total_units + $request->quantity,
-            'total_unit_price' => $paydetail->total_unit_price + $request->price,
-            'balance_amount' => $paydetail->balance_amount + $request->price,
+            'total_unit_price' => $paydetail->total_unit_price + $totalAmountWithGst,
+            'balance_amount' => $paydetail->balance_amount + $totalAmountWithGst,
         ]);
     } else {
         VendorPayDetail::create([
             'vendor_id' => $request->vendor_id,
             'total_units' => $request->quantity,
-            'total_unit_price' => $request->price,
-            'balance_amount' => $request->price,
+            'total_unit_price' => $totalAmountWithGst,
+            'balance_amount' => $totalAmountWithGst,
             'created_by' => auth('api')->id(),
         ]);
     }
@@ -587,6 +603,7 @@ public function materialPayment(Request $request)
             'date'          => 'required',
             'quantity'      => 'required|numeric',
             'price'         => 'required|numeric',
+            'gst'           => 'nullable|numeric|min:0|max:100',
             'unit'          => 'nullable|string',
             'remarks'       => 'nullable|string',
             'attachment'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
@@ -602,8 +619,10 @@ public function materialPayment(Request $request)
             $date = Carbon::parse($request->date)->toDateString();
         }
 
-        $oldPrice = (float) $order->price;
+        $oldTotalWithGst = (float) ($order->total_amount ?? $order->price);
         $newPrice = (float) $request->price;
+        $gstPercent = (float) ($request->gst ?? $order->gst ?? 0);
+        $newTotalWithGst = $newPrice + ($newPrice * $gstPercent / 100);
 
         if ($request->hasFile('attachment')) {
             $order->image_url = asset('storage/' . $request->file('attachment')->store('material_attachments', 'public'));
@@ -614,18 +633,20 @@ public function materialPayment(Request $request)
             'date'          => $date,
             'quantity'      => $request->quantity,
             'price'         => $newPrice,
+            'gst'           => $request->gst ?? $order->gst,
+            'total_amount'  => $newTotalWithGst,
             'unit'          => $request->unit,
             'updated_by'    => auth('api')->id(),
         ]);
 
-        // Adjust vendor pay detail for price difference
-        $priceDiff = $newPrice - $oldPrice;
-        if ($priceDiff != 0 && $order->vendor_id) {
+        // Adjust vendor pay detail for the GST-inclusive total difference
+        $totalDiff = $newTotalWithGst - $oldTotalWithGst;
+        if ($totalDiff != 0 && $order->vendor_id) {
             $paydetail = VendorPayDetail::where('vendor_id', $order->vendor_id)->first();
             if ($paydetail) {
                 $paydetail->update([
-                    'total_unit_price' => $paydetail->total_unit_price + $priceDiff,
-                    'balance_amount'   => $paydetail->balance_amount + $priceDiff,
+                    'total_unit_price' => $paydetail->total_unit_price + $totalDiff,
+                    'balance_amount'   => $paydetail->balance_amount + $totalDiff,
                 ]);
             }
         }
@@ -646,14 +667,15 @@ public function materialPayment(Request $request)
             return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
         }
 
-        // Reverse vendor pay detail
+        // Reverse vendor pay detail (GST-inclusive)
         if ($order->vendor_id) {
+            $orderTotal = (float) ($order->total_amount ?? $order->price);
             $paydetail = VendorPayDetail::where('vendor_id', $order->vendor_id)->first();
             if ($paydetail) {
                 $paydetail->update([
                     'total_units'      => max(0, $paydetail->total_units - $order->quantity),
-                    'total_unit_price' => max(0, $paydetail->total_unit_price - $order->price),
-                    'balance_amount'   => max(0, $paydetail->balance_amount - $order->price),
+                    'total_unit_price' => max(0, $paydetail->total_unit_price - $orderTotal),
+                    'balance_amount'   => max(0, $paydetail->balance_amount - $orderTotal),
                 ]);
             }
         }

@@ -93,6 +93,14 @@ class MaterialController extends Controller
             ->whereBetween('date', [$startDate, $endDate])
             ->sum('price');
 
+        $totalAmountWithGst = MaterialOrder::where('site_id', $siteId)
+            ->where('material_type', $materialType)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
+
+        $totalGstAmount = $totalAmountWithGst - $totalAmount;
+
         $settledAmount = MaterialPayment::where('site_id', $siteId)
             ->where('material_type', $materialType)
             ->whereBetween('date', [$startDate, $endDate])
@@ -108,6 +116,8 @@ class MaterialController extends Controller
             'siteId',
             'siteName',
             'totalAmount',
+            'totalAmountWithGst',
+            'totalGstAmount',
             'settledAmount',
             'pendingAmount',
             'totalUnits',
@@ -220,17 +230,23 @@ class MaterialController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $columns = ['Date', 'Quantity', 'Vendor', 'Price', 'Material Type', 'Invoice Link'];
+        $columns = ['Date', 'Quantity', 'Vendor', 'Price', 'GST (%)', 'Total (incl. GST)', 'Material Type', 'Invoice Link'];
 
         $callback = function () use ($materials, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
             foreach ($materials as $m) {
+                $price = (float) $m->price;
+                $gst = (float) ($m->gst ?? 0);
+                $totalWithGst = $m->total_amount !== null ? (float) $m->total_amount : $price + ($price * $gst / 100);
+
                 fputcsv($file, [
                     $m->date ? Carbon::parse($m->date)->format('d-m-Y') : '',
                     $m->quantity,
                     optional($m->vendor)->name,
-                    $m->price,
+                    number_format($price, 2, '.', ''),
+                    number_format($gst, 0, '.', ''),
+                    number_format($totalWithGst, 2, '.', ''),
                     $m->material_type,
                     $m->image_url ?? '',
                 ]);
@@ -400,7 +416,7 @@ public function materialRequest(Request $request)
             'quantity' => 'required|numeric',
             'unit' => 'nullable',
             'price' => 'required|numeric',
-            'gst' => 'nullable|numeric',
+            'gst' => 'nullable|numeric|min:0|max:100',
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ]);
 
@@ -419,6 +435,9 @@ public function materialRequest(Request $request)
             $imageUrl = asset('storage/' . $path);
         }
 
+        $gstPercent = (float) ($request->gst ?? 0);
+        $totalAmountWithGst = (float) $request->price + ((float) $request->price * $gstPercent / 100);
+
         $material_order = MaterialOrder::create([
             'site_id' => $request->site_id,
             'vendor_id' => $request->vendor_id,
@@ -430,13 +449,16 @@ public function materialRequest(Request $request)
             'unit' => $request->unit,
             'price' => $request->price,
             'gst' => $request->gst,
+            'total_amount' => $totalAmountWithGst,
             'created_by' => auth('admin')->id(),
             'image_url' => $imageUrl
         ]);
 
         // ✅ Vendor payment details update
         $totalUnits = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('quantity');
-        $totalAmount = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $request->vendor_id)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
         $paidAmount = VendorPayment::where('vendor_id', $request->vendor_id)->sum('payment');
 
         VendorPayDetail::updateOrCreate(
@@ -544,7 +566,7 @@ public function materialRequest(Request $request)
             'date' => 'required|date',
             'quantity' => 'required|numeric',
             'price' => 'required|numeric',
-            'gst' => 'nullable|numeric',
+            'gst' => 'nullable|numeric|min:0|max:100',
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
@@ -554,6 +576,9 @@ public function materialRequest(Request $request)
 
         $order = MaterialOrder::findOrFail($id);
 
+        $gstPercent = (float) ($request->gst ?? 0);
+        $totalAmountWithGst = (float) $request->price + ((float) $request->price * $gstPercent / 100);
+
         $updateData = [
             'date' => $request->date,
             'category_name' => $request->category_name ?? $order->category_name,
@@ -561,6 +586,7 @@ public function materialRequest(Request $request)
             'quantity' => $request->quantity,
             'price' => $request->price,
             'gst' => $request->gst,
+            'total_amount' => $totalAmountWithGst,
         ];
 
         if ($request->hasFile('attachment')) {

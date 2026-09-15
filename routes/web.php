@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\SubcontractorController;
 use App\Http\Controllers\Admin\SupervisorCreationController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\TermsConditionController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\API\TicketController;
 use App\Http\Controllers\ChecklistController;
@@ -300,6 +301,9 @@ Route::prefix('admin')->group(function () {
         Route::get('/quotation-form', [QuotationController::class, 'getForm'])->name('quotation.form');
         Route::post('/quotation-add', [QuotationController::class, 'store'])->name('quotation.add');
         Route::get('/quotation-history', [QuotationController::class, 'history'])->name('quotation.history');
+
+        //Settings (tabbed: Unit Master, Terms & Conditions)
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 
         //Terms & Conditions
         Route::get('/terms-condition', [TermsConditionController::class, 'manage'])->name('terms-condition.manage');

@@ -159,7 +159,7 @@
         $price = (float) $order->price;
         $gst = (float) ($order->gst ?? 0);
         $unitPrice = $quantity > 0 ? $price / $quantity : $price;
-        $total = $price + $gst;
+        $total = $order->total_amount !== null ? (float) $order->total_amount : $price + ($price * $gst / 100);
     @endphp
 
     <div class="page">
@@ -230,7 +230,7 @@
                     </td>
                     <td>{{ rtrim(rtrim(number_format($quantity, 2), '0'), '.') }}</td>
                     <td>{{ number_format($unitPrice, 2) }}</td>
-                    <td>{{ number_format($gst, 2) }}</td>
+                    <td>{{ number_format($gst, 0) }}%</td>
                     <td>Rs. {{ number_format($total, 2) }}</td>
                 </tr>
             </tbody>

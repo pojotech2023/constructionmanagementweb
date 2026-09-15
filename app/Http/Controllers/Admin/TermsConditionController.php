@@ -25,7 +25,7 @@ class TermsConditionController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return redirect()->route('terms-condition.manage')
+            return redirect()->back()
                 ->withErrors($validate)
                 ->withInput();
         }
@@ -36,7 +36,7 @@ class TermsConditionController extends Controller
             'created_by' => auth('admin')->id(),
         ]);
 
-        return redirect()->route('terms-condition.manage')->with('success', 'Terms & Conditions template added successfully.');
+        return redirect()->back()->with('success', 'Terms & Conditions template added successfully.');
     }
 
     public function update(Request $request, $id)
@@ -49,7 +49,7 @@ class TermsConditionController extends Controller
         ]);
 
         if ($validate->fails()) {
-            return redirect()->route('terms-condition.manage')
+            return redirect()->back()
                 ->withErrors($validate)
                 ->withInput();
         }
@@ -59,14 +59,14 @@ class TermsConditionController extends Controller
             'description' => $request->description,
         ]);
 
-        return redirect()->route('terms-condition.manage')->with('success', 'Terms & Conditions template updated successfully.');
+        return redirect()->back()->with('success', 'Terms & Conditions template updated successfully.');
     }
 
     public function destroy($id)
     {
         TermsCondition::findOrFail($id)->delete();
 
-        return redirect()->route('terms-condition.manage')->with('success', 'Terms & Conditions template deleted successfully.');
+        return redirect()->back()->with('success', 'Terms & Conditions template deleted successfully.');
     }
 
     // Autocomplete: returns titles matching the typed letters (used in Quotation / Sales Bill / Purchase Bill forms)

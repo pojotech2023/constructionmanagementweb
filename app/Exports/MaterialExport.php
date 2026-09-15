@@ -21,6 +21,7 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
     protected $siteName;
     protected $rows = [];
     protected $grandTotal = 0;
+    protected $grandTotalWithGst = 0;
 
     public function __construct($siteId, $materialType = null, $month = null)
     {
@@ -51,7 +52,13 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
         $records = $query->orderBy('date')->get();
 
         foreach ($records as $order) {
-            $this->grandTotal += $order->price;
+            $price = (float) $order->price;
+            $gst = (float) ($order->gst ?? 0);
+            $totalWithGst = $order->total_amount !== null ? (float) $order->total_amount : $price + ($price * $gst / 100);
+
+            $this->grandTotal += $price;
+            $this->grandTotalWithGst += $totalWithGst;
+
             $itemDesc = $order->category_name ?? ucfirst($order->material_type);
             if (!empty($order->spec)) {
                 $itemDesc .= ' (' . $order->spec . ')';
@@ -61,21 +68,23 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
                 ucfirst($order->material_type),
                 $itemDesc,
                 $order->quantity . ($order->unit ? ' ' . $order->unit : ''),
-                $order->price,
+                $price,
+                $gst,
+                $totalWithGst,
                 $order->vendor->name ?? '-',
                 $order->remarks ?? '-',
                 $order->image_url ?? '-',
             ];
         }
 
-        $this->rows[] = ['', '', '', '', 'Grand Total (₹)', $this->grandTotal, '', ''];
+        $this->rows[] = ['', '', '', '', 'Grand Total (₹)', $this->grandTotal, 'Grand Total incl. GST (₹)', $this->grandTotalWithGst, '', ''];
 
         return new Collection($this->rows);
     }
 
     public function headings(): array
     {
-        return ['Date', 'Material Type', 'Category / Item', 'Quantity', 'Price (₹)', 'Vendor', 'Remarks', 'Invoice Link'];
+        return ['Date', 'Material Type', 'Category / Item', 'Quantity', 'Price (₹)', 'GST (%)', 'Total incl. GST (₹)', 'Vendor', 'Remarks', 'Invoice Link'];
     }
 
     public function map($row): array
@@ -89,22 +98,22 @@ class MaterialExport implements FromCollection, WithHeadings, WithMapping, WithC
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                $sheet->mergeCells('A1:H1');
+                $sheet->mergeCells('A1:J1');
                 $sheet->setCellValue('A1', 'Material Report - ' . $this->siteName);
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
                 $sheet->getRowDimension(1)->setRowHeight(25);
 
-                $sheet->getStyle('A3:H3')->getFont()->setBold(true);
-                $sheet->getStyle('A3:H3')->getAlignment()->setHorizontal('center');
-                $sheet->getStyle('A3:H3')->getFill()
+                $sheet->getStyle('A3:J3')->getFont()->setBold(true);
+                $sheet->getStyle('A3:J3')->getAlignment()->setHorizontal('center');
+                $sheet->getStyle('A3:J3')->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('FFE5E5E5');
 
                 $highestRow = $sheet->getHighestRow();
-                $sheet->getStyle("E{$highestRow}:F{$highestRow}")->getFont()->setBold(true);
+                $sheet->getStyle("E{$highestRow}:H{$highestRow}")->getFont()->setBold(true);
 
-                foreach (range('A', 'H') as $col) {
+                foreach (range('A', 'J') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
             },

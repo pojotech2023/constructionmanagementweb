@@ -96,7 +96,7 @@ class VendorController extends Controller
     public function dashboard()
     {
         $vendors = Vendor::withSum('vendorPayment', 'payment')
-            ->withSum('materialOrders', 'price')
+            ->withSum('materialOrders', 'total_amount')
             ->get();
 
         return view('admin.menus.vendor.vendor_dashboard', compact('vendors'));
@@ -112,12 +112,16 @@ class VendorController extends Controller
             ->get();
         $totalUnits = $orders->sum('quantity');
         $totalAmount = $orders->sum('price');
+        $totalAmountWithGst = $orders->sum(function ($order) {
+            return $order->total_amount ?? $order->price;
+        });
+        $totalGstAmount = $totalAmountWithGst - $totalAmount;
 
         $paydetail = VendorPayDetail::where('vendor_id', $vendorId)->first();
         $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
-        $balanceAmount = $totalAmount - $paidAmount;
+        $balanceAmount = $totalAmountWithGst - $paidAmount;
 
-        return view('admin.menus.vendor.vendor_paydetail', compact('vendor', 'orders', 'totalUnits', 'totalAmount', 'vendorId', 'paydetail', 'paidAmount', 'balanceAmount'));
+        return view('admin.menus.vendor.vendor_paydetail', compact('vendor', 'orders', 'totalUnits', 'totalAmount', 'totalAmountWithGst', 'totalGstAmount', 'vendorId', 'paydetail', 'paidAmount', 'balanceAmount'));
     }
 
     public function vendorpayUpdate(Request $request)
@@ -190,7 +194,9 @@ class VendorController extends Controller
 
         $paidAmount = VendorPayment::where('vendor_id', $request->vendor_id)->sum('payment');
         $totalUnits = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('quantity');
-        $totalAmount = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $request->vendor_id)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
 
         VendorPayDetail::updateOrCreate(
             ['vendor_id' => $request->vendor_id],
@@ -239,7 +245,9 @@ class VendorController extends Controller
         ]);
 
         $paidAmount = VendorPayment::where('vendor_id', $payment->vendor_id)->sum('payment');
-        $totalAmount = MaterialOrder::where('vendor_id', $payment->vendor_id)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $payment->vendor_id)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
 
         VendorPayDetail::updateOrCreate(
             ['vendor_id' => $payment->vendor_id],
@@ -262,7 +270,9 @@ class VendorController extends Controller
         $payment->delete();
 
         $paidAmount = VendorPayment::where('vendor_id', $vendorId)->sum('payment');
-        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+        $totalAmount = MaterialOrder::where('vendor_id', $vendorId)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, price)), 0) as total')
+            ->value('total');
 
         VendorPayDetail::updateOrCreate(
             ['vendor_id' => $vendorId],

@@ -152,19 +152,10 @@
                 </li>
                 @endif
 
-                @if ($sharedMenuVisibility['unit_master'] ?? true)
-                <li class="nav-item {{ request()->routeIs('unit.*') ? 'active' : '' }}">
-                    <a href="{{ route('unit.list') }}" class="collapsed" aria-expanded="false">
-                        <i class="bi bi-rulers"></i>
-                        <p>Unit Master</p>
-                    </a>
-                </li>
-                @endif
-
-                <li class="nav-item {{ request()->routeIs('terms-condition.*') ? 'active' : '' }}">
-                    <a href="{{ route('terms-condition.manage') }}" class="collapsed" aria-expanded="false">
-                        <i class="fa-solid fa-file-contract"></i>
-                        <p>Terms &amp; Conditions</p>
+                <li class="nav-item {{ request()->routeIs('settings.*', 'unit.*', 'terms-condition.*') ? 'active' : '' }}">
+                    <a href="{{ route('settings.index') }}" class="collapsed" aria-expanded="false">
+                        <i class="bi bi-gear-fill"></i>
+                        <p>Settings</p>
                     </a>
                 </li>
 

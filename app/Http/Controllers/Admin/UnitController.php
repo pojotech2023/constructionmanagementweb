@@ -31,7 +31,7 @@ class UnitController extends Controller
             'created_by' => auth('admin')->id(),
         ]);
 
-        return redirect()->route('unit.list')->with('success', 'Unit added successfully!');
+        return redirect()->back()->with('success', 'Unit added successfully!');
     }
 
     public function update(Request $request, $id)
@@ -51,7 +51,7 @@ class UnitController extends Controller
             'updated_by' => auth('admin')->id(),
         ]);
 
-        return redirect()->route('unit.list')->with('success', 'Unit updated successfully!');
+        return redirect()->back()->with('success', 'Unit updated successfully!');
     }
 
     public function delete($id)

@@ -25,13 +25,13 @@
                                                 <h4 class="card-title">{{ $vendor->name }}</h4>
                                                 @php
                                                 $paidAmount = $vendor->vendor_payment_sum_payment ?? 0;
-                                                $totalAmount = $vendor->material_orders_sum_price ?? 0;
+                                                $totalAmount = $vendor->material_orders_sum_total_amount ?? 0;
                                                 $pendingAmount = $totalAmount - $paidAmount;
                                             @endphp
                                             
                                             <div class="amount-lines">
                                                 <div class="amount-line">
-                                                    <span>Total Amount</span>
+                                                    <span>Total Amount (incl. GST)</span>
                                                     <span>:</span>
                                                     <strong class="text-primary">₹{{ number_format($totalAmount, 2) }}</strong>
                                                 </div>

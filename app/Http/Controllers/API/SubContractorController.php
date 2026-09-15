@@ -185,6 +185,9 @@ class SubContractorController extends Controller
                 'name' => $type->name,
                 'slug' => $type->slug,
                 'image_url' => $type->image ? asset('storage/' . $type->image) : null,
+                // false for base catalog tiles seeded with no admin (created_by is null) —
+                // same defaults as Plumber/Electrician; true only for tiles added via "+ Add SubContractor"
+                'is_removable' => $type->created_by !== null,
             ];
         }),
         'status' => true,

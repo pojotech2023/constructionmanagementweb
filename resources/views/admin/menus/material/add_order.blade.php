@@ -125,9 +125,37 @@
                             <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <input id="price" name="price" type="number" class="form-control no-arrow"
                                     min="0" step="0.01" placeholder="Enter total price"
-                                    oninput="document.getElementById('price_words').innerText = numberToWordsIndian(this.value);" />
+                                    oninput="document.getElementById('price_words').innerText = numberToWordsIndian(this.value); calculateTotalWithGst();" />
                                 <small id="price_words" class="form-text text-muted"></small>
                                 @error('price')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label for="gst" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">GST</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
+                                <select id="gst" name="gst" class="form-select" onchange="calculateTotalWithGst();">
+                                    <option value="0">0% (No GST)</option>
+                                    <option value="5">5%</option>
+                                    <option value="12">12%</option>
+                                    <option value="18" selected>18%</option>
+                                    <option value="28">28%</option>
+                                </select>
+                                @error('gst')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label for="total_amount" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Total Amount (incl. GST)</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
+                                <input id="total_amount" name="total_amount" type="number" class="form-control no-arrow"
+                                    min="0" step="0.01" placeholder="Auto-calculated" readonly />
+                                <small id="total_amount_words" class="form-text text-muted"></small>
+                                @error('total_amount')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -171,6 +199,22 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        function calculateTotalWithGst() {
+            const priceInput = document.getElementById('price');
+            const gstInput = document.getElementById('gst');
+            const totalInput = document.getElementById('total_amount');
+            const totalWords = document.getElementById('total_amount_words');
+
+            const price = parseFloat(priceInput.value) || 0;
+            const gstPercent = parseFloat(gstInput.value) || 0;
+            const total = price + (price * gstPercent / 100);
+
+            totalInput.value = total ? total.toFixed(2) : '';
+            if (totalWords) {
+                totalWords.innerText = total ? numberToWordsIndian(total.toFixed(2)) : '';
+            }
+        }
+
         function showStatusModal(message, options = {}) {
             const modal = document.getElementById('statusModal');
             const title = document.getElementById('statusModalTitle');

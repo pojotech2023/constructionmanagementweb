@@ -20,6 +20,7 @@ class MaterialOrder extends Model
         'unit',
         'price',
         'gst',
+        'total_amount',
         'available_unit_count',
         'status',
         'created_by',
@@ -30,6 +31,7 @@ class MaterialOrder extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'gst' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
     public function site()
