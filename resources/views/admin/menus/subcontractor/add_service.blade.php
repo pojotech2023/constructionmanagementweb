@@ -117,8 +117,8 @@
                         </div>
 
                         <div class="row mt-4">
-                            <div class="col-sm-8 col-md-8 col-lg-6 offset-sm-4 offset-md-3 offset-lg-2 form-input-wrap">
-                                <button type="submit" class="btn btn-primary w-100">Send Service to SubContractor WhatsApp
+                            <div class="col-sm-8 col-md-8 col-lg-6 offset-sm-4 offset-md-3 offset-lg-2 form-input-wrap text-center">
+                                <button type="submit" class="btn btn-primary px-4">Send Service to SubContractor WhatsApp
                                     <i class="fab fa-whatsapp me-1"></i>
                                 </button>
                             </div>
