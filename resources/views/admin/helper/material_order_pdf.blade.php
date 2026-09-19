@@ -192,17 +192,20 @@
             <tr>
                 <td>
                     <div class="bill-title">BILL FROM</div>
-                    <div class="bill-name">Pojo Infra360</div>
-                    <div>No 77, Velachery main road, Rajakilpakkam, Tambaram, Chennai 600073</div>
-                </td>
-                <td style="text-align: right;">
-                    <div class="bill-title">BILL TO</div>
                     <div class="bill-name">{{ optional($vendor)->name ?? '-' }}</div>
                     <div>{{ optional($vendor)->address ?? '-' }}</div>
                     <div>{{ optional($vendor)->mobile_no ?? '-' }}</div>
+                    @if ($order->invoice_no)
+                        <div>Invoice No: {{ $order->invoice_no }}</div>
+                    @endif
                     @if (optional($vendor)->gst)
                         <div>GSTIN: {{ $vendor->gst }}</div>
                     @endif
+                </td>
+                <td style="text-align: right;">
+                    <div class="bill-title">BILL TO</div>
+                    <div class="bill-name">Pojo Infra360</div>
+                    <div>No 77, Velachery main road, Rajakilpakkam, Tambaram, Chennai 600073</div>
                 </td>
             </tr>
         </table>

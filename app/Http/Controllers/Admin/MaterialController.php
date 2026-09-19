@@ -414,19 +414,20 @@ public function materialRequest(Request $request)
             'vendor_address' => 'required',
             'material_type' => 'required|string',
             'date' => 'required',
+            'invoice_no' => 'nullable|string|max:100',
             'items' => 'required|array|min:1',
             'items.*.category_name' => 'nullable|string',
             'items.*.spec' => 'nullable|string',
             'items.*.quantity' => 'required|numeric|min:0',
             'items.*.unit' => 'nullable|string',
-            'items.*.price' => 'required|numeric|min:0',
+            'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.gst' => 'nullable|numeric|min:0|max:100',
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
         ], [
             'items.required' => 'Please select at least one item.',
             'items.min' => 'Please select at least one item.',
             'items.*.quantity.required' => 'Please enter the quantity for every selected item.',
-            'items.*.price.required' => 'Please enter the total price for every selected item.',
+            'items.*.unit_price.required' => 'Please enter the price per item for every selected item.',
         ]);
 
         if ($validate->fails()) {
@@ -449,13 +450,14 @@ public function materialRequest(Request $request)
 
         DB::transaction(function () use ($request, $imageUrl, $orderGroup) {
             foreach ($request->items as $item) {
-                $price = (float) $item['price'];
+                $price = (float) $item['unit_price'] * (float) $item['quantity']; // quantity x price per item
                 $gstPercent = (float) ($item['gst'] ?? 0);
 
                 MaterialOrder::create([
                     'site_id' => $request->site_id,
                     'vendor_id' => $request->vendor_id,
                     'order_group' => $orderGroup,
+                    'invoice_no' => $request->invoice_no,
                     'material_type' => $request->material_type,
                     'category_name' => $item['category_name'] ?? null,
                     'spec' => $item['spec'] ?? null,
@@ -506,7 +508,8 @@ public function materialRequest(Request $request)
                 . (!empty($item['spec']) ? "Spec/Brand: {$item['spec']}\n" : "")
                 . (!empty($item['unit']) ? "Unit: {$item['unit']}\n" : "")
                 . "Quantity: {$item['quantity']}\n"
-                . "Price: ₹{$item['price']}\n";
+                . "Price per item: ₹{$item['unit_price']}\n"
+                . "Total: ₹" . number_format((float) $item['unit_price'] * (float) $item['quantity'], 2) . "\n";
         }
         $message .= (!empty($imageUrl) ? "Image: {$imageUrl}\n" : "");
         $whatsappUrl = "https://wa.me/{$request->vendor_mobile}?text=" . urlencode($message);

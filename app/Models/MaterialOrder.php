@@ -13,6 +13,7 @@ class MaterialOrder extends Model
         'site_id',
         'vendor_id',
         'order_group',
+        'invoice_no',
         'material_type',
         'category_name',
         'spec',

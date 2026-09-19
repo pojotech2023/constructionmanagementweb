@@ -111,6 +111,18 @@
                         </div>
 
                         <div class="row mb-3 align-items-center">
+                            <label for="invoice_no" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Invoice No</label>
+                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
+                                <input type="text" name="invoice_no" id="invoice_no" class="form-control"
+                                    placeholder="Vendor's invoice number" maxlength="100" autocomplete="off"
+                                    value="{{ old('invoice_no') }}">
+                                @error('invoice_no')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
                             <label for="attachment" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Invoice</label>
                             <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
                                 <input type="file" name="attachment" id="attachment" class="form-control" accept="image/*,.pdf">
@@ -228,19 +240,19 @@
             $('#requestForm').on('submit', function(e) {
                 e.preventDefault();
 
-                const $cards = $('.item-card');
+                const $rows = $('.item-row');
                 let itemError = '';
-                if (!$cards.length) {
+                if (!$rows.length) {
                     itemError = 'Please select at least one item.';
                 } else {
-                    $cards.each(function() {
-                        const name = $(this).find('.item-name').text().trim();
+                    $rows.each(function() {
+                        const name = $(this).closest('.item-card').find('.item-name').text().trim();
                         if (!(parseFloat($(this).find('.item-qty').val()) > 0)) {
                             itemError = `Please enter the quantity for ${name}.`;
                             return false;
                         }
                         if (!(parseFloat($(this).find('.item-price').val()) >= 0) || $(this).find('.item-price').val() === '') {
-                            itemError = `Please enter the total price for ${name}.`;
+                            itemError = `Please enter the price per item for ${name}.`;
                             return false;
                         }
                     });
@@ -598,62 +610,82 @@
                 <optgroup label="All Units">${otherHtml}</optgroup>`;
         }
 
-        // One row per selected item: name on the left, its input boxes on the right
-        function buildItemCard(idx, itemName, config, allUnits) {
-            const p = `items[${idx}]`;
+        // Unique index for every input row, so items[N][...] never collides
+        let itemRowSeq = 0;
+        let currentConfig = null;
+        let currentUnits = [];
+
+        // One set of input boxes (spec, qty, unit, price, GST, total) for an item
+        function buildItemRow(itemName, config, allUnits, removable) {
+            const p = `items[${itemRowSeq++}]`;
             const specField = config && config.specLabel ? `
                 <div class="col-md-4 col-lg-3">
                     <label class="form-label small mb-1">${escapeHtml(config.specLabel)}</label>
                     <input type="text" class="form-control" name="${p}[spec]" list="specList"
                         placeholder="Select or enter" autocomplete="off">
                 </div>` : '';
+            const removeBtn = removable ? `
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 remove-row-btn">Remove</button>
+                        </div>` : '';
 
             return `
-            <div class="row mb-3 align-items-start item-card" data-idx="${idx}">
-                <label class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end item-name">${escapeHtml(itemName)}</label>
-                <div class="col-sm-8 col-md-9 col-lg-10">
-                    <input type="hidden" name="${p}[category_name]" value="${config ? escapeHtml(itemName) : ''}">
-                    <div class="row g-2">
-                        ${specField}
-                        <div class="col-md-4 col-lg-2">
-                            <label class="form-label small mb-1">Quantity</label>
-                            <input type="number" class="form-control no-arrow item-qty" name="${p}[quantity]"
-                                min="0" step="any" placeholder="Qty">
-                        </div>
-                        <div class="col-md-4 col-lg-2">
-                            <label class="form-label small mb-1">Unit</label>
-                            <select class="form-select" name="${p}[unit]">${buildUnitOptions(config, allUnits)}</select>
-                        </div>
-                        <div class="col-md-4 col-lg-2">
-                            <label class="form-label small mb-1">Total Price</label>
-                            <input type="number" class="form-control no-arrow item-price" name="${p}[price]"
-                                min="0" step="0.01" placeholder="Total price">
-                        </div>
-                        <div class="col-md-4 col-lg-1">
-                            <label class="form-label small mb-1">GST</label>
-                            <select class="form-select item-gst" name="${p}[gst]">
-                                <option value="0">0%</option>
-                                <option value="5">5%</option>
-                                <option value="12">12%</option>
-                                <option value="18" selected>18%</option>
-                                <option value="28">28%</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 col-lg-2">
-                            <label class="form-label small mb-1">Total incl. GST</label>
-                            <input type="number" class="form-control no-arrow item-total" name="${p}[total_amount]"
-                                min="0" step="0.01" placeholder="Auto" readonly>
-                        </div>
+            <div class="item-row mb-2">
+                <input type="hidden" name="${p}[category_name]" value="${config ? escapeHtml(itemName) : ''}">
+                <div class="row g-2">
+                    ${specField}
+                    <div class="col-md-4 col-lg-2">
+                        <label class="form-label small mb-1">Quantity</label>
+                        <input type="number" class="form-control no-arrow item-qty" name="${p}[quantity]"
+                            min="0" step="any" placeholder="Qty">
                     </div>
+                    <div class="col-md-4 col-lg-2">
+                        <label class="form-label small mb-1">Unit</label>
+                        <select class="form-select" name="${p}[unit]">${buildUnitOptions(config, allUnits)}</select>
+                    </div>
+                    <div class="col-md-4 col-lg-2">
+                        <label class="form-label small mb-1">Price per item</label>
+                        <input type="number" class="form-control no-arrow item-price" name="${p}[unit_price]"
+                            min="0" step="0.01" placeholder="Price per item">
+                    </div>
+                    <div class="col-md-4 col-lg-1">
+                        <label class="form-label small mb-1">GST</label>
+                        <select class="form-select item-gst" name="${p}[gst]">
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18" selected>18%</option>
+                            <option value="28">28%</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-lg-2">
+                        <label class="form-label small mb-1">Total incl. GST</label>
+                        <input type="number" class="form-control no-arrow item-total" name="${p}[total_amount]"
+                            min="0" step="0.01" placeholder="Auto" readonly>
+                    </div>
+                    ${removeBtn}
                 </div>
             </div>`;
         }
 
-        function recalcItem($card) {
-            const price = parseFloat($card.find('.item-price').val()) || 0;
-            const gst = parseFloat($card.find('.item-gst').val()) || 0;
+        // One card per selected item: name on the left, its rows on the right ("Add more" for extra sizes)
+        function buildItemCard(idx, itemName, config, allUnits) {
+            return `
+            <div class="row mb-3 align-items-start item-card" data-idx="${idx}" data-name="${escapeHtml(itemName)}">
+                <label class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end item-name">${escapeHtml(itemName)}</label>
+                <div class="col-sm-8 col-md-9 col-lg-10">
+                    <div class="item-rows">${buildItemRow(itemName, config, allUnits, false)}</div>
+                    <button type="button" class="btn btn-sm btn-outline-primary add-more-btn">+ Add more</button>
+                </div>
+            </div>`;
+        }
+
+        function recalcItem($row) {
+            const qty = parseFloat($row.find('.item-qty').val()) || 0;
+            const price = (parseFloat($row.find('.item-price').val()) || 0) * qty;
+            const gst = parseFloat($row.find('.item-gst').val()) || 0;
             const total = price + (price * gst / 100);
-            $card.find('.item-total').val(total ? total.toFixed(2) : '');
+            $row.find('.item-total').val(total ? total.toFixed(2) : '');
         }
 
         function loadUnitField(materialType) {
@@ -664,6 +696,8 @@
             ];
             const config = materialCategoryConfig[materialType];
             const $container = $('#dynamic-fields');
+            currentConfig = config || null;
+            currentUnits = allUnits;
 
             if (!config) {
                 // Custom unmapped material: a single item, no dropdown
@@ -722,8 +756,17 @@
             });
         }
 
-        $(document).on('input change', '.item-price, .item-gst', function() {
-            recalcItem($(this).closest('.item-card'));
+        $(document).on('input change', '.item-qty, .item-price, .item-gst', function() {
+            recalcItem($(this).closest('.item-row'));
+        });
+
+        $(document).on('click', '.add-more-btn', function() {
+            const $card = $(this).closest('.item-card');
+            $card.find('.item-rows').append(buildItemRow($card.data('name'), currentConfig, currentUnits, true));
+        });
+
+        $(document).on('click', '.remove-row-btn', function() {
+            $(this).closest('.item-row').remove();
         });
     </script>
 

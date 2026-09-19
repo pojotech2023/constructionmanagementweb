@@ -147,6 +147,9 @@ Route::middleware('auth:api')->group(function () {
   Route::post('/material-update/{id}', [MaterialController::class, 'updateMaterial']);
   Route::delete('/material-delete/{id}', [MaterialController::class, 'destroyMaterial']);
   Route::get('/material-order/{id}/pdf', [MaterialController::class, 'orderPdf']);
+  Route::get('/material-order/{id}', [MaterialController::class, 'showOrder']); //single order + all items of its invoice
+  Route::get('/material-order-form/{siteId}/{materialType}', [MaterialController::class, 'orderForm']); //site, vendors & catalog for the add-order/request form
+  Route::get('/material-request/{id}', [MaterialController::class, 'showRequest']); //single material request
   //Material Other Utilities
   Route::get('/site-utilities/{id}', [OtherUtilitiesController::class, 'index']); //siteId
   Route::post('/utilities-add', [OtherUtilitiesController::class, 'store']);

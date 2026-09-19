@@ -109,6 +109,7 @@
                                         <thead>
                                             <tr>
                                                 <th>S.No</th>
+                                                <th class="text-nowrap">Invoice No</th>
                                                 <th class="text-nowrap">Date</th>
                                                 <th>Category / Item</th>
                                                 <th>Quantity</th>
@@ -130,6 +131,7 @@
                                             @foreach ($materials as $index => $brick)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
+                                                    <td class="text-nowrap">{{ $brick->invoice_no ?: '-' }}</td>
                                                     <td class="text-nowrap">{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
                                                     <td>
                                                         <strong>{{ $brick->category_name ?? ucfirst($materialType) }}</strong>
@@ -178,7 +180,7 @@
                                                                 data-id="{{ $brick->id }}" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
                                                                 <i class="fa fa-times"></i>
                                                             </button>
-                                                            @if (!$brick->order_group || $lastIdInGroup[$brick->order_group] === $brick->id)
+                                                            @if (!$brick->order_group || $lastIdInGroup[$brick->order_group] == $brick->id)
                                                                 <a href="{{ route('material.order.pdf', $brick->id) }}" class="btn btn-secondary btn-sm" target="_blank">
                                                                     <i class="fa fa-file-pdf"></i> PDF
                                                                 </a>
@@ -191,7 +193,7 @@
                                         </tbody>
                                         <tfoot>
                                             <tr class="table-totals-row">
-                                                <td colspan="3" class="text-end"><strong>TOTAL</strong></td>
+                                                <td colspan="4" class="text-end"><strong>TOTAL</strong></td>
                                                 <td><strong id="totalUnits">{{ $totalUnits }} Units</strong></td>
                                                 <td></td>
                                                 <td><strong id="totalAmount">₹{{ number_format((float) $totalAmount, 2) }}</strong></td>

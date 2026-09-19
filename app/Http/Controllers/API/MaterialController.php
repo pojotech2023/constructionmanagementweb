@@ -406,9 +406,12 @@ public function materialRequest(Request $request)
         'vendor_id' => 'required|exists:vendors,id',
         'material_type' => 'required|string',
         'date' => 'required',
+        'invoice_no' => 'nullable|string|max:100', // ✅ vendor's own invoice number
         'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // ✅ optional file (shared by all items)
     ];
 
+    // ✅ Each item sends either `unit_price` (price per item, total = quantity x unit_price)
+    //    or `price` (line total, older app versions)
     if ($hasItems) {
         $rules += [
             'items' => 'required|array|min:1',
@@ -416,14 +419,16 @@ public function materialRequest(Request $request)
             'items.*.spec' => 'nullable|string',
             'items.*.quantity' => 'required|numeric|min:0',
             'items.*.unit' => 'nullable|string',
-            'items.*.price' => 'required|numeric|min:0',
+            'items.*.unit_price' => 'nullable|numeric|min:0|required_without:items.*.price',
+            'items.*.price' => 'nullable|numeric|min:0|required_without:items.*.unit_price',
             'items.*.gst' => 'nullable|numeric|min:0|max:100', // ✅ GST percentage (0, 5, 12, 18, 28 ...)
             'items.*.available_unit_count' => 'nullable|numeric',
         ];
     } else {
         $rules += [
             'quantity' => 'required|numeric',
-            'price' => 'required|numeric',
+            'unit_price' => 'nullable|numeric|min:0|required_without:price',
+            'price' => 'nullable|numeric|required_without:unit_price',
             'gst' => 'nullable|numeric|min:0|max:100',
             'category_name' => 'nullable|string',
         ];
@@ -462,6 +467,7 @@ public function materialRequest(Request $request)
         'spec' => $request->spec,
         'quantity' => $request->quantity,
         'unit' => $request->unit,
+        'unit_price' => $request->unit_price,
         'price' => $request->price,
         'gst' => $request->gst,
         'available_unit_count' => $request->available_unit_count,
@@ -477,7 +483,9 @@ public function materialRequest(Request $request)
     DB::transaction(function () use ($request, $items, $date, $imageUrl, $orderGroup, &$materialOrders, &$totalQuantity, &$totalWithGst) {
         foreach ($items as $item) {
             // ✅ Compute GST-inclusive total
-            $price = (float) $item['price'];
+            $price = isset($item['unit_price']) && $item['unit_price'] !== ''
+                ? (float) $item['unit_price'] * (float) $item['quantity']
+                : (float) $item['price'];
             $gstPercent = (float) ($item['gst'] ?? 0);
             $totalAmountWithGst = $price + ($price * $gstPercent / 100);
 
@@ -486,6 +494,7 @@ public function materialRequest(Request $request)
                 'site_id' => $request->site_id,
                 'vendor_id' => $request->vendor_id,
                 'order_group' => $orderGroup,
+                'invoice_no' => $request->invoice_no,
                 'material_type' => $request->material_type,
                 'category_name' => $item['category_name'] ?? null,
                 'spec' => $item['spec'] ?? null,
@@ -656,9 +665,13 @@ public function materialPayment(Request $request)
             'material_type' => 'required|string',
             'date'          => 'required',
             'quantity'      => 'required|numeric',
-            'price'         => 'required|numeric',
+            'unit_price'    => 'nullable|numeric|min:0|required_without:price',
+            'price'         => 'nullable|numeric|required_without:unit_price',
             'gst'           => 'nullable|numeric|min:0|max:100',
             'unit'          => 'nullable|string',
+            'category_name' => 'nullable|string',
+            'spec'          => 'nullable|string',
+            'invoice_no'    => 'nullable|string|max:100',
             'remarks'       => 'nullable|string',
             'attachment'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
@@ -674,7 +687,9 @@ public function materialPayment(Request $request)
         }
 
         $oldTotalWithGst = (float) ($order->total_amount ?? $order->price);
-        $newPrice = (float) $request->price;
+        $newPrice = $request->filled('unit_price')
+            ? (float) $request->unit_price * (float) $request->quantity // quantity x price per item
+            : (float) $request->price;
         $gstPercent = (float) ($request->gst ?? $order->gst ?? 0);
         $newTotalWithGst = $newPrice + ($newPrice * $gstPercent / 100);
 
@@ -690,6 +705,9 @@ public function materialPayment(Request $request)
             'gst'           => $request->gst ?? $order->gst,
             'total_amount'  => $newTotalWithGst,
             'unit'          => $request->unit,
+            'category_name' => $request->category_name ?? $order->category_name,
+            'spec'          => $request->spec ?? $order->spec,
+            'invoice_no'    => $request->invoice_no ?? $order->invoice_no,
             'updated_by'    => auth('api')->id(),
         ]);
 
@@ -768,7 +786,16 @@ public function materialPayment(Request $request)
 
     public function index()
     {
-        $materials = [
+        return response()->json([
+            'status' => 'true',
+            'data' => $this->catalog()
+        ]);
+    }
+
+    // Built-in material catalog (categories, spec options, units) used by the order/request forms
+    private function catalog(): array
+    {
+        return [
             [
                 'id' => 1,
                 'material_type' => 'bricks',
@@ -1100,10 +1127,78 @@ public function materialPayment(Request $request)
                 'attachment' => false,
             ],
         ];
+    }
+
+    // Data needed to render the add-order / add-request form for a site + material type
+    public function orderForm($siteId, $materialType)
+    {
+        $site = Site::with('supervisor')->select('id', 'site_name', 'location', 'supervisor_id')->findOrFail($siteId);
+
+        $slug = strtolower(trim($materialType));
+        $catalogEntry = collect($this->catalog())->firstWhere('material_type', $slug);
+
+        // Dynamically-added material types have no catalog entry — fall back to the generic one
+        if (!$catalogEntry) {
+            $catalogEntry = collect($this->catalog())->firstWhere('material_type', 'default');
+        }
 
         return response()->json([
-            'status' => 'true',
-            'data' => $materials
+            'response_code' => 200,
+            'status' => true,
+            'data' => [
+                'site_details' => [
+                    'site_id' => $site->id,
+                    'site_name' => $site->site_name,
+                    'location' => $site->location,
+                    'supervisor' => $site->supervisor,
+                ],
+                'material_type' => $slug,
+                'catalog' => $catalogEntry,
+                'vendors' => Vendor::select('id', 'name', 'mobile_no', 'address', 'email')->orderBy('name')->get(),
+            ],
+        ]);
+    }
+
+    // Single material order, together with every item ordered in the same invoice
+    public function showOrder($id)
+    {
+        $order = MaterialOrder::with(['vendor', 'site:id,site_name,location'])->find($id);
+
+        if (!$order) {
+            return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
+        }
+
+        $items = $order->groupedOrders();
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'data' => [
+                'material_order' => $order,
+                'items' => $items,
+                'invoice_no' => $order->invoice_no,
+                'total_quantity' => $items->sum('quantity'),
+                'total_amount' => $items->sum('price'),
+                'total_amount_with_gst' => $items->sum(function ($item) {
+                    return $item->total_amount ?? $item->price;
+                }),
+            ],
+        ]);
+    }
+
+    // Single material request
+    public function showRequest($id)
+    {
+        $materialRequest = MaterialRequest::with(['vendor', 'site:id,site_name,location'])->find($id);
+
+        if (!$materialRequest) {
+            return response()->json(['status' => false, 'message' => 'Material request not found.'], 404);
+        }
+
+        return response()->json([
+            'response_code' => 200,
+            'status' => true,
+            'data' => $materialRequest,
         ]);
     }
 
