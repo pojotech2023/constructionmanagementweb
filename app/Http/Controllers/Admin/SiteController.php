@@ -124,9 +124,9 @@ public function store(Request $request)
         // Customer fields
         'customer_type'       => 'nullable|in:new,existing',
         'existing_customer_id'=> 'nullable|exists:customers,id',
-        'name'           => 'nullable|string',
-        'mobile_no'      => 'nullable|numeric|digits:10',
-        'email'          => 'nullable|email',
+        'name'           => 'required|string',
+        'mobile_no'      => 'required|numeric|digits:10',
+        'email'          => 'required|email',
         'dob'            => 'nullable|date|before_or_equal:today',
         'address'        => 'nullable|string',
     ]);

@@ -280,12 +280,12 @@
                                     <div class="row align-items-center mt-5">
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="name">Name</label>
+                                                <label for="name">Name <span class="text-danger">*</span></label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" name="name" id="customer_name" class="form-control" value="{{ old('name') }}">
+                                                <input type="text" name="name" id="customer_name" class="form-control" value="{{ old('name') }}" required>
                                             </div>
                                             @error('name')
                                                 <div class="text-danger">{{ $message }}</div>
@@ -295,14 +295,14 @@
                                         <!-- Mobile Number -->
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="mobile_no">Mobile Number</label>
+                                                <label for="mobile_no">Mobile Number <span class="text-danger">*</span></label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
                                                 <input type="text" name="mobile_no" id="mobile_no"
                                                     class="form-control" maxlength="10" minlength="10" pattern="\d{10}"
-                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" value="{{ old('mobile_no') }}">
+                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" value="{{ old('mobile_no') }}" required>
                                             </div>
                                             @error('mobile_no')
                                                 <div class="text-danger">{{ $message }}</div>
@@ -314,12 +314,12 @@
                                     <div class="row align-items-center mt-5">
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="email">Email</label>
+                                                <label for="email">Email <span class="text-danger">*</span></label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" name="email" id="customer_email" class="form-control" value="{{ old('email') }}">
+                                                <input type="email" name="email" id="customer_email" class="form-control" value="{{ old('email') }}" required>
                                             </div>
                                             @error('email')
                                                 <div class="text-danger">{{ $message }}</div>
