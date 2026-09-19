@@ -126,12 +126,13 @@
                             <div class="h1">
                                 <img src="{{ asset('images/sri/sales.png') }}" class="w-100">
                             </div>
-                            <div class="text-muted">Sales Bill</div>
+                            <div class="text-muted">Sales Bill - For Customer</div>
                         </div>
 
                     </div>
                 </div>
                 @endif
+                {{-- Purchase Bill card hidden for now
                 @if ($sharedMenuVisibility['purchase_bill'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('purchaseBill.form', $site->id) }}" onclick="redirectToDetails(event, this)">
@@ -145,6 +146,7 @@
                     </div>
                 </div>
                 @endif
+                --}}
                 @if ($sharedMenuVisibility['material_estimation'] ?? true)
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card" data-route="{{ route('materialEstimation.form', $site->id) }}" onclick="redirectToDetails(event, this)">

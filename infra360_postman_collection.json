@@ -307,6 +307,32 @@
                         "method": "GET",
                         "url": "{{base_url}}/sales-bill/:id"
                     }
+                },
+                {
+                    "name": "Sales Bills History (Site)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/sales-bills/:siteId"
+                    }
+                },
+                {
+                    "name": "Delete Sales Bill",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/sales-bill-delete/:id"
+                    }
                 }
             ]
         },
@@ -468,7 +494,94 @@
                     "name": "Add Material Order",
                     "request": {
                         "method": "POST",
-                        "url": "{{base_url}}/add-order"
+                        "url": "{{base_url}}/add-order",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "site_id",
+                                    "value": "",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "vendor_id",
+                                    "value": "",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "material_type",
+                                    "value": "Bricks",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "date",
+                                    "value": "19-09-2026",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[0][category_name]",
+                                    "value": "Red Brick",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[0][spec]",
+                                    "value": "",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[0][quantity]",
+                                    "value": "1000",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[0][unit]",
+                                    "value": "Nos",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[0][price]",
+                                    "value": "8000",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[0][gst]",
+                                    "value": "12",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[1][category_name]",
+                                    "value": "Fly Ash Brick",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[1][quantity]",
+                                    "value": "500",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[1][unit]",
+                                    "value": "Nos",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[1][price]",
+                                    "value": "3500",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "items[1][gst]",
+                                    "value": "5",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attachment",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "date is d-m-Y. Send items[] for a multi-item order (all items print on one invoice). The old flat single-item fields (quantity, price, gst, unit, category_name, spec) still work when items[] is omitted. See material_apis.md."
                     }
                 },
                 {
@@ -781,6 +894,19 @@
                         "method": "PATCH",
                         "url": "{{base_url}}/subpayment-update/:id"
                     }
+                },
+                {
+                    "name": "Subcontractor Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/subcontractor-categories"
+                    }
                 }
             ]
         },
@@ -988,6 +1114,40 @@
                         "method": "DELETE",
                         "url": "{{base_url}}/payment-delete/:id"
                     }
+                },
+                {
+                    "name": "Update Vendor Payment",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "payment",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "date",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "payment_mode",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "remarks",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/payment-update/:id"
+                    }
                 }
             ]
         },
@@ -1142,6 +1302,59 @@
                         "method": "POST",
                         "url": "{{base_url}}/profile-update"
                     }
+                },
+                {
+                    "name": "Show Client Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/client-profile",
+                        "description": "Customer guard: use the token returned by Login (Customer, mobile)."
+                    }
+                },
+                {
+                    "name": "Update Client Profile",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "name",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "email",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "dob",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "marriage_date",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "address",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/client-profile-update",
+                        "description": "Customer guard: use the token returned by Login (Customer, mobile). All fields optional."
+                    }
                 }
             ]
         },
@@ -1190,6 +1403,242 @@
                             "type": "noauth"
                         },
                         "url": "{{base_url}}/checklist-admin-supervisor-remarks"
+                    }
+                },
+                {
+                    "name": "Manage Checklists (Admin Templates)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/checklist-manage"
+                    }
+                },
+                {
+                    "name": "Add Checklist Task",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "checklist_id",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "task_name",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/checklist-task-add",
+                        "description": "Adds a single task to an existing stage."
+                    }
+                },
+                {
+                    "name": "Update Checklist Stage Name",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "stage",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/checklist-stage-update/:id"
+                    }
+                },
+                {
+                    "name": "Update Checklist Task Name",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "task_name",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/checklist-task-update/:id"
+                    }
+                },
+                {
+                    "name": "Update Checklist (Stage + Task List)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "stage",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "task_list[]",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/checklist-update/:id",
+                        "description": "Replaces the stage name and its whole task list. Repeat task_list[] for each task."
+                    }
+                },
+                {
+                    "name": "Delete Checklist Stage",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/checklist-stage/:id"
+                    }
+                },
+                {
+                    "name": "Delete Checklist Task",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/checklist-task/:id"
+                    }
+                },
+                {
+                    "name": "Reorder Checklist Tasks",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "task_ids[]",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/checklist-tasks-reorder",
+                        "description": "Repeat task_ids[] in the new order."
+                    }
+                },
+                {
+                    "name": "Reorder Checklist Stages",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "checklist_ids[]",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/checklist-stages-reorder",
+                        "description": "Repeat checklist_ids[] in the new order."
+                    }
+                },
+                {
+                    "name": "View Task Media (Site + Task)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/task-media/:siteId/:taskId"
+                    }
+                },
+                {
+                    "name": "Update Task Media Status",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "status",
+                                    "value": "approved"
+                                },
+                                {
+                                    "key": "admin_remark",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/task-media-update/:id",
+                        "description": "status: approved | rejected. admin_remark is kept only when rejected."
+                    }
+                },
+                {
+                    "name": "Delete Task Media (by Remarks)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/task-media-delete/:id/:siteId"
                     }
                 }
             ]
@@ -1535,6 +1984,116 @@
                     "request": {
                         "method": "GET",
                         "url": "{{base_url}}/bricks-export/:siteId"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Terms & Conditions",
+            "item": [
+                {
+                    "name": "Terms & Conditions List",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/terms-condition"
+                    }
+                },
+                {
+                    "name": "Add Terms & Condition",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "title",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "description",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/terms-condition-add"
+                    }
+                },
+                {
+                    "name": "Update Terms & Condition",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "title",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "description",
+                                    "value": ""
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/terms-condition-update/:id",
+                        "description": "Route accepts both POST and PATCH."
+                    }
+                },
+                {
+                    "name": "Delete Terms & Condition",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/terms-condition-delete/:id"
+                    }
+                },
+                {
+                    "name": "Search Terms & Condition Titles",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/terms-condition-search?term="
+                    }
+                },
+                {
+                    "name": "Get Terms & Condition Description",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/terms-condition-description?title="
                     }
                 }
             ]

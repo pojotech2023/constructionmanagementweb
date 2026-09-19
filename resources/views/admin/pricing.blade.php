@@ -204,7 +204,7 @@
             yearly: '4,999',
             sites: '5 Projects',
             desc: 'Essential tools for small projects and daily site management.',
-            features: ['Admin Panel - Web', 'Dashboard', 'Attendance Tracker', 'Attendance Report Download', 'Materials Management', 'Materials Report Download', 'Sub Contractor Management', 'Sub Contractor Report Download', 'Client Payment Summary', 'Purchase Bill', 'Sales Bill', 'Customer Management', 'Customer Wishes Reminder', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Petty Cash Management', 'Rental Management', 'GST Management', 'Settings', 'Profile'],
+            features: ['Admin Panel - Web', 'Dashboard', 'Attendance Tracker', 'Attendance Report Download', 'Materials Management', 'Materials Report Download', 'Sub Contractor Management', 'Sub Contractor Report Download', 'Client Payment Summary', 'Sales Bill - For Customer', 'Customer Management', 'Customer Wishes Reminder', 'Vendor Management', 'Vendor Payment Management', 'Sub Contractor Payment Management', 'Petty Cash Management', 'Rental Management', 'GST Management', 'Settings', 'Profile'],
             supportLink: 'https://wa.me/918072515050'
         },
         {

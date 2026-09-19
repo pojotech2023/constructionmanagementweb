@@ -155,11 +155,8 @@
         $logoPath = public_path('images/logo/logo.jpeg');
         $invoiceNo = str_pad((string) $order->id, 5, '0', STR_PAD_LEFT);
         $orderDate = \Carbon\Carbon::parse($order->date)->format('d M Y');
-        $quantity = (float) $order->quantity;
-        $price = (float) $order->price;
-        $gst = (float) ($order->gst ?? 0);
-        $unitPrice = $quantity > 0 ? $price / $quantity : $price;
-        $total = $order->total_amount !== null ? (float) $order->total_amount : $price + ($price * $gst / 100);
+        $orders = $orders ?? collect([$order]);
+        $grandTotal = 0;
     @endphp
 
     <div class="page">
@@ -221,18 +218,34 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>
-                        {{ ucfirst($order->material_type) }}
-                        @if ($order->category_name) - {{ $order->category_name }} @endif
-                        @if ($order->spec) ({{ $order->spec }}) @endif
-                        @if ($order->unit) [{{ $order->unit }}] @endif
-                    </td>
-                    <td>{{ rtrim(rtrim(number_format($quantity, 2), '0'), '.') }}</td>
-                    <td>{{ number_format($unitPrice, 2) }}</td>
-                    <td>{{ number_format($gst, 0) }}%</td>
-                    <td>Rs. {{ number_format($total, 2) }}</td>
-                </tr>
+                @foreach ($orders as $row)
+                    @php
+                        $quantity = (float) $row->quantity;
+                        $price = (float) $row->price;
+                        $gst = (float) ($row->gst ?? 0);
+                        $unitPrice = $quantity > 0 ? $price / $quantity : $price;
+                        $total = $row->total_amount !== null ? (float) $row->total_amount : $price + ($price * $gst / 100);
+                        $grandTotal += $total;
+                    @endphp
+                    <tr>
+                        <td>
+                            {{ ucfirst($row->material_type) }}
+                            @if ($row->category_name) - {{ $row->category_name }} @endif
+                            @if ($row->spec) ({{ $row->spec }}) @endif
+                            @if ($row->unit) [{{ $row->unit }}] @endif
+                        </td>
+                        <td>{{ rtrim(rtrim(number_format($quantity, 2), '0'), '.') }}</td>
+                        <td>{{ number_format($unitPrice, 2) }}</td>
+                        <td>{{ number_format($gst, 0) }}%</td>
+                        <td>Rs. {{ number_format($total, 2) }}</td>
+                    </tr>
+                @endforeach
+                @if ($orders->count() > 1)
+                    <tr>
+                        <td colspan="4" style="text-align: right; font-weight: 800;">Grand Total</td>
+                        <td style="font-weight: 800;">Rs. {{ number_format($grandTotal, 2) }}</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
 

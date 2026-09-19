@@ -123,6 +123,10 @@
                                             </tr>
                                         </thead>
                                         <tbody id="bricksTableBody">
+                                            @php
+                                                // Items ordered together share one combined PDF, shown only on the last item of the group
+                                                $lastIdInGroup = $materials->whereNotNull('order_group')->groupBy('order_group')->map->max('id');
+                                            @endphp
                                             @foreach ($materials as $index => $brick)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
@@ -174,9 +178,11 @@
                                                                 data-id="{{ $brick->id }}" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
                                                                 <i class="fa fa-times"></i>
                                                             </button>
-                                                            <a href="{{ route('material.order.pdf', $brick->id) }}" class="btn btn-secondary btn-sm" target="_blank">
-                                                                <i class="fa fa-file-pdf"></i> PDF
-                                                            </a>
+                                                            @if (!$brick->order_group || $lastIdInGroup[$brick->order_group] === $brick->id)
+                                                                <a href="{{ route('material.order.pdf', $brick->id) }}" class="btn btn-secondary btn-sm" target="_blank">
+                                                                    <i class="fa fa-file-pdf"></i> PDF
+                                                                </a>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                     {{-- <td>{{ $brick->available_unit_count }}</td> --}}

@@ -12,6 +12,7 @@ class MaterialOrder extends Model
     protected $fillable = [
         'site_id',
         'vendor_id',
+        'order_group',
         'material_type',
         'category_name',
         'spec',
@@ -42,5 +43,15 @@ class MaterialOrder extends Model
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    // All orders placed together with this one (just itself when it was ordered alone)
+    public function groupedOrders()
+    {
+        if (!$this->order_group) {
+            return collect([$this]);
+        }
+
+        return static::where('order_group', $this->order_group)->orderBy('id')->get();
     }
 }

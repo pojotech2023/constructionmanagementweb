@@ -14,7 +14,9 @@ use App\Models\Vendor;
 use App\Models\VendorPayDetail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
@@ -396,17 +398,38 @@ public function materialRequest(Request $request)
 
   public function materialOrder(Request $request)
 {
-    $validate = Validator::make($request->all(), [
+    // ✅ Multi-item order sends items[]; the old single-item payload (flat fields) still works
+    $hasItems = $request->has('items');
+
+    $rules = [
         'site_id' => 'required|exists:sites,id',
         'vendor_id' => 'required|exists:vendors,id',
         'material_type' => 'required|string',
         'date' => 'required',
-        'quantity' => 'required|numeric',
-        'price' => 'required|numeric',
-        'gst' => 'nullable|numeric|min:0|max:100', // ✅ GST percentage (0, 5, 12, 18, 28 ...)
-        'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // ✅ optional file
-        'category_name' => 'nullable|string', // ✅ not stored but shown in response
-    ]);
+        'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // ✅ optional file (shared by all items)
+    ];
+
+    if ($hasItems) {
+        $rules += [
+            'items' => 'required|array|min:1',
+            'items.*.category_name' => 'nullable|string',
+            'items.*.spec' => 'nullable|string',
+            'items.*.quantity' => 'required|numeric|min:0',
+            'items.*.unit' => 'nullable|string',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.gst' => 'nullable|numeric|min:0|max:100', // ✅ GST percentage (0, 5, 12, 18, 28 ...)
+            'items.*.available_unit_count' => 'nullable|numeric',
+        ];
+    } else {
+        $rules += [
+            'quantity' => 'required|numeric',
+            'price' => 'required|numeric',
+            'gst' => 'nullable|numeric|min:0|max:100',
+            'category_name' => 'nullable|string',
+        ];
+    }
+
+    $validate = Validator::make($request->all(), $rules);
 
     if ($validate->fails()) {
         return response()->json([
@@ -433,45 +456,74 @@ public function materialRequest(Request $request)
         $imageUrl = asset('storage/' . $path);
     }
 
-    // ✅ Compute GST-inclusive total
-    $gstPercent = (float) ($request->gst ?? 0);
-    $totalAmountWithGst = (float) $request->price + ((float) $request->price * $gstPercent / 100);
-
-    // ✅ Create material order record
-    $materialOrder = MaterialOrder::create([
-        'site_id' => $request->site_id,
-        'vendor_id' => $request->vendor_id,
-        'material_type' => $request->material_type,
-        'category_name' => $request->category_name ?? null,
-        'spec' => $request->spec ?? null,
-        'date' => $date,
+    // ✅ Normalise to a list of items (legacy payload = a single item)
+    $items = $hasItems ? $request->items : [[
+        'category_name' => $request->category_name,
+        'spec' => $request->spec,
         'quantity' => $request->quantity,
         'unit' => $request->unit,
         'price' => $request->price,
         'gst' => $request->gst,
-        'total_amount' => $totalAmountWithGst,
         'available_unit_count' => $request->available_unit_count,
-        'image_url' => $imageUrl, // ✅ store image URL
-        'created_by' => auth('api')->id(),
-    ]);
+    ]];
 
-    // ✅ Update vendor payment details (GST-inclusive)
-    $paydetail = VendorPayDetail::where('vendor_id', $request->vendor_id)->first();
-    if ($paydetail) {
-        $paydetail->update([
-            'total_units' => $paydetail->total_units + $request->quantity,
-            'total_unit_price' => $paydetail->total_unit_price + $totalAmountWithGst,
-            'balance_amount' => $paydetail->balance_amount + $totalAmountWithGst,
-        ]);
-    } else {
-        VendorPayDetail::create([
-            'vendor_id' => $request->vendor_id,
-            'total_units' => $request->quantity,
-            'total_unit_price' => $totalAmountWithGst,
-            'balance_amount' => $totalAmountWithGst,
-            'created_by' => auth('api')->id(),
-        ]);
-    }
+    // ✅ Items ordered together share one order_group so they print on one invoice PDF
+    $orderGroup = count($items) > 1 ? (string) Str::uuid() : null;
+
+    $materialOrders = [];
+    $totalQuantity = 0;
+    $totalWithGst = 0;
+
+    DB::transaction(function () use ($request, $items, $date, $imageUrl, $orderGroup, &$materialOrders, &$totalQuantity, &$totalWithGst) {
+        foreach ($items as $item) {
+            // ✅ Compute GST-inclusive total
+            $price = (float) $item['price'];
+            $gstPercent = (float) ($item['gst'] ?? 0);
+            $totalAmountWithGst = $price + ($price * $gstPercent / 100);
+
+            // ✅ Create material order record (one row per item)
+            $materialOrders[] = MaterialOrder::create([
+                'site_id' => $request->site_id,
+                'vendor_id' => $request->vendor_id,
+                'order_group' => $orderGroup,
+                'material_type' => $request->material_type,
+                'category_name' => $item['category_name'] ?? null,
+                'spec' => $item['spec'] ?? null,
+                'date' => $date,
+                'quantity' => $item['quantity'],
+                'unit' => $item['unit'] ?? null,
+                'price' => $price,
+                'gst' => $item['gst'] ?? null,
+                'total_amount' => $totalAmountWithGst,
+                'available_unit_count' => $item['available_unit_count'] ?? null,
+                'image_url' => $imageUrl, // ✅ store image URL
+                'created_by' => auth('api')->id(),
+            ]);
+
+            $totalQuantity += (float) $item['quantity'];
+            $totalWithGst += $totalAmountWithGst;
+        }
+
+        // ✅ Update vendor payment details (GST-inclusive, all items together)
+        $paydetail = VendorPayDetail::where('vendor_id', $request->vendor_id)->first();
+        if ($paydetail) {
+            $paydetail->update([
+                'total_units' => $paydetail->total_units + $totalQuantity,
+                'total_unit_price' => $paydetail->total_unit_price + $totalWithGst,
+                'balance_amount' => $paydetail->balance_amount + $totalWithGst,
+            ]);
+        } else {
+            VendorPayDetail::create([
+                'vendor_id' => $request->vendor_id,
+                'total_units' => $totalQuantity,
+                'total_unit_price' => $totalWithGst,
+                'balance_amount' => $totalWithGst,
+                'created_by' => auth('api')->id(),
+            ]);
+        }
+    });
+
+    $materialOrder = $materialOrders[0];
 
     // ✅ Fetch site details (with supervisor)
     $site = Site::with('supervisor')
@@ -488,11 +540,13 @@ public function materialRequest(Request $request)
         'status' => true,
         'message' => 'Material order added successfully.',
         'data' => [
-            'material_order' => $materialOrder,
+            'material_order' => $materialOrder, // first item (kept for older app versions)
+            'material_orders' => $materialOrders, // every item of this order
+            'order_group' => $orderGroup,
             'site_details' => [
                 'site_id' => $site->id,
                 'site_name' => $site->site_name,
-                'category_name' => $request->category_name ?? null,
+                'category_name' => $materialOrder->category_name,
                 'location' => $site->location,
                 'supervisor' => $site->supervisor,
             ],
@@ -697,7 +751,8 @@ public function materialPayment(Request $request)
             return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
         }
 
-        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order'));
+        $orders = $order->groupedOrders();
+        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order', 'orders'));
         $pdfPath = 'material_orders/material_order_' . $order->id . '.pdf';
         Storage::disk('public')->put($pdfPath, $pdf->output());
 

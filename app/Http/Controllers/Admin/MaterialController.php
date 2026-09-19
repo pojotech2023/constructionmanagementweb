@@ -10,6 +10,7 @@ use App\Models\Site;
 use App\Models\VendorPayDetail;
 use App\Models\VendorPayment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -413,11 +414,19 @@ public function materialRequest(Request $request)
             'vendor_address' => 'required',
             'material_type' => 'required|string',
             'date' => 'required',
-            'quantity' => 'required|numeric',
-            'unit' => 'nullable',
-            'price' => 'required|numeric',
-            'gst' => 'nullable|numeric|min:0|max:100',
+            'items' => 'required|array|min:1',
+            'items.*.category_name' => 'nullable|string',
+            'items.*.spec' => 'nullable|string',
+            'items.*.quantity' => 'required|numeric|min:0',
+            'items.*.unit' => 'nullable|string',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.gst' => 'nullable|numeric|min:0|max:100',
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
+        ], [
+            'items.required' => 'Please select at least one item.',
+            'items.min' => 'Please select at least one item.',
+            'items.*.quantity.required' => 'Please enter the quantity for every selected item.',
+            'items.*.price.required' => 'Please enter the total price for every selected item.',
         ]);
 
         if ($validate->fails()) {
@@ -427,7 +436,7 @@ public function materialRequest(Request $request)
             ], 422);
         }
 
-        // ✅ File upload
+        // ✅ File upload (shared by every item in this order)
         $imageUrl = null;
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
@@ -435,25 +444,32 @@ public function materialRequest(Request $request)
             $imageUrl = asset('storage/' . $path);
         }
 
-        $gstPercent = (float) ($request->gst ?? 0);
-        $totalAmountWithGst = (float) $request->price + ((float) $request->price * $gstPercent / 100);
+        // ✅ One material order row per selected item
+        $orderGroup = count($request->items) > 1 ? (string) Str::uuid() : null;
 
-        $material_order = MaterialOrder::create([
-            'site_id' => $request->site_id,
-            'vendor_id' => $request->vendor_id,
-            'material_type' => $request->material_type,
-            'category_name' => $request->category_name ?? null,
-            'spec' => $request->spec ?? null,
-            'date' => $request->date,
-            'quantity' => $request->quantity,
-            'unit' => $request->unit,
-            'price' => $request->price,
-            'gst' => $request->gst,
-            'total_amount' => $totalAmountWithGst,
-            'created_by' => auth('admin')->id(),
-            'image_url' => $imageUrl
-        ]);
+        DB::transaction(function () use ($request, $imageUrl, $orderGroup) {
+            foreach ($request->items as $item) {
+                $price = (float) $item['price'];
+                $gstPercent = (float) ($item['gst'] ?? 0);
 
+                MaterialOrder::create([
+                    'site_id' => $request->site_id,
+                    'vendor_id' => $request->vendor_id,
+                    'order_group' => $orderGroup,
+                    'material_type' => $request->material_type,
+                    'category_name' => $item['category_name'] ?? null,
+                    'spec' => $item['spec'] ?? null,
+                    'date' => $request->date,
+                    'quantity' => $item['quantity'],
+                    'unit' => $item['unit'] ?? null,
+                    'price' => $price,
+                    'gst' => $item['gst'] ?? null,
+                    'total_amount' => $price + ($price * $gstPercent / 100),
+                    'created_by' => auth('admin')->id(),
+                    'image_url' => $imageUrl
+                ]);
+            }
+        });
         // ✅ Vendor payment details update
         $totalUnits = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('quantity');
         $totalAmount = MaterialOrder::where('vendor_id', $request->vendor_id)
@@ -478,19 +494,21 @@ public function materialRequest(Request $request)
         // ✅ WhatsApp message
         $message = "*POJO INFRA 360*\n"
             . "Site Name: {$site->site_name} - Material Order\n"
-            ."Location: {$site->location} \n"
+            . "Location: {$site->location} \n"
             . "Vendor Name: {$request->vendor_name}\n"
             . "Vendor Address: {$request->vendor_address}\n"
             . "Mobile Number: {$request->vendor_mobile}\n"
             . "Material Type: {$request->material_type}\n"
-            . (!empty($request->category_name) ? "Category: {$request->category_name}\n" : "")
-            . (!empty($request->spec) ? "Spec/Brand: {$request->spec}\n" : "")
-            . (!empty($request->unit) ? "Unit: {$request->unit}\n" : "")
-            . "Date: " . \Carbon\Carbon::parse($request->date)->format('d-m-Y') . "\n"
-            . "Quantity: {$request->quantity}\n"
-            . "Price: ₹{$request->price}\n"
-            . (!empty($imageUrl) ? "Image: {$imageUrl}\n" : "");
-
+            . "Date: " . \Carbon\Carbon::parse($request->date)->format('d-m-Y') . "\n";
+        foreach ($request->items as $item) {
+            $message .= "\n"
+                . (!empty($item['category_name']) ? "Category: {$item['category_name']}\n" : "")
+                . (!empty($item['spec']) ? "Spec/Brand: {$item['spec']}\n" : "")
+                . (!empty($item['unit']) ? "Unit: {$item['unit']}\n" : "")
+                . "Quantity: {$item['quantity']}\n"
+                . "Price: ₹{$item['price']}\n";
+        }
+        $message .= (!empty($imageUrl) ? "Image: {$imageUrl}\n" : "");
         $whatsappUrl = "https://wa.me/{$request->vendor_mobile}?text=" . urlencode($message);
 
         return response()->json([
@@ -604,7 +622,8 @@ public function materialRequest(Request $request)
     {
         $order = MaterialOrder::with('vendor')->findOrFail($id);
 
-        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order'));
+        $orders = $order->groupedOrders();
+        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order', 'orders'));
         $filename = 'material_order_' . $order->id . '.pdf';
 
         return $pdf->download($filename);

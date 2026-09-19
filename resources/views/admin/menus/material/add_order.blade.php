@@ -83,16 +83,6 @@
                             </div>
                         </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <label for="quantity" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Quantity</label>
-                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                                <input type="text" class="form-control" id="quantity" name="quantity" placeholder="Enter quantity">
-                                @error('quantity')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
                         <div id="dynamic-fields"></div>
 
                         <div class="row mb-3 align-items-center">
@@ -115,47 +105,6 @@
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
                                     value="{{ old('supervisor_phone', $supervisor->mobile_no ?? '') }}">
                                 @error('supervisor_phone')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label for="price" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Total Price</label>
-                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                                <input id="price" name="price" type="number" class="form-control no-arrow"
-                                    min="0" step="0.01" placeholder="Enter total price"
-                                    oninput="document.getElementById('price_words').innerText = numberToWordsIndian(this.value); calculateTotalWithGst();" />
-                                <small id="price_words" class="form-text text-muted"></small>
-                                @error('price')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label for="gst" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">GST</label>
-                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                                <select id="gst" name="gst" class="form-select" onchange="calculateTotalWithGst();">
-                                    <option value="0">0% (No GST)</option>
-                                    <option value="5">5%</option>
-                                    <option value="12">12%</option>
-                                    <option value="18" selected>18%</option>
-                                    <option value="28">28%</option>
-                                </select>
-                                @error('gst')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label for="total_amount" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Total Amount (incl. GST)</label>
-                            <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                                <input id="total_amount" name="total_amount" type="number" class="form-control no-arrow"
-                                    min="0" step="0.01" placeholder="Auto-calculated" readonly />
-                                <small id="total_amount_words" class="form-text text-muted"></small>
-                                @error('total_amount')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -199,22 +148,6 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        function calculateTotalWithGst() {
-            const priceInput = document.getElementById('price');
-            const gstInput = document.getElementById('gst');
-            const totalInput = document.getElementById('total_amount');
-            const totalWords = document.getElementById('total_amount_words');
-
-            const price = parseFloat(priceInput.value) || 0;
-            const gstPercent = parseFloat(gstInput.value) || 0;
-            const total = price + (price * gstPercent / 100);
-
-            totalInput.value = total ? total.toFixed(2) : '';
-            if (totalWords) {
-                totalWords.innerText = total ? numberToWordsIndian(total.toFixed(2)) : '';
-            }
-        }
-
         function showStatusModal(message, options = {}) {
             const modal = document.getElementById('statusModal');
             const title = document.getElementById('statusModalTitle');
@@ -294,6 +227,33 @@
 
             $('#requestForm').on('submit', function(e) {
                 e.preventDefault();
+
+                const $cards = $('.item-card');
+                let itemError = '';
+                if (!$cards.length) {
+                    itemError = 'Please select at least one item.';
+                } else {
+                    $cards.each(function() {
+                        const name = $(this).find('.item-name').text().trim();
+                        if (!(parseFloat($(this).find('.item-qty').val()) > 0)) {
+                            itemError = `Please enter the quantity for ${name}.`;
+                            return false;
+                        }
+                        if (!(parseFloat($(this).find('.item-price').val()) >= 0) || $(this).find('.item-price').val() === '') {
+                            itemError = `Please enter the total price for ${name}.`;
+                            return false;
+                        }
+                    });
+                }
+                if (itemError) {
+                    showStatusModal(itemError, {
+                        title: 'Error',
+                        type: 'error',
+                        buttonText: 'Close'
+                    });
+                    return;
+                }
+
                 $('#loadingSpinner').removeClass('d-none');
                 let form = $(this);
                 let formData = new FormData(this);
@@ -618,99 +578,198 @@
             }
         };
 
+        function escapeHtml(value) {
+            return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function buildUnitOptions(config, allUnits) {
+            const recommended = (config && config.units) || [];
+            const recommendedHtml = recommended.map((u, idx) =>
+                `<option value="${escapeHtml(u)}" ${idx === 0 ? 'selected' : ''}>${escapeHtml(u)}</option>`).join('');
+            const otherHtml = allUnits.filter(u => !recommended.includes(u))
+                .map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+
+            if (!recommended.length) {
+                return `<option value="">Select Unit</option>${otherHtml}`;
+            }
+            return `<option value="">Select Unit</option>
+                <optgroup label="Recommended Units">${recommendedHtml}</optgroup>
+                <optgroup label="All Units">${otherHtml}</optgroup>`;
+        }
+
+        // One row per selected item: name on the left, its input boxes on the right
+        function buildItemCard(idx, itemName, config, allUnits) {
+            const p = `items[${idx}]`;
+            const specField = config && config.specLabel ? `
+                <div class="col-md-4 col-lg-3">
+                    <label class="form-label small mb-1">${escapeHtml(config.specLabel)}</label>
+                    <input type="text" class="form-control" name="${p}[spec]" list="specList"
+                        placeholder="Select or enter" autocomplete="off">
+                </div>` : '';
+
+            return `
+            <div class="row mb-3 align-items-start item-card" data-idx="${idx}">
+                <label class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end item-name">${escapeHtml(itemName)}</label>
+                <div class="col-sm-8 col-md-9 col-lg-10">
+                    <input type="hidden" name="${p}[category_name]" value="${config ? escapeHtml(itemName) : ''}">
+                    <div class="row g-2">
+                        ${specField}
+                        <div class="col-md-4 col-lg-2">
+                            <label class="form-label small mb-1">Quantity</label>
+                            <input type="number" class="form-control no-arrow item-qty" name="${p}[quantity]"
+                                min="0" step="any" placeholder="Qty">
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <label class="form-label small mb-1">Unit</label>
+                            <select class="form-select" name="${p}[unit]">${buildUnitOptions(config, allUnits)}</select>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <label class="form-label small mb-1">Total Price</label>
+                            <input type="number" class="form-control no-arrow item-price" name="${p}[price]"
+                                min="0" step="0.01" placeholder="Total price">
+                        </div>
+                        <div class="col-md-4 col-lg-1">
+                            <label class="form-label small mb-1">GST</label>
+                            <select class="form-select item-gst" name="${p}[gst]">
+                                <option value="0">0%</option>
+                                <option value="5">5%</option>
+                                <option value="12">12%</option>
+                                <option value="18" selected>18%</option>
+                                <option value="28">28%</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
+                            <label class="form-label small mb-1">Total incl. GST</label>
+                            <input type="number" class="form-control no-arrow item-total" name="${p}[total_amount]"
+                                min="0" step="0.01" placeholder="Auto" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function recalcItem($card) {
+            const price = parseFloat($card.find('.item-price').val()) || 0;
+            const gst = parseFloat($card.find('.item-gst').val()) || 0;
+            const total = price + (price * gst / 100);
+            $card.find('.item-total').val(total ? total.toFixed(2) : '');
+        }
+
         function loadUnitField(materialType) {
             const allUnits = [
                 @foreach ($sharedUnits as $unitOption)
                     "{{ $unitOption }}",
                 @endforeach
             ];
-
             const config = materialCategoryConfig[materialType];
-            let categoryHtml = '';
-            let specHtml = '';
-            let unitHtml = '';
+            const $container = $('#dynamic-fields');
 
-            if (config) {
-                // 1. Primary Category / Item dropdown
-                let optionsHtml = config.options.map(o => `<option value="${o}">${o}</option>`).join('');
-                categoryHtml = `
-                <div class="row mb-3 align-items-center">
-                    <label for="category_name" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">${config.label}</label>
-                    <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                        <select class="form-select" name="category_name" id="category_name">
-                            <option value="">Select ${config.label}</option>
-                            ${optionsHtml}
-                        </select>
-                    </div>
-                </div>`;
-
-                // 2. Secondary Spec / Brand / Grade / Size input with datalist
-                if (config.specLabel) {
-                    let specDatalistOptions = (config.specOptions || []).map(s => `<option value="${s}"></option>`).join('');
-                    specHtml = `
-                    <div class="row mb-3 align-items-center">
-                        <label for="spec" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">${config.specLabel}</label>
-                        <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                            <input type="text" class="form-control" name="spec" id="spec" list="specList"
-                                placeholder="Select or enter ${config.specLabel}" autocomplete="off">
-                            <datalist id="specList">
-                                ${specDatalistOptions}
-                            </datalist>
-                        </div>
-                    </div>`;
-                }
-
-                // 3. Filtered Unit dropdown: Recommended units on top, followed by other units
-                let recommendedUnits = config.units || [];
-                let recommendedOptionsHtml = '';
-                let otherOptionsHtml = '';
-
-                // Build recommended options
-                recommendedUnits.forEach((u, idx) => {
-                    let selected = (idx === 0) ? 'selected' : '';
-                    recommendedOptionsHtml += `<option value="${u}" ${selected}>${u}</option>`;
-                });
-
-                // Build other units
-                allUnits.forEach(u => {
-                    if (!recommendedUnits.includes(u)) {
-                        otherOptionsHtml += `<option value="${u}">${u}</option>`;
-                    }
-                });
-
-                unitHtml = `
-                <div class="row mb-3 align-items-center">
-                    <label for="unit" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Unit</label>
-                    <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                        <select class="form-select" name="unit" id="unit">
-                            <option value="">Select Unit</option>
-                            ${recommendedUnits.length > 0 ? `<optgroup label="Recommended Units">${recommendedOptionsHtml}</optgroup>` : ''}
-                            <optgroup label="All Units">${otherOptionsHtml}</optgroup>
-                        </select>
-                    </div>
-                </div>`;
-            } else {
-                // Fallback for custom unmapped materials
-                let plainOptionsHtml = allUnits.map(u => `<option value="${u}">${u}</option>`).join('');
-                unitHtml = `
-                <div class="row mb-3 align-items-center">
-                    <label for="unit" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Unit</label>
-                    <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
-                        <select class="form-select" name="unit" id="unit">
-                            <option value="">Select Unit</option>
-                            ${plainOptionsHtml}
-                        </select>
-                    </div>
-                </div>`;
+            if (!config) {
+                // Custom unmapped material: a single item, no dropdown
+                $container.html(`<div id="items-container">${buildItemCard(0, materialType, null, allUnits)}</div>`);
+                return;
             }
 
-            $("#dynamic-fields").html(categoryHtml + specHtml + unitHtml);
+            const checkboxes = config.options.map((o, idx) => `
+                <label class="item-option" for="item_check_${idx}">
+                    <input class="item-check" type="checkbox" id="item_check_${idx}"
+                        value="${idx}" data-name="${escapeHtml(o)}">
+                    <span>${escapeHtml(o)}</span>
+                </label>`).join('');
+            const specDatalist = (config.specOptions || []).map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
+
+            $container.html(`
+                <div class="row mb-3 align-items-center">
+                    <label class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">${escapeHtml(config.label)}</label>
+                    <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap">
+                        <div class="item-dropdown position-relative">
+                            <button type="button" class="form-select text-start item-dropdown-btn">Select ${escapeHtml(config.label)}</button>
+                            <div class="item-dropdown-menu border rounded bg-white shadow-sm p-2 position-absolute w-100 d-none">${checkboxes}</div>
+                        </div>
+                    </div>
+                </div>
+                <datalist id="specList">${specDatalist}</datalist>
+                <div id="items-container"></div>`);
+
+            const $btn = $container.find('.item-dropdown-btn');
+            const $menu = $container.find('.item-dropdown-menu');
+            const placeholder = `Select ${config.label}`;
+
+            function refreshButtonLabel() {
+                const names = $container.find('.item-check:checked').map(function() { return $(this).data('name'); }).get();
+                $btn.text(names.length ? names.join(', ') : placeholder);
+            }
+
+            $btn.on('click', function() { $menu.toggleClass('d-none'); });
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.item-dropdown').length) {
+                    $menu.addClass('d-none');
+                }
+            });
+
+            $container.on('change', '.item-check', function() {
+                const idx = $(this).val();
+                const $existing = $container.find(`.item-card[data-idx="${idx}"]`);
+                if (this.checked) {
+                    if (!$existing.length) {
+                        $('#items-container').append(buildItemCard(idx, $(this).data('name'), config, allUnits));
+                    }
+                } else {
+                    $existing.remove();
+                }
+                refreshButtonLabel();
+            });
         }
+
+        $(document).on('input change', '.item-price, .item-gst', function() {
+            recalcItem($(this).closest('.item-card'));
+        });
     </script>
 
     <style>
         .form-input-wrap {
             max-width: 540px;
+        }
+
+        .item-dropdown-btn {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .item-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: normal;
+        }
+
+        .item-option:hover {
+            background: #f1f5f9;
+        }
+
+        .item-option .item-check {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        @media (min-width: 576px) {
+            .item-card .item-name {
+                padding-top: 2rem;
+            }
+        }
+        .item-dropdown-menu {
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .custom-status-modal {
