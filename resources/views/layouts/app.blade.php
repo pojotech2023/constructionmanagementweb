@@ -44,6 +44,8 @@
     <!-- CSS Just for demo purpose, don't include it in your project -->
     <link rel="stylesheet" href="{{ asset('admin/assets/css/demo.css') }}" />
     <link rel="stylesheet" href="{{ asset('admin/assets/css/custom.css') }}" />
+    <!-- Core jQuery (loaded in head so all child views can use $ safely) -->
+    <script src="{{ asset('admin/assets/js/core/jquery-3.7.1.min.js') }}"></script>
 
     <script>
         // Converts a rupee amount to words using the Indian numbering system (lakh/crore).

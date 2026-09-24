@@ -42,7 +42,7 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row g-4">
                 <!-- Blade alert for success -->
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show w-100" role="alert">
@@ -52,11 +52,31 @@
                     {{ session()->forget('success') }} {{-- Clear session --}}
                 @endif
 
+                <div class="col-6 col-sm-4 col-lg-2">
+                    <div class="card h-100 w-100 site-card position-relative all-materials-card"
+                        data-route="{{ route('material.allForm', ['siteId' => $site->id]) }}"
+                        onclick="redirectToDetails(event, this)">
+                        <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                            <div class="h1 m-0">
+                                <img src="{{ asset('images/sri/material.jpg') }}" class="w-75" alt="All Materials">
+                            </div>
+                            <div class="text-muted mb-3">All Materials</div>
+                            <div class="text-success fw-bold">
+                                Qnty - {{ $totalUnitsAll ?? $site->materialOrders->sum('quantity') }}
+                            </div>
+                            <div class="text-success fw-bold">
+                                Values - ₹{{ $totalValuesAll ?? $site->materialOrders->sum('price') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 @unless(in_array('bricks', $sharedHiddenMaterialTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'bricks']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="bricks" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/bricks.webp') }}" class="w-75">
@@ -77,6 +97,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'sand']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="sand" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1">
                                 <img src="{{ asset('images/sri/sand.jpg') }}" class="w-75">
@@ -97,6 +118,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'cement']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="cement" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/cement1.webp') }}" class="w-75">
@@ -117,6 +139,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'electricalwire']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="electricalwire" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/electricwire.webp') }}" class="w-75">
@@ -137,6 +160,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'plumber']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="plumber" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/plumber.jpg') }}" class="w-75">
@@ -157,6 +181,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'tea']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="tea" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/tea.jpg') }}" class="w-75">
@@ -172,12 +197,12 @@
                     </div>
                 </div>
 @endunless
-
                 @unless(in_array('watercan', $sharedHiddenMaterialTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'watercan']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="watercan" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/watercan.jpg') }}" class="w-75">
@@ -198,6 +223,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'lorrywater']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="lorrywater" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/waterlorry.jpg') }}" class="w-75">
@@ -218,6 +244,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'tiles']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="tiles" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/tiles.jpg') }}" class="w-75">
@@ -238,6 +265,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'granite']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="granite" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/granite.jpg') }}" class="w-75">
@@ -258,6 +286,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'jally']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="jally" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/jally.jpg') }}" class="w-75">
@@ -278,6 +307,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'welding']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="welding" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/welding.jpg') }}" class="w-75">
@@ -293,12 +323,12 @@
                     </div>
                 </div>
 @endunless
-
                 @unless(in_array('lift', $sharedHiddenMaterialTypes))
                 <div class="col-6 col-sm-4 col-lg-2">
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'lift']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="lift" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/lift.jpg') }}" class="w-75">
@@ -319,6 +349,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'rcconcrete']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="rcconcrete" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/concrete.webp') }}" class="w-75">
@@ -339,6 +370,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'transport']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="transport" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/transport.jpg') }}" class="w-75">
@@ -359,6 +391,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'interior']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="interior" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/interior.jpg') }}" class="w-75">
@@ -379,6 +412,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'painting']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="painting" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/painting.jpg') }}" class="w-75">
@@ -400,6 +434,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'steel']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="steel" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/steel.jpg') }}" class="w-75">
@@ -423,6 +458,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'aggregate']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="aggregate" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/aggregate.jpg') }}" class="w-75">
@@ -445,6 +481,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'rmc']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="rmc" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/rmc.jpg') }}" class="w-75">
@@ -467,6 +504,7 @@
                     <div class="card h-100 w-100 site-card position-relative"
                         data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => 'gravel']) }}"
                         onclick="redirectToDetails(event, this)">
+                        <button type="button" class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 fixedRemoveBtn" style="z-index: 2;" data-slug="gravel" data-module="material" title="Remove from grid"><i class="fa fa-times"></i></button>
                         <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                             <div class="h1 m-0">
                                 <img src="{{ asset('images/sri/jally.jpg') }}" class="w-75">
@@ -489,17 +527,17 @@
                         <div class="card h-100 w-100 site-card position-relative"
                             data-route="{{ route('material', ['siteId' => $site->id, 'materialType' => $materialType->slug]) }}"
                             onclick="redirectToDetails(event, this)">
-                            @if ($materialType->created_by)
-                                <button type="button" class="btn btn-danger btn-sm remove-tile-btn deleteMaterialTypeBtn"
-                                    data-id="{{ $materialType->id }}" title="Remove material type">
-                                    <i class="fa fa-times"></i>
-                                </button>
-                            @endif
+                            <button type="button"
+                                class="btn btn-link btn-danger btn-sm position-absolute top-0 end-0 deleteMaterialTypeBtn"
+                                style="z-index: 2;" data-id="{{ $materialType->id }}"
+                                title="Remove material type">
+                                <i class="fa fa-times"></i>
+                            </button>
                             <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
                                 <div class="h1 m-0">
-                                    <img src="{{ $materialType->image_url }}" onerror="this.onerror=null;this.src='{{ asset('images/sri/material.jpg') }}';" class="w-75">
+                                    <img src="{{ asset('storage/' . $materialType->image) }}" class="w-75">
                                 </div>
-                                <div class="text-muted">{{ $materialType->name }}</div>
+                                <div class="text-muted mb-3">{{ $materialType->name }}</div>
                                 <div class="text-success fw-bold">
                                     Qnty - {{ $materials[$materialType->slug]['units'] ?? 0 }}
                                 </div>
@@ -510,15 +548,23 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+</div>
 
-                <div class="col-6 col-sm-4 col-lg-2">
-                    <div class="card h-100 w-100 site-card" id="addButton" data-bs-toggle="modal"
-                        data-bs-target="#addModal" data-site-id="{{ $site->id }}">
-                        <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
-                            <div class="h1 m-0">
-                                <img src="{{ asset('images/sri/othershand.jpg') }}" class="w-100">
+            <div class="row justify-content-center mt-4 g-3">
+                <div class="col-12 col-md-4 col-lg-3" id="addButton" data-bs-toggle="modal"
+                    data-bs-target="#addModal" data-site-id="{{ $site->id }}" style="cursor: pointer;">
+                    <div class="card border border-primary shadow" style="min-height: 140px;">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-6 text-center">
+                                    <img src="{{ asset('images/sri/othershand.webp') }}"
+                                        style="width: 200px; height: 100px; object-fit: cover;">
+                                </div>
+                                <div class="col-6 text-start">
+                                    <h3 class="fw-bold mb-0">OTHERS</h3>
+                                </div>
                             </div>
-                            <div class="text-muted">OTHERS</div>
                         </div>
                     </div>
                 </div>
@@ -559,6 +605,29 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Fixed Material Card Confirm Modal -->
+    <div class="modal fade" id="removeFixedMaterialModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Remove</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to remove this card from the grid? This only hides the card; existing records remain and it can be brought back by an admin later.
+                </div>
+                <div class="modal-footer">
+                    <form id="removeFixedMaterialForm" action="" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Yes, Remove</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -738,6 +807,16 @@
                 });
             });
 
+            // Remove a fixed (built-in) material card from the grid
+            document.querySelectorAll('.fixedRemoveBtn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const slug = this.getAttribute('data-slug');
+                    const action = "{{ route('materialType.hideFixed', ':slug') }}".replace(':slug', slug);
+                    document.getElementById('removeFixedMaterialForm').setAttribute('action', action);
+                    new bootstrap.Modal(document.getElementById('removeFixedMaterialModal')).show();
+                });
+            });
         });
     </script>
     <style>
@@ -778,21 +857,6 @@
 
         .site-card .card-body .text-muted {
             margin-bottom: 0 !important;
-        }
-
-        .remove-tile-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            z-index: 5;
-            width: 24px;
-            height: 24px;
-            padding: 0;
-            line-height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
     </style>
 @endsection

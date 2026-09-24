@@ -93,9 +93,14 @@ public function materialData(Request $request, $siteId, $materialType)
     // Base query
     $query = MaterialOrder::with('vendor')
         ->where('site_id', $siteId)
-        ->whereRaw('LOWER(TRIM(material_type)) = ?', [strtolower(trim($materialType))])
         ->whereMonth('date', $month)
-        ->whereYear('date', $year);
+        ->whereYear('date', $year)
+        ->orderBy('date', 'desc')
+        ->orderBy('id', 'desc');
+
+    if (strtolower(trim($materialType)) !== 'all') {
+        $query->whereRaw('LOWER(TRIM(material_type)) = ?', [strtolower(trim($materialType))]);
+    }
 
     // Apply week filter if provided
     if ($week > 0 && $week <= 5) {
@@ -107,16 +112,6 @@ public function materialData(Request $request, $siteId, $materialType)
 
     $materials = $query->get();
 
-    // Debug info (you can remove later)
-    if ($materials->isEmpty()) {
-        \Log::info('No materials found', [
-            'site_id' => $siteId,
-            'material_type' => $materialType,
-            'month' => $month,
-            'year' => $year,
-        ]);
-    }
-
     $totalUnits = $materials->sum('quantity');
     $totalAmount = $materials->sum('price');
     $totalAmountWithGst = $materials->sum(function ($order) {
@@ -124,11 +119,50 @@ public function materialData(Request $request, $siteId, $materialType)
     });
     $totalGstAmount = $totalAmountWithGst - $totalAmount;
 
+    // Precompute order counts & last item IDs for action visibility
+    $orderNos = $materials->pluck('order_no')->filter()->unique();
+    $orderItemCounts = $orderNos->isNotEmpty()
+        ? MaterialOrder::whereIn('order_no', $orderNos)
+            ->groupBy('order_no')
+            ->selectRaw('order_no, count(*) as count')
+            ->pluck('count', 'order_no')
+            ->toArray()
+        : [];
+
+    $lastItemIds = [];
+    foreach ($materials as $m) {
+        $groupKey = !empty($m->order_no) ? $m->order_no : (!empty($m->order_group) ? $m->order_group : ('single_' . $m->id));
+        $lastItemIds[$groupKey] = $m->id;
+    }
+
+    $isAllOverview = strtolower(trim($materialType)) === 'all';
+
+    $materials = $materials->map(function ($material) use ($lastItemIds, $orderItemCounts, $isAllOverview) {
+        $groupKey = !empty($material->order_no) ? $material->order_no : (!empty($material->order_group) ? $material->order_group : ('single_' . $material->id));
+        $totalInOrder = !empty($material->order_no) ? ($orderItemCounts[$material->order_no] ?? 1) : 1;
+        $isIndividual = ($totalInOrder === 1);
+        $isLastInOrder = isset($lastItemIds[$groupKey]) && $lastItemIds[$groupKey] == $material->id;
+
+        // In All Overview: show action for individual orders or on the last item of multi-item orders
+        // In Specific Material Overview (e.g. Bricks, Cement): ONLY show action if added individually!
+        $showAction = $isAllOverview ? ($isIndividual || $isLastInOrder) : $isIndividual;
+
+        $material->is_individual = $isIndividual;
+        $material->is_last_in_order = $isLastInOrder;
+        $material->show_action = $showAction;
+        $material->order_pdf_url = url('/api/material-order/' . $material->id . '/pdf');
+
+        return $material;
+    });
+
     // Payments
     $paymentQuery = MaterialPayment::where('site_id', $siteId)
-        ->whereRaw('LOWER(TRIM(material_type)) = ?', [strtolower(trim($materialType))])
         ->whereMonth('date', $month)
         ->whereYear('date', $year);
+
+    if (strtolower(trim($materialType)) !== 'all') {
+        $paymentQuery->whereRaw('LOWER(TRIM(material_type)) = ?', [strtolower(trim($materialType))]);
+    }
 
     if ($week > 0 && $week <= 5) {
         $paymentQuery->whereBetween('date', [$weekStart, $weekEnd]);
@@ -473,14 +507,15 @@ public function materialRequest(Request $request)
         'available_unit_count' => $request->available_unit_count,
     ]];
 
-    // ✅ Items ordered together share one order_group so they print on one invoice PDF
-    $orderGroup = count($items) > 1 ? (string) Str::uuid() : null;
+    // ✅ Items ordered together share one order_group and order_no so they group on invoice PDF
+    $orderNo = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+    $orderGroup = $orderNo;
 
     $materialOrders = [];
     $totalQuantity = 0;
     $totalWithGst = 0;
 
-    DB::transaction(function () use ($request, $items, $date, $imageUrl, $orderGroup, &$materialOrders, &$totalQuantity, &$totalWithGst) {
+    DB::transaction(function () use ($request, $items, $date, $imageUrl, $orderNo, $orderGroup, &$materialOrders, &$totalQuantity, &$totalWithGst) {
         foreach ($items as $item) {
             // ✅ Compute GST-inclusive total
             $price = isset($item['unit_price']) && $item['unit_price'] !== ''
@@ -493,10 +528,12 @@ public function materialRequest(Request $request)
             $materialOrders[] = MaterialOrder::create([
                 'site_id' => $request->site_id,
                 'vendor_id' => $request->vendor_id,
+                'order_no' => $orderNo,
                 'order_group' => $orderGroup,
                 'invoice_no' => $request->invoice_no,
                 'material_type' => $request->material_type,
-                'category_name' => $item['category_name'] ?? null,
+                'category' => $item['category_name'] ?? $item['category'] ?? null,
+                'category_name' => $item['category_name'] ?? $item['category'] ?? null,
                 'spec' => $item['spec'] ?? null,
                 'date' => $date,
                 'quantity' => $item['quantity'],
@@ -711,6 +748,18 @@ public function materialPayment(Request $request)
             'updated_by'    => auth('api')->id(),
         ]);
 
+        // Sync shared fields across multi-item orders
+        $groupKey = $order->order_no ?: $order->order_group;
+        if (!empty($groupKey)) {
+            $sharedUpdates = ['date' => $date];
+            if ($order->image_url) {
+                $sharedUpdates['image_url'] = $order->image_url;
+            }
+            MaterialOrder::where(function ($q) use ($groupKey) {
+                $q->where('order_no', $groupKey)->orWhere('order_group', $groupKey);
+            })->where('id', '!=', $order->id)->update($sharedUpdates);
+        }
+
         // Adjust vendor pay detail for the GST-inclusive total difference
         $totalDiff = $newTotalWithGst - $oldTotalWithGst;
         if ($totalDiff != 0 && $order->vendor_id) {
@@ -739,20 +788,34 @@ public function materialPayment(Request $request)
             return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
         }
 
-        // Reverse vendor pay detail (GST-inclusive)
-        if ($order->vendor_id) {
-            $orderTotal = (float) ($order->total_amount ?? $order->price);
-            $paydetail = VendorPayDetail::where('vendor_id', $order->vendor_id)->first();
-            if ($paydetail) {
-                $paydetail->update([
-                    'total_units'      => max(0, $paydetail->total_units - $order->quantity),
-                    'total_unit_price' => max(0, $paydetail->total_unit_price - $orderTotal),
-                    'balance_amount'   => max(0, $paydetail->balance_amount - $orderTotal),
-                ]);
-            }
+        $vendorId = $order->vendor_id;
+        $groupKey = $order->order_no ?: $order->order_group;
+
+        if (!empty($groupKey)) {
+            MaterialOrder::where(function ($q) use ($groupKey) {
+                $q->where('order_no', $groupKey)->orWhere('order_group', $groupKey);
+            })->delete();
+        } else {
+            $order->delete();
         }
 
-        $order->delete();
+        // Recalculate vendor pay detail
+        if ($vendorId) {
+            $totalUnits = MaterialOrder::where('vendor_id', $vendorId)->sum('quantity');
+            $totalAmount = MaterialOrder::where('vendor_id', $vendorId)->sum('price');
+            $paidAmount = \App\Models\VendorPayment::where('vendor_id', $vendorId)->sum('payment');
+
+            VendorPayDetail::updateOrCreate(
+                ['vendor_id' => $vendorId],
+                [
+                    'total_units'      => $totalUnits,
+                    'total_unit_price' => $totalAmount,
+                    'paid_amount'      => $paidAmount,
+                    'balance_amount'   => (float) $totalAmount - (float) $paidAmount,
+                    'updated_by'       => auth('api')->id(),
+                ]
+            );
+        }
 
         return response()->json([
             'response_code' => 200,
@@ -763,15 +826,21 @@ public function materialPayment(Request $request)
 
     public function orderPdf($id)
     {
-        $order = MaterialOrder::with('vendor')->find($id);
+        $order = MaterialOrder::with('vendor', 'site')->find($id);
 
         if (!$order) {
             return response()->json(['status' => false, 'message' => 'Material order not found.'], 404);
         }
 
-        $orders = $order->groupedOrders();
-        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order', 'orders'));
-        $pdfPath = 'material_orders/material_order_' . $order->id . '.pdf';
+        $orderItems = $order->groupedOrders();
+        if ($orderItems->isEmpty()) {
+            $orderItems = collect([$order]);
+        }
+
+        $pdf = Pdf::loadView('admin.helper.material_order_pdf', compact('order', 'orderItems'));
+        $orderIdentifier = $order->order_no ?: ($order->invoice_no ?: ('PO-' . str_pad((string)$order->id, 5, '0', STR_PAD_LEFT)));
+        $filename = 'purchase_order_' . $orderIdentifier . '.pdf';
+        $pdfPath = 'material_orders/' . $filename;
         Storage::disk('public')->put($pdfPath, $pdf->output());
 
         return response()->json([

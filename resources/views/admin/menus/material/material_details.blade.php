@@ -80,9 +80,12 @@
     <!-- Buttons -->
         <div class="col-12 col-md-6">
         <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-            <a href="{{ route('material.requestForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-info w-100 w-md-auto">Request</a>
-
-            <a href="{{ route('material.orderForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-primary w-100 w-md-auto">Inward Order</a>
+            @if(strtolower($materialType) === 'all')
+                <a href="{{ route('material.allForm', ['siteId' => $siteId]) }}" class="btn btn-primary w-100 w-md-auto">Inward Order</a>
+            @else
+                <a href="{{ route('material.requestForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-info w-100 w-md-auto">Request</a>
+                <a href="{{ route('material.orderForm', ['siteId' => $siteId, 'materialType' => $materialType]) }}" class="btn btn-primary w-100 w-md-auto">Inward Order</a>
+            @endif
 
             <button type="button" class="btn btn-success w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#materialExportModal">Export</button>
         </div>
@@ -105,51 +108,73 @@
                         @else
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="add-row" class="display table table-striped table-hover">
+                                    <table id="add-row" class="display table table-striped table-hover align-middle custom-material-table">
                                         <thead>
                                             <tr>
-                                                <th>S.No</th>
-                                                <th class="text-nowrap">Invoice No</th>
-                                                <th class="text-nowrap">Date</th>
-                                                <th>Category / Item</th>
-                                                <th>Quantity</th>
-                                                <th>Vendor</th>
-                                                <th>Price</th>
-                                                <th>GST</th>
-                                                <th>Total (incl. GST)</th>
-                                                <th>Vendor GST</th>
-                                                <th>Invoice</th>
-                                                <th style="width:10%">Action</th>
+                                                <th class="text-center" style="width: 50px;">S.No</th>
+                                                <th class="text-center" style="width: 110px; white-space: nowrap;">Date</th>
+                                                <th class="text-center" style="width: 130px; white-space: nowrap;">Material Type</th>
+                                                <th style="min-width: 170px;">Category</th>
+                                                <th class="text-center" style="width: 110px; white-space: nowrap;">Quantity</th>
+                                                <th style="min-width: 180px;">Vendor</th>
+                                                <th class="text-end" style="width: 120px; white-space: nowrap;">Price</th>
+                                                <th class="text-center" style="width: 150px; white-space: nowrap;">Vendor GST</th>
+                                                <th class="text-center" style="width: 70px;">Invoice</th>
+                                                <th class="text-center" style="width: 110px; white-space: nowrap;">Action</th>
                                                 {{-- <th>Available</th> --}}
                                             </tr>
                                         </thead>
                                         <tbody id="bricksTableBody">
                                             @php
-                                                // Items ordered together share one combined PDF, shown only on the last item of the group
-                                                $lastIdInGroup = $materials->whereNotNull('order_group')->groupBy('order_group')->map->max('id');
+                                                // Group items by order_no (or individual item id) and determine the last item of each order
+                                                $lastItemIds = [];
+                                                foreach ($materials as $m) {
+                                                    $groupKey = !empty($m->order_no) ? $m->order_no : ('single_' . $m->id);
+                                                    $lastItemIds[$groupKey] = $m->id;
+                                                }
+                                                $isAllOverview = strtolower($materialType) === 'all';
                                             @endphp
                                             @foreach ($materials as $index => $brick)
+                                                @php
+                                                    $groupKey = !empty($brick->order_no) ? $brick->order_no : ('single_' . $brick->id);
+                                                    $totalInOrder = !empty($brick->order_no) ? ($orderItemCounts[$brick->order_no] ?? 1) : 1;
+                                                    $isIndividual = ($totalInOrder === 1);
+                                                    $isLastInOrder = isset($lastItemIds[$groupKey]) && $lastItemIds[$groupKey] == $brick->id;
+
+                                                    // In All Overview: show action for individual orders or on the last item of multi-item orders
+                                                    // In Specific Material Overview (e.g. Bricks, Cement): ONLY show action if added individually!
+                                                    $showAction = $isAllOverview ? ($isIndividual || $isLastInOrder) : $isIndividual;
+                                                @endphp
                                                 <tr>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td class="text-nowrap">{{ $brick->invoice_no ?: '-' }}</td>
-                                                    <td class="text-nowrap">{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
-                                                    <td>
-                                                        <strong>{{ $brick->category_name ?? ucfirst($materialType) }}</strong>
-                                                        @if (!empty($brick->spec))
-                                                            <br><small class="text-muted">{{ $brick->spec }}</small>
-                                                        @endif
+                                                    <td class="text-center text-muted fw-semibold">{{ $loop->iteration }}</td>
+                                                    <td class="text-center" style="white-space: nowrap;">{{ $brick->date ? \Carbon\Carbon::parse($brick->date)->format('d-m-Y') : '-' }}</td>
+                                                    <td class="text-center" style="white-space: nowrap;">
+                                                        <span class="badge bg-secondary-subtle text-dark fw-bold px-2 py-1" style="font-size: 12px;">
+                                                            {{ $brick->material_type_display }}
+                                                        </span>
                                                     </td>
-                                                    <td>{{ $brick->quantity }} @if ($brick->unit) <small class="text-muted">({{ $brick->unit }})</small> @endif</td>
-                                                    <td>{{ $brick->vendor->name ?? '-' }}</td>
-                                                    <td>₹{{ number_format((float) $brick->price, 2) }}</td>
-                                                    <td>{{ $brick->gst !== null ? number_format((float) $brick->gst, 0) . '%' : '-' }}</td>
-                                                    <td>₹{{ number_format((float) ($brick->total_amount ?? $brick->price), 2) }}</td>
-                                                    <td>{{ $brick->vendor->gst ?? '-' }}</td>
                                                     <td>
+                                                        <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-1" style="font-size: 12px; white-space: normal; text-align: left; display: inline-block;">
+                                                            {{ $brick->category_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center" style="white-space: nowrap;">
+                                                        {{ $brick->quantity }} {{ $brick->unit_display != '-' ? $brick->unit_display : '' }}
+                                                    </td>
+                                                    <td>
+                                                        <span class="fw-semibold text-dark">{{ optional($brick->vendor)->name ?? '-' }}</span>
+                                                    </td>
+                                                    <td class="text-end" style="white-space: nowrap;">
+                                                        <span class="fw-bold text-dark">₹&nbsp;{{ number_format((float)$brick->price, 2) }}</span>
+                                                    </td>
+                                                    <td class="text-center" style="white-space: nowrap;">
+                                                        <span class="text-muted font-monospace" style="font-size: 12px;">{{ optional($brick->vendor)->gst ?? '-' }}</span>
+                                                    </td>
+                                                    <td class="text-center">
                                                         @if ($brick->image_url)
                                                             @if (str_ends_with(strtolower($brick->image_url), '.pdf'))
-                                                                <a href="{{ $brick->image_url }}" target="_blank" title="View invoice">
-                                                                    <i class="fa fa-file-pdf"></i> View
+                                                                <a href="{{ $brick->image_url }}" target="_blank" class="btn btn-link btn-danger btn-sm p-0" title="View invoice PDF">
+                                                                    <i class="fa fa-file-pdf fa-lg"></i>
                                                                 </a>
                                                             @else
                                                                 <a href="{{ $brick->image_url }}" target="_blank" title="View invoice">
@@ -160,48 +185,35 @@
                                                             <span class="text-muted">-</span>
                                                         @endif
                                                     </td>
-                                                    <td>
-                                                        <div class="form-button-action">
-                                                            <button type="button" class="btn btn-link btn-primary btn-sm editOrderBtn"
-                                                                data-id="{{ $brick->id }}"
-                                                                data-date="{{ $brick->date }}"
-                                                                data-category="{{ $brick->category_name }}"
-                                                                data-spec="{{ $brick->spec }}"
-                                                                data-quantity="{{ $brick->quantity }}"
-                                                                data-price="{{ $brick->price }}"
-                                                                data-gst-percent="{{ $brick->gst ?? '' }}"
-                                                                data-total-amount="{{ $brick->total_amount ?? '' }}"
-                                                                data-gst="{{ $brick->vendor->gst ?? '' }}"
-                                                                data-image="{{ $brick->image_url }}"
-                                                                data-bs-toggle="modal" data-bs-target="#editOrderModal">
-                                                                <i class="fa fa-edit"></i>
-                                                            </button>
-                                                            <button type="button" class="btn btn-link btn-danger btn-sm deleteOrderBtn"
-                                                                data-id="{{ $brick->id }}" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
-                                                                <i class="fa fa-times"></i>
-                                                            </button>
-                                                            @if (!$brick->order_group || $lastIdInGroup[$brick->order_group] == $brick->id)
-                                                                <a href="{{ route('material.order.pdf', $brick->id) }}" class="btn btn-secondary btn-sm" target="_blank">
-                                                                    <i class="fa fa-file-pdf"></i> PDF
+                                                    <td class="text-center" style="white-space: nowrap;">
+                                                        @if ($showAction)
+                                                            <div class="form-button-action d-inline-flex align-items-center justify-content-center gap-1">
+                                                                <button type="button" class="btn btn-link btn-primary btn-sm p-1 editOrderBtn"
+                                                                    data-id="{{ $brick->id }}"
+                                                                    data-date="{{ $brick->date }}"
+                                                                    data-quantity="{{ $brick->quantity }}"
+                                                                    data-price="{{ $brick->price }}"
+                                                                    data-gst="{{ optional($brick->vendor)->gst }}"
+                                                                    data-image="{{ $brick->image_url }}"
+                                                                    data-bs-toggle="modal" data-bs-target="#editOrderModal"
+                                                                    title="Edit Order">
+                                                                    <i class="fa fa-edit fa-lg"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-link btn-danger btn-sm p-1 deleteOrderBtn"
+                                                                    data-id="{{ $brick->id }}" data-bs-toggle="modal" data-bs-target="#deleteOrderModal"
+                                                                    title="Delete Order">
+                                                                    <i class="fa fa-times fa-lg"></i>
+                                                                </button>
+                                                                <a href="{{ route('material.order.pdf', $brick->id) }}" class="btn btn-link btn-danger btn-sm p-1" title="Download Order PDF" target="_blank">
+                                                                    <i class="fa fa-file-pdf fa-lg"></i>
                                                                 </a>
-                                                            @endif
-                                                        </div>
+                                                            </div>
+                                                        @endif
                                                     </td>
                                                     {{-- <td>{{ $brick->available_unit_count }}</td> --}}
                                                 </tr>
                                             @endforeach
                                         </tbody>
-                                        <tfoot>
-                                            <tr class="table-totals-row">
-                                                <td colspan="4" class="text-end"><strong>TOTAL</strong></td>
-                                                <td><strong id="totalUnits">{{ $totalUnits }} Units</strong></td>
-                                                <td></td>
-                                                <td><strong id="totalAmount">₹{{ number_format((float) $totalAmount, 2) }}</strong></td>
-                                                <td><strong id="totalGstAmount">₹{{ number_format((float) $totalGstAmount, 2) }}</strong></td>
-                                                <td><strong id="totalAmountWithGst">₹{{ number_format((float) $totalAmountWithGst, 2) }}</strong></td>
-                                                <td colspan="3"></td>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -237,7 +249,7 @@
 
                     <!-- Edit Order Modal -->
                     <div class="modal fade" id="editOrderModal" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-dialog">
                             <div class="modal-content">
                                 <form id="editOrderForm" method="POST" enctype="multipart/form-data">
                                     @csrf
@@ -247,63 +259,33 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Category / Item</label>
-                                                <input type="text" name="category_name" id="edit_order_category_name" class="form-control" placeholder="Enter Category or Item Type">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Specification / Brand</label>
-                                                <input type="text" name="spec" id="edit_order_spec" class="form-control" placeholder="Enter Brand, Size, or Grade">
-                                            </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Date</label>
+                                            <input type="date" name="date" id="edit_order_date" class="form-control" required>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Date</label>
-                                                <input type="date" name="date" id="edit_order_date" class="form-control" required>
+                                                <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                                                <input type="number" step="any" min="0" name="quantity" id="edit_order_quantity" class="form-control" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Quantity</label>
-                                                <input type="number" step="1" name="quantity" id="edit_order_quantity" class="form-control" required>
+                                                <label class="form-label fw-bold">Rate / Unit (₹)</label>
+                                                <input type="number" step="any" min="0" id="edit_order_rate" class="form-control" placeholder="Rate / unit">
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Price</label>
-                                                <input type="number" step="0.01" name="price" id="edit_order_price" class="form-control" required
-                                                    oninput="document.getElementById('edit_order_price_words').innerText = numberToWordsIndian(this.value); calculateEditTotalWithGst();">
-                                                <small id="edit_order_price_words" class="form-text text-muted"></small>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">GST</label>
-                                                <select name="gst" id="edit_order_gst_percent" class="form-select" onchange="calculateEditTotalWithGst();">
-                                                    <option value="0">0% (No GST)</option>
-                                                    <option value="5">5%</option>
-                                                    <option value="12">12%</option>
-                                                    <option value="18">18%</option>
-                                                    <option value="28">28%</option>
-                                                </select>
-                                            </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Total Price (₹) <span class="text-danger">*</span></label>
+                                            <input type="number" step="0.01" min="0" name="price" id="edit_order_price" class="form-control" required>
+                                            <small id="edit_order_price_words" class="form-text text-success fw-semibold mt-1 d-block"></small>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Total Amount (incl. GST)</label>
-                                                <input type="number" step="0.01" name="total_amount" id="edit_order_total_amount" class="form-control" readonly>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Vendor GST</label>
-                                                <input type="text" id="edit_order_gst" class="form-control" readonly>
-                                            </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Vendor GST</label>
+                                            <input type="text" id="edit_order_gst" class="form-control" readonly>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Invoice</label>
-                                                <input type="file" name="attachment" id="edit_order_attachment" class="form-control" accept="image/*,.pdf">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Current Invoice</label>
-                                                <div id="edit_order_current_image"></div>
-                                            </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Invoice</label>
+                                            <div id="edit_order_current_image" class="mb-2"></div>
+                                            <input type="file" name="attachment" id="edit_order_attachment" class="form-control" accept="image/*,.pdf">
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -337,6 +319,43 @@
                             </div>
                         </div>
                     </div>
+                    <div class="card">
+                        <div class="card-body d-flex justify-content-center">
+                            <table class="table mt-3" style="width: 50%">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <h6 class="fw-bold text-info">TOTAL</h6>
+                                        </td>
+                                        <td>
+                                            <h6 class="fw-bold text-info" id="totalUnits">{{ $totalUnits }} Units</h6>
+                                        </td>
+                                        <td>
+                                            <h6 class="fw-bold text-info" id="totalAmount">{{ $totalAmount }}</h6>
+                                        </td>
+                                    </tr>
+                                    {{-- <tr>
+                                        <td>
+                                            <p class="text-success fw-bold">Settled Amount</p>
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <p class="text-success fw-bold" id="settledAmount">{{ $settledAmount }}</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <p class="text-danger fw-bold">Pending Amount</p>
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <p class="text-danger fw-bold" id="pendingAmount">{{ $pendingAmount }}</p>
+                                        </td>
+                                    </tr> --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -350,18 +369,6 @@
     </div>
 
     <script>
-        function calculateEditTotalWithGst() {
-            const priceInput = document.getElementById('edit_order_price');
-            const gstInput = document.getElementById('edit_order_gst_percent');
-            const totalInput = document.getElementById('edit_order_total_amount');
-
-            const price = parseFloat(priceInput.value) || 0;
-            const gstPercent = parseFloat(gstInput.value) || 0;
-            const total = price + (price * gstPercent / 100);
-
-            totalInput.value = total ? total.toFixed(2) : '';
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.js-export-modal-form').forEach(function(form) {
                 form.addEventListener('submit', function() {
@@ -423,6 +430,63 @@
                 return dateValue;
             }
 
+            // Live price calculation & currency words in Edit Order Modal
+            const editQtyInput = document.getElementById('edit_order_quantity');
+            const editRateInput = document.getElementById('edit_order_rate');
+            const editPriceInput = document.getElementById('edit_order_price');
+            const editWordsEl = document.getElementById('edit_order_price_words');
+
+            function updateEditWords(amount) {
+                if (!editWordsEl) return;
+                const num = parseFloat(amount);
+                if (!isNaN(num) && num > 0 && typeof numberToWordsIndian === 'function') {
+                    editWordsEl.innerText = numberToWordsIndian(num);
+                } else {
+                    editWordsEl.innerText = '';
+                }
+            }
+
+            if (editQtyInput) {
+                editQtyInput.addEventListener('input', function() {
+                    const qty = parseFloat(this.value) || 0;
+                    const rate = parseFloat(editRateInput ? editRateInput.value : 0) || 0;
+                    const currentPrice = parseFloat(editPriceInput ? editPriceInput.value : 0) || 0;
+
+                    if (qty > 0 && rate > 0) {
+                        const total = +(qty * rate).toFixed(2);
+                        if (editPriceInput) editPriceInput.value = total;
+                        updateEditWords(total);
+                    } else if (qty > 0 && currentPrice > 0 && rate === 0 && editRateInput) {
+                        const computedRate = +(currentPrice / qty).toFixed(2);
+                        editRateInput.value = computedRate;
+                    }
+                });
+            }
+
+            if (editRateInput) {
+                editRateInput.addEventListener('input', function() {
+                    const rate = parseFloat(this.value) || 0;
+                    const qty = parseFloat(editQtyInput ? editQtyInput.value : 0) || 0;
+                    if (qty > 0 && rate > 0) {
+                        const total = +(qty * rate).toFixed(2);
+                        if (editPriceInput) editPriceInput.value = total;
+                        updateEditWords(total);
+                    }
+                });
+            }
+
+            if (editPriceInput) {
+                editPriceInput.addEventListener('input', function() {
+                    const price = parseFloat(this.value) || 0;
+                    const qty = parseFloat(editQtyInput ? editQtyInput.value : 0) || 0;
+                    if (qty > 0 && price > 0 && editRateInput) {
+                        const computedRate = +(price / qty).toFixed(2);
+                        editRateInput.value = computedRate;
+                    }
+                    updateEditWords(price);
+                });
+            }
+
             // Event delegation for edit/delete buttons
             document.addEventListener('click', function (e) {
                 const editBtn = e.target.closest('.editOrderBtn');
@@ -431,23 +495,25 @@
                 if (editBtn) {
                     const id = editBtn.getAttribute('data-id');
                     const date = editBtn.getAttribute('data-date');
-                    const category = editBtn.getAttribute('data-category');
-                    const spec = editBtn.getAttribute('data-spec');
                     const quantity = editBtn.getAttribute('data-quantity');
                     const price = editBtn.getAttribute('data-price');
                     const gst = editBtn.getAttribute('data-gst');
-                    const gstPercent = editBtn.getAttribute('data-gst-percent');
-                    const totalAmount = editBtn.getAttribute('data-total-amount');
                     const image = editBtn.getAttribute('data-image');
                     const form = document.getElementById('editOrderForm');
                     form.action = '/admin/material-order-update/' + id;
+
+                    const qtyVal = parseFloat(quantity) || 0;
+                    const priceVal = parseFloat(price) || 0;
+                    const rateVal = (qtyVal > 0 && priceVal > 0) ? (priceVal / qtyVal) : 0;
+
                     document.getElementById('edit_order_date').value = toIsoDate(date);
-                    document.getElementById('edit_order_category_name').value = category || '';
-                    document.getElementById('edit_order_spec').value = spec || '';
-                    document.getElementById('edit_order_quantity').value = quantity;
-                    document.getElementById('edit_order_price').value = price;
-                    document.getElementById('edit_order_gst_percent').value = gstPercent || '0';
-                    document.getElementById('edit_order_total_amount').value = totalAmount || price;
+                    document.getElementById('edit_order_quantity').value = qtyVal > 0 ? qtyVal : '';
+                    if (document.getElementById('edit_order_rate')) {
+                        document.getElementById('edit_order_rate').value = rateVal > 0 ? (Number.isInteger(rateVal) ? rateVal : parseFloat(rateVal.toFixed(2))) : '';
+                    }
+                    document.getElementById('edit_order_price').value = priceVal > 0 ? (Number.isInteger(priceVal) ? priceVal : parseFloat(priceVal.toFixed(2))) : '';
+                    updateEditWords(priceVal);
+
                     document.getElementById('edit_order_gst').value = gst || '';
                     document.getElementById('edit_order_attachment').value = '';
 
@@ -499,10 +565,35 @@
             border: 1px solid #dee2e6;
         }
 
-        .table-totals-row td {
-            background: #f1f5f9;
-            color: #0d6efd;
-            border-top: 2px solid #cbd5e1;
+        /* Enforce perfect alignment in material table */
+        .custom-material-table th,
+        .custom-material-table td {
+            vertical-align: middle !important;
+            padding: 10px 12px !important;
+        }
+
+        .custom-material-table thead th {
+            background-color: #f8fafc !important;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 700;
+            border-bottom: 2px solid #e2e8f0 !important;
+            vertical-align: middle !important;
+        }
+
+        .custom-material-table tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.04) !important;
+        }
+
+        .custom-material-table .form-button-action {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .custom-material-table .form-button-action .btn-link {
+            text-decoration: none;
         }
     </style>
 @endsection

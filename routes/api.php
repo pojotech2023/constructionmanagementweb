@@ -129,7 +129,7 @@ Route::middleware('auth:api')->group(function () {
 
   //Material Details
   Route::get('/material-detail/{siteId}', [MaterialController::class, 'getMaterial']); //material quantity & vlaues
-  Route::post('/material/{siteId}/{materialType}', [MaterialController::class, 'materialData']); //bricks, sand list
+  Route::match(['get', 'post'], '/material/{siteId}/{materialType}', [MaterialController::class, 'materialData']); //bricks, sand list, all materials list
   Route::post('/request-order', [MaterialController::class, 'materialRequest']); //add request
   Route::get('/my-material-requests/{siteId}', [MaterialController::class, 'myRequests']); //supervisor: view own request statuses
   Route::get('/material-request-list/{siteId}', [MaterialController::class, 'requestList']); //admin: view all supervisor requests for a site

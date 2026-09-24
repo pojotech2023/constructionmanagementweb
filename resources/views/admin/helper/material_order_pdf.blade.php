@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Purchase Invoice</title>
     <style>
         @page {
@@ -153,10 +153,13 @@
     @php
         $vendor = $order->vendor;
         $logoPath = public_path('images/logo/logo.jpeg');
-        $invoiceNo = str_pad((string) $order->id, 5, '0', STR_PAD_LEFT);
+        $invoiceNo = !empty($order->order_no) ? $order->order_no : ($order->invoice_no ?: ('PO-' . str_pad((string) $order->id, 5, '0', STR_PAD_LEFT)));
         $orderDate = \Carbon\Carbon::parse($order->date)->format('d M Y');
-        $orders = $orders ?? collect([$order]);
-        $grandTotal = 0;
+        $items = isset($orderItems) && $orderItems->count() > 0 ? $orderItems : (isset($orders) && $orders->count() > 0 ? $orders : collect([$order]));
+        $totalQty = $items->sum('quantity');
+        $subtotal = $items->sum('price');
+        $totalGst = (float) $items->sum('gst');
+        $grandTotal = $subtotal + $totalGst;
     @endphp
 
     <div class="page">
@@ -192,20 +195,17 @@
             <tr>
                 <td>
                     <div class="bill-title">BILL FROM</div>
-                    <div class="bill-name">{{ optional($vendor)->name ?? '-' }}</div>
-                    <div>{{ optional($vendor)->address ?? '-' }}</div>
-                    <div>{{ optional($vendor)->mobile_no ?? '-' }}</div>
-                    @if ($order->invoice_no)
-                        <div>Invoice No: {{ $order->invoice_no }}</div>
-                    @endif
-                    @if (optional($vendor)->gst)
-                        <div>GSTIN: {{ $vendor->gst }}</div>
-                    @endif
+                    <div class="bill-name">Pojo Infra360</div>
+                    <div>No 77, Velachery main road, Near to Tata motors show room, Rajakilpakkam, Tambaram, Chennai 600073</div>
                 </td>
                 <td style="text-align: right;">
                     <div class="bill-title">BILL TO</div>
-                    <div class="bill-name">Pojo Infra360</div>
-                    <div>No 77, Velachery main road, Rajakilpakkam, Tambaram, Chennai 600073</div>
+                    <div class="bill-name">{{ optional($vendor)->name ?? '-' }}</div>
+                    <div>{{ optional($vendor)->address ?? '-' }}</div>
+                    <div>{{ optional($vendor)->mobile_no ?? '-' }}</div>
+                    @if (optional($vendor)->gst)
+                        <div>GSTIN: {{ $vendor->gst }}</div>
+                    @endif
                 </td>
             </tr>
         </table>
@@ -213,47 +213,53 @@
         <table class="items">
             <thead>
                 <tr>
-                    <th style="width: 35%;">Item</th>
-                    <th style="width: 15%;">Qty</th>
-                    <th style="width: 20%;">Unit Price</th>
-                    <th style="width: 15%;">GST</th>
-                    <th style="width: 15%;">Total</th>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 22%;">Material Type</th>
+                    <th style="width: 33%;">Category / Item</th>
+                    <th style="width: 12%; text-align: center;">Qty</th>
+                    <th style="width: 14%; text-align: right;">Unit Price</th>
+                    <th style="width: 14%; text-align: right;">Total</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($orders as $row)
+                @foreach ($items as $idx => $item)
                     @php
-                        $quantity = (float) $row->quantity;
-                        $price = (float) $row->price;
-                        $gst = (float) ($row->gst ?? 0);
-                        $unitPrice = $quantity > 0 ? $price / $quantity : $price;
-                        $total = $row->total_amount !== null ? (float) $row->total_amount : $price + ($price * $gst / 100);
-                        $grandTotal += $total;
+                        $itemQty = (float) $item->quantity;
+                        $itemPrice = (float) $item->price;
+                        $itemUnitPrice = $itemQty > 0 ? $itemPrice / $itemQty : $itemPrice;
                     @endphp
                     <tr>
-                        <td>
-                            {{ ucfirst($row->material_type) }}
-                            @if ($row->category_name) - {{ $row->category_name }} @endif
-                            @if ($row->spec) ({{ $row->spec }}) @endif
-                            @if ($row->unit) [{{ $row->unit }}] @endif
-                        </td>
-                        <td>{{ rtrim(rtrim(number_format($quantity, 2), '0'), '.') }}</td>
-                        <td>{{ number_format($unitPrice, 2) }}</td>
-                        <td>{{ number_format($gst, 0) }}%</td>
-                        <td>Rs. {{ number_format($total, 2) }}</td>
+                        <td>{{ $idx + 1 }}</td>
+                        <td><strong>{{ $item->material_type_display }}</strong></td>
+                        <td>{{ $item->category_display }}</td>
+                        <td style="text-align: center;">{{ $itemQty }} {{ $item->unit_display != '-' ? $item->unit_display : '' }}</td>
+                        <td style="text-align: right;">@include('admin.partials.rupee_pdf') {{ number_format($itemUnitPrice, 2) }}</td>
+                        <td style="text-align: right;">@include('admin.partials.rupee_pdf') {{ number_format($itemPrice, 2) }}</td>
                     </tr>
                 @endforeach
-                @if ($orders->count() > 1)
-                    <tr>
-                        <td colspan="4" style="text-align: right; font-weight: 800;">Grand Total</td>
-                        <td style="font-weight: 800;">Rs. {{ number_format($grandTotal, 2) }}</td>
-                    </tr>
-                @endif
             </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background: #f3f4f6;">
+                    <td colspan="3" style="text-align: right;">Total:</td>
+                    <td style="text-align: center;">{{ $totalQty }} Units</td>
+                    <td style="text-align: right;">Subtotal:</td>
+                    <td style="text-align: right;">@include('admin.partials.rupee_pdf') {{ number_format($subtotal, 2) }}</td>
+                </tr>
+                @if ($totalGst > 0)
+                <tr style="font-weight: bold; background: #f9fafb;">
+                    <td colspan="5" style="text-align: right;">GST:</td>
+                    <td style="text-align: right;">@include('admin.partials.rupee_pdf') {{ number_format($totalGst, 2) }}</td>
+                </tr>
+                @endif
+                <tr style="font-weight: 800; font-size: 13px; background: #e5e7eb;">
+                    <td colspan="5" style="text-align: right; color: #17172d;">Grand Total:</td>
+                    <td style="text-align: right; color: #073b75;">@include('admin.partials.rupee_pdf') {{ number_format($grandTotal, 2) }}</td>
+                </tr>
+            </tfoot>
         </table>
 
         <div class="footer-strip">
-            <span class="brand">Pojo Infra360</span>
+            <span class="brand">POJO INFRA360</span>
             &nbsp;|&nbsp;
             No 77, Velachery main road, Near to Tata motors show room, Rajakilpakkam, Tambaram, Chennai 600073
         </div>

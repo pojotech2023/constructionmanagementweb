@@ -223,6 +223,7 @@ Route::prefix('admin')->group(function () {
 
         //Materials
         Route::get('/material-detail/{siteId}', [MaterialController::class, 'getMaterial'])->name('material.detail');
+        Route::get('/material-all/{siteId}', [MaterialController::class, 'allMaterialsForm'])->name('material.allForm');
 
         Route::get('/material/{siteId}/{materialType}', [MaterialController::class, 'index'])->name('material');
         Route::post('/material/get-data/{siteId}', [MaterialController::class, 'getMaterialData'])->name('material.getData');
@@ -255,8 +256,9 @@ Route::prefix('admin')->group(function () {
         Route::delete('/utilities-delete/{id}', [OtherUtilitiesController::class, 'delete'])->name('utilities.delete');
         Route::get('/site-utilities/{id}/export', [OtherUtilitiesController::class, 'export'])->name('utilities.export');
 
-        // Material export (CSV)
+        // Material export (CSV & PDF)
         Route::get('/material/{siteId}/{materialType}/export', [\App\Http\Controllers\Admin\MaterialController::class, 'export'])->name('material.export');
+        Route::get('/material/{siteId}/{materialType}/overview-pdf', [\App\Http\Controllers\Admin\MaterialController::class, 'overviewPdf'])->name('material.overview.pdf');
 
         // Bricks export (CSV)
         Route::get('/bricks/{siteId}/export', [\App\Http\Controllers\Admin\BricksController::class, 'export'])->name('bricks.export');
