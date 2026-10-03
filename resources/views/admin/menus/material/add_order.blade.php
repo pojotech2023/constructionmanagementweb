@@ -30,15 +30,17 @@
                         <div class="row mb-3 align-items-center">
                             <label for="vendor_name" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Vendor Name</label>
                             <div class="col-sm-8 col-md-8 col-lg-6 form-input-wrap position-relative">
-                                <input type="text" id="vendor_name" name="vendor_name" class="form-control"
-                                    placeholder="Type Vendor Name..." autocomplete="off">
-                                <div id="vendor_suggestions" class="list-group position-absolute w-100"
-                                    style="z-index: 1000; display: none;"></div>
+                                <input type="text" id="vendor_name" name="vendor_name" class="form-control pe-4"
+                                    placeholder="Type or select vendor name..." autocomplete="off">
+                                <i class="fas fa-chevron-down position-absolute top-50 translate-middle-y text-muted" style="right: 25px; pointer-events: none; font-size: 11px;"></i>
+                                <div id="vendor_suggestions" class="list-group position-absolute w-100 shadow-sm"
+                                    style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto;"></div>
                                 @error('vendor_name')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
+
 
                         <div class="row mb-3 align-items-center">
                             <label for="vendor_mobile" class="col-sm-4 col-md-3 col-lg-2 col-form-label fw-bold text-sm-end">Vendor Mobile No</label>
@@ -190,48 +192,55 @@
         }
 
         $(document).ready(function() {
-            $('#vendor_name').on('input', function() {
-                let query = $(this).val();
-                if (query.length >= 1) {
-                    $.ajax({
-                        url: "{{ route('vendors.search') }}",
-                        type: 'GET',
-                        data: {
-                            name: query
-                        },
-                        success: function(data) {
-                            let suggestions = '';
+            function fetchVendorSuggestions(query = '') {
+                $.ajax({
+                    url: "{{ route('vendors.search') }}",
+                    type: 'GET',
+                    data: { name: query },
+                    success: function(data) {
+                        let suggestions = '';
+                        if (data && data.length > 0) {
                             data.forEach(function(vendor) {
+                                const safeName = escapeHtml(vendor.name || '');
+                                const safeMobile = escapeHtml(vendor.mobile_no || '');
+                                const safeAddress = escapeHtml(vendor.address || '');
+                                const safeGst = escapeHtml(vendor.gst || '');
                                 suggestions += `
-                        <a href="#"
-                            class="list-group-item list-group-item-action vendor-option"
-                            data-id="${vendor.id}"
-                            data-name="${vendor.name}"
-                            data-mobile="${vendor.mobile_no}"
-                            data-address="${vendor.address}"
-                            data-gst="${vendor.gst ?? ''}">
-                            ${vendor.name}
-                        </a>`;
+                                    <a href="#" class="list-group-item list-group-item-action vendor-option"
+                                        data-id="${vendor.id}"
+                                        data-name="${safeName}"
+                                        data-mobile="${safeMobile}"
+                                        data-address="${safeAddress}"
+                                        data-gst="${safeGst}">
+                                        <strong>${safeName}</strong>${safeMobile ? ` - <small class="text-muted">${safeMobile}</small>` : ''}
+                                    </a>`;
                             });
-                            $('#vendor_suggestions').html(suggestions).show();
+                        } else {
+                            suggestions = `<div class="list-group-item text-muted small fst-italic">No vendors found${query ? ` matching "${escapeHtml(query)}"` : ''}</div>`;
                         }
-                    });
-                } else {
-                    $('#vendor_suggestions').hide();
-                }
+                        $('#vendor_suggestions').html(suggestions).show();
+                    },
+                    error: function(err) {
+                        console.error('Vendor search error:', err);
+                    }
+                });
+            }
+
+            $('#vendor_name').on('input focus click', function() {
+                fetchVendorSuggestions($(this).val().trim());
             });
 
             $(document).on('click', '.vendor-option', function(e) {
                 e.preventDefault();
                 $('#vendor_name').val($(this).data('name'));
-                $('#vendor_mobile').val($(this).data('mobile'));
+                $('#vendor_mobile').val($(this).data('mobile') || '');
                 $('#vendor_id').val($(this).data('id'));
-                $('#vendor_address').val($(this).data('address'));
-                $('#vendor_gstin').val($(this).data('gst'));
-                $('#vendor_suggestions').hide();
+                $('#vendor_address').val($(this).data('address') || '');
+                $('#vendor_gstin').val($(this).data('gst') || '');
+                $('#vendor_suggestions').hide().empty();
             });
 
-            $(document).click(function(e) {
+            $(document).on('click', function(e) {
                 if (!$(e.target).closest('#vendor_name, #vendor_suggestions').length) {
                     $('#vendor_suggestions').hide();
                 }
@@ -266,9 +275,42 @@
                     return;
                 }
 
+                // Ensure mirror fields and calculate grand totals
+                let grandPrice = 0;
+                let grandTotal = 0;
+                let grandGst = 0;
+                let grandQty = 0;
+
+                $rows.each(function() {
+                    const qty = parseFloat($(this).find('.item-qty').val()) || 0;
+                    const unitPrice = parseFloat($(this).find('.item-price').val()) || 0;
+                    const rowPrice = qty * unitPrice;
+                    const gstPercent = parseFloat($(this).find('.item-gst').val()) || 0;
+                    const rowGst = rowPrice * (gstPercent / 100);
+                    const rowTotal = rowPrice + rowGst;
+
+                    $(this).find('.item-total').val(rowTotal ? rowTotal.toFixed(2) : '');
+                    $(this).find('.item-rate-mirror').val(unitPrice > 0 ? unitPrice.toFixed(2) : '');
+                    $(this).find('.item-price-mirror').val(rowPrice > 0 ? rowPrice.toFixed(2) : '');
+                    $(this).find('.item-spec-mirror').val($(this).find('.item-spec').val() || '');
+
+                    grandPrice += rowPrice;
+                    grandGst += rowGst;
+                    grandTotal += rowTotal;
+                    grandQty += qty;
+                });
+
                 $('#loadingSpinner').removeClass('d-none');
                 let form = $(this);
                 let formData = new FormData(this);
+
+                // Set computed totals into FormData so backend validator always receives valid numbers
+                formData.set('price', grandPrice.toFixed(2));
+                formData.set('gst', grandGst.toFixed(2));
+                formData.set('total_amount', grandTotal.toFixed(2));
+                if (!formData.get('quantity')) {
+                    formData.set('quantity', grandQty > 0 ? grandQty : 1);
+                }
 
                 $.ajax({
                     url: form.attr('action'),
@@ -287,7 +329,7 @@
                                     const siteId = "{{ $siteId }}";
                                     const materialType = "{{ $materialType }}";
                                     const enteredDate = formData.get('date');
-                                    let url = "/admin/public/admin/material/" + siteId + "/" + materialType;
+                                    let url = "{{ route('material', ['siteId' => $siteId, 'materialType' => $materialType]) }}";
                                     if (enteredDate) {
                                         url += "?month=" + enteredDate.slice(0, 7);
                                     }
@@ -313,6 +355,7 @@
                 });
             });
         });
+
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
@@ -618,11 +661,13 @@
         // One set of input boxes (spec, qty, unit, price, GST, total) for an item
         function buildItemRow(itemName, config, allUnits, removable) {
             const p = `items[${itemRowSeq++}]`;
+            const currentMat = "{{ $materialType }}";
             const specField = config && config.specLabel ? `
                 <div class="col-md-4 col-lg-3">
                     <label class="form-label small mb-1">${escapeHtml(config.specLabel)}</label>
-                    <input type="text" class="form-control" name="${p}[spec]" list="specList"
+                    <input type="text" class="form-control item-spec" name="${p}[spec]" list="specList"
                         placeholder="Select or enter" autocomplete="off">
+                    <input type="hidden" name="${p}[specification]" class="item-spec-mirror">
                 </div>` : '';
             const removeBtn = removable ? `
                         <div class="col-12 text-end">
@@ -631,7 +676,9 @@
 
             return `
             <div class="item-row mb-2">
+                <input type="hidden" name="${p}[name]" value="${config ? escapeHtml(itemName) : ''}">
                 <input type="hidden" name="${p}[category_name]" value="${config ? escapeHtml(itemName) : ''}">
+                <input type="hidden" name="${p}[category]" value="${escapeHtml(currentMat)}">
                 <div class="row g-2">
                     ${specField}
                     <div class="col-md-4 col-lg-2">
@@ -641,12 +688,14 @@
                     </div>
                     <div class="col-md-4 col-lg-2">
                         <label class="form-label small mb-1">Unit</label>
-                        <select class="form-select" name="${p}[unit]">${buildUnitOptions(config, allUnits)}</select>
+                        <select class="form-select item-unit" name="${p}[unit]">${buildUnitOptions(config, allUnits)}</select>
                     </div>
                     <div class="col-md-4 col-lg-2">
                         <label class="form-label small mb-1">Price per item</label>
                         <input type="number" class="form-control no-arrow item-price" name="${p}[unit_price]"
                             min="0" step="0.01" placeholder="Price per item">
+                        <input type="hidden" name="${p}[rate]" class="item-rate-mirror">
+                        <input type="hidden" name="${p}[price]" class="item-price-mirror">
                     </div>
                     <div class="col-md-4 col-lg-1">
                         <label class="form-label small mb-1">GST</label>
@@ -682,18 +731,21 @@
 
         function recalcItem($row) {
             const qty = parseFloat($row.find('.item-qty').val()) || 0;
-            const price = (parseFloat($row.find('.item-price').val()) || 0) * qty;
+            const unitPrice = parseFloat($row.find('.item-price').val()) || 0;
+            const price = qty * unitPrice;
             const gst = parseFloat($row.find('.item-gst').val()) || 0;
-            const total = price + (price * gst / 100);
+            const gstAmt = price * (gst / 100);
+            const total = price + gstAmt;
             $row.find('.item-total').val(total ? total.toFixed(2) : '');
+            $row.find('.item-rate-mirror').val(unitPrice > 0 ? unitPrice.toFixed(2) : '');
+            $row.find('.item-price-mirror').val(price > 0 ? price.toFixed(2) : '');
+            $row.find('.item-spec-mirror').val($row.find('.item-spec').val() || '');
         }
 
+
         function loadUnitField(materialType) {
-            const allUnits = [
-                @foreach ($sharedUnits as $unitOption)
-                    "{{ $unitOption }}",
-                @endforeach
-            ];
+            const allUnits = @json($sharedUnits ?? []);
+
             const config = materialCategoryConfig[materialType];
             const $container = $('#dynamic-fields');
             currentConfig = config || null;
@@ -756,7 +808,7 @@
             });
         }
 
-        $(document).on('input change', '.item-qty, .item-price, .item-gst', function() {
+        $(document).on('input change', '.item-qty, .item-price, .item-gst, .item-spec', function() {
             recalcItem($(this).closest('.item-row'));
         });
 

@@ -77,8 +77,14 @@
         .company-cell {
             text-align: right;
             font-size: 11px;
-            line-height: 1.4;
+            line-height: 1.35;
             color: #222222;
+        }
+
+        .company-logo {
+            max-height: 46px;
+            max-width: 160px;
+            margin-bottom: 3px;
         }
 
         .company-title {
@@ -230,6 +236,7 @@
             ? '46 Kabilar Street, MGR Nagar, Chennai 600078'
             : 'No 77, Velachery main road, Rajakilpakkam, Tambaram, Chennai 600073';
         $companyPhone = $isPavan ? '+91 91717 56690' : '+91 74017 07707';
+        $logoPath = public_path('images/logo/logo.jpeg');
 
         // Indian Currency Number to Words converter
         if (!function_exists('siteReceiptNumberToWordsIndian')) {
@@ -334,7 +341,11 @@
                         <div class="payment-receipt-box">PAYMENT RECEIPT</div>
                     </td>
                     <td class="company-cell" style="width: 48%;">
-                        <div class="company-title">{{ $companyName }}</div>
+                        @if (file_exists($logoPath))
+                            <div><img src="{{ $logoPath }}" class="company-logo" alt="{{ $companyName }}"></div>
+                        @else
+                            <div class="company-title">{{ $companyName }}</div>
+                        @endif
                         <div>{{ $companyAddress }}</div>
                         <div>Phone: {{ $companyPhone }}</div>
                     </td>

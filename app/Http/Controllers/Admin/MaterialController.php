@@ -167,6 +167,14 @@ class MaterialController extends Controller
                 ->toArray()
             : [];
 
+        $allOrderItems = $orderNos->isNotEmpty()
+            ? MaterialOrder::with('vendor')
+                ->whereIn('order_no', $orderNos)
+                ->orderBy('id', 'asc')
+                ->get()
+                ->groupBy('order_no')
+            : collect();
+
         return view('admin.menus.material.material_details', compact(
             'materials',
             'siteId',
@@ -178,7 +186,8 @@ class MaterialController extends Controller
             'materialType',
             'month',
             'week',
-            'orderItemCounts'
+            'orderItemCounts',
+            'allOrderItems'
         ));
     }
 
@@ -296,18 +305,30 @@ class MaterialController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $columns = ['Date', 'Quantity', 'Vendor', 'Price', 'Material Type', 'Invoice Link'];
+        $columns = ['Date', 'Material Type', 'Category', 'Specification', 'Quantity', 'Unit', 'Price / Item', 'Price', 'GST', 'Total Amount', 'Vendor', 'Vendor GSTIN', 'Invoice Link'];
 
         $callback = function () use ($materials, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
             foreach ($materials as $m) {
+                $qty = (float)$m->quantity;
+                $price = (float)$m->price;
+                $rate = ($qty > 0 && $price > 0) ? ($price / $qty) : $price;
+                $total = !is_null($m->total_amount) && (float)$m->total_amount > 0 ? (float)$m->total_amount : ($price + (float)($m->gst ?? 0));
+
                 fputcsv($file, [
                     $m->date ? Carbon::parse($m->date)->format('d-m-Y') : '',
+                    $m->material_type_display ?? $m->material_type,
+                    $m->category_display ?? $m->category ?? $m->category_name,
+                    $m->spec ?? '',
                     $m->quantity,
+                    $m->unit_display != '-' ? $m->unit_display : ($m->unit ?? ''),
+                    number_format($rate, 2, '.', ''),
+                    number_format($price, 2, '.', ''),
+                    !is_null($m->gst) ? number_format((float)$m->gst, 2, '.', '') : '',
+                    number_format($total, 2, '.', ''),
                     optional($m->vendor)->name,
-                    $m->price,
-                    $m->material_type,
+                    optional($m->vendor)->gst ?? '',
                     $m->image_url ?? '',
                 ]);
             }
@@ -505,8 +526,10 @@ public function materialRequest(Request $request)
         $hasMultiItems = $request->has('items') && is_array($request->items) && count($request->items) > 0;
         if ($hasMultiItems) {
             $rules['quantity'] = 'nullable';
+            $rules['price']    = 'nullable|numeric';
         } else {
             $rules['quantity'] = 'required|numeric';
+            $rules['price']    = 'required|numeric';
         }
 
         $validate = Validator::make($request->all(), $rules);
@@ -534,34 +557,67 @@ public function materialRequest(Request $request)
             $parsedItems = [];
             foreach ($request->items as $key => $item) {
                 if (!is_array($item)) continue;
-                $name = $item['name'] ?? (is_string($key) ? $key : '');
+                $name = $item['name'] ?? $item['category_name'] ?? $item['category'] ?? (is_string($key) ? $key : '');
                 $qty = isset($item['quantity']) ? (float)$item['quantity'] : 0;
                 if (!empty($name) && $qty > 0) {
-                    $itemPrice = isset($item['price']) && $item['price'] !== '' ? (float)$item['price'] : ($qty * (float)($item['rate'] ?? 0));
+                    $rate = null;
+                    if (isset($item['rate']) && $item['rate'] !== '') {
+                        $rate = (float)$item['rate'];
+                    } elseif (isset($item['unit_price']) && $item['unit_price'] !== '') {
+                        $rate = (float)$item['unit_price'];
+                    }
+
+                    if (isset($item['price']) && $item['price'] !== '' && (float)$item['price'] > 0) {
+                        $itemPrice = (float)$item['price'];
+                    } elseif ($rate !== null) {
+                        $itemPrice = $qty * $rate;
+                    } elseif (isset($item['total_amount']) && $item['total_amount'] !== '') {
+                        $itemPrice = (float)$item['total_amount'];
+                    } else {
+                        $itemPrice = 0;
+                    }
+
+                    $spec = $item['specification'] ?? $item['spec'] ?? null;
+
+                    $itemGstAmount = null;
+                    if (isset($item['gst']) && $item['gst'] !== '') {
+                        $gstVal = (float)$item['gst'];
+                        $itemGstAmount = round($itemPrice * ($gstVal / 100), 2);
+                    }
+
+                    $totalAmount = isset($item['total_amount']) && $item['total_amount'] !== '' && (float)$item['total_amount'] > 0
+                        ? (float)$item['total_amount']
+                        : ($itemPrice + ($itemGstAmount ?? 0));
+
                     $parsedItems[] = [
                         'name'          => $name,
-                        'category'      => $item['category'] ?? null,
-                        'specification' => $item['specification'] ?? null,
+                        'category'      => $item['category'] ?? $item['category_name'] ?? $request->material_type,
+                        'specification' => $spec,
                         'quantity'      => $qty,
                         'unit'          => $item['unit'] ?? null,
-                        'rate'          => !empty($item['rate']) ? (float)$item['rate'] : null,
+                        'rate'          => $rate,
                         'price'         => $itemPrice,
+                        'gst'           => $itemGstAmount,
+                        'total_amount'  => $totalAmount,
                     ];
                     $totalItemsQty += $qty;
                     $totalItemsPrice += $itemPrice;
                 }
             }
 
+            $isAllMaterials = ($request->source === 'all_materials' || strtolower($request->material_type ?? '') === 'all');
+            $prefix = $isAllMaterials ? 'ALL-ORD-' : 'ORD-';
+            $orderNo = $prefix . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
             if (!empty($parsedItems)) {
                 $totalGst = (float)($request->gst ?? 0);
-                $orderNo = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
 
                 foreach ($parsedItems as $idx => $pi) {
                     $itemCategory = $pi['name'];
                     $itemUnit = !empty($pi['unit']) ? $pi['unit'] : 'Nos';
 
-                    $itemGst = null;
-                    if ($totalGst > 0) {
+                    $itemGst = $pi['gst'];
+                    if ($itemGst === null && $totalGst > 0) {
                         if ($totalItemsPrice > 0) {
                             $itemGst = round(($pi['price'] / $totalItemsPrice) * $totalGst, 2);
                         } elseif ($idx === 0) {
@@ -569,6 +625,7 @@ public function materialRequest(Request $request)
                         }
                     }
 
+                    $itemTotalAmount = $pi['total_amount'] ?? ((float)$pi['price'] + (float)($itemGst ?? 0));
                     $itemMatType = !empty($pi['category']) ? $pi['category'] : $request->material_type;
 
                     MaterialOrder::create([
@@ -576,6 +633,7 @@ public function materialRequest(Request $request)
                         'vendor_id'     => $request->vendor_id,
                         'order_no'      => $orderNo,
                         'order_group'   => $orderNo,
+                        'invoice_no'    => $request->invoice_no,
                         'material_type' => $itemMatType,
                         'category'      => $itemCategory,
                         'category_name' => $itemCategory,
@@ -585,7 +643,7 @@ public function materialRequest(Request $request)
                         'unit'          => $itemUnit,
                         'price'         => $pi['price'],
                         'gst'           => $itemGst,
-                        'total_amount'  => (float)$pi['price'] + (float)($itemGst ?? 0),
+                        'total_amount'  => $itemTotalAmount,
                         'created_by'    => auth('admin')->id(),
                         'image_url'     => $imageUrl
                     ]);
@@ -595,7 +653,6 @@ public function materialRequest(Request $request)
                     $itemsList[] = "• {$pi['name']}{$specStr}: {$pi['quantity']}{$unitStr} - ₹" . number_format($pi['price'], 2);
                 }
             } else {
-                $orderNo = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
                 $singlePrice = (float)($request->price ?? 0);
                 $singleGst = (float)($request->gst ?? 0);
                 MaterialOrder::create([
@@ -603,21 +660,26 @@ public function materialRequest(Request $request)
                     'vendor_id'     => $request->vendor_id,
                     'order_no'      => $orderNo,
                     'order_group'   => $orderNo,
+                    'invoice_no'    => $request->invoice_no,
                     'material_type' => $request->material_type,
                     'category'      => $request->category_name ?? $request->category ?? null,
                     'category_name' => $request->category_name ?? $request->category ?? null,
+                    'spec'          => $request->spec ?? $request->specification ?? null,
                     'date'          => $request->date,
                     'quantity'      => $request->quantity ?? 1,
                     'unit'          => $request->unit,
                     'price'         => $singlePrice,
                     'gst'           => $singleGst > 0 ? $singleGst : null,
-                    'total_amount'  => $singlePrice + $singleGst,
+                    'total_amount'  => (float)($request->total_amount ?? ($singlePrice + $singleGst)),
                     'created_by'    => auth('admin')->id(),
                     'image_url'     => $imageUrl
                 ]);
             }
         } else {
-            $orderNo = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $isAllMaterials = ($request->source === 'all_materials' || strtolower($request->material_type ?? '') === 'all');
+            $prefix = $isAllMaterials ? 'ALL-ORD-' : 'ORD-';
+            $orderNo = $prefix . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
             $singlePrice = (float)($request->price ?? 0);
             $singleGst = (float)($request->gst ?? 0);
             MaterialOrder::create([
@@ -625,19 +687,22 @@ public function materialRequest(Request $request)
                 'vendor_id'     => $request->vendor_id,
                 'order_no'      => $orderNo,
                 'order_group'   => $orderNo,
+                'invoice_no'    => $request->invoice_no,
                 'material_type' => $request->material_type,
                 'category'      => $request->category_name ?? $request->category ?? null,
                 'category_name' => $request->category_name ?? $request->category ?? null,
+                'spec'          => $request->spec ?? $request->specification ?? null,
                 'date'          => $request->date,
                 'quantity'      => $request->quantity,
                 'unit'          => $request->unit,
                 'price'         => $singlePrice,
                 'gst'           => $singleGst > 0 ? $singleGst : null,
-                'total_amount'  => $singlePrice + $singleGst,
+                'total_amount'  => (float)($request->total_amount ?? ($singlePrice + $singleGst)),
                 'created_by'    => auth('admin')->id(),
                 'image_url'     => $imageUrl
             ]);
         }
+
 
         // ✅ Vendor payment details update
         $totalUnits = MaterialOrder::where('vendor_id', $request->vendor_id)->sum('quantity');
@@ -673,8 +738,8 @@ public function materialRequest(Request $request)
             . $itemsSummary
             . "Date: " . \Carbon\Carbon::parse($request->date)->format('d-m-Y') . "\n"
             . "Total Quantity: " . ($totalItemsQty > 0 ? $totalItemsQty : $request->quantity) . "\n"
-            . "Total Price: ₹" . number_format((float)$request->price, 2) . "\n"
-            . (!empty($request->gst) ? "GST: ₹{$request->gst}\n" : "")
+            . "Total Price: ₹" . number_format(($request->filled('price') && (float)$request->price > 0 ? (float)$request->price : $totalItemsPrice), 2) . "\n"
+            . (!empty($totalGst) && $totalGst > 0 ? "GST: ₹{$totalGst}\n" : (!empty($request->gst) ? "GST: ₹{$request->gst}\n" : ""))
             . (!empty($imageUrl) ? "Image: {$imageUrl}\n" : "");
 
         $whatsappUrl = "https://wa.me/{$request->vendor_mobile}?text=" . urlencode($message);
@@ -748,13 +813,16 @@ public function materialRequest(Request $request)
     // Update material order
     public function updateOrder(Request $request, $id)
     {
-        $validate = Validator::make($request->all(), [
-            'date' => 'required|date',
-            'quantity' => 'required|numeric',
-            'price' => 'required|numeric',
-            'gst' => 'nullable|numeric',
+        $rules = [
+            'date' => 'required',
             'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
+        ];
+        if (!$request->has('items')) {
+            $rules['quantity'] = 'required|numeric';
+            $rules['price'] = 'required|numeric';
+        }
+
+        $validate = Validator::make($request->all(), $rules);
 
         if ($validate->fails()) {
             return redirect()->back()->withErrors($validate)->withInput();
@@ -762,29 +830,88 @@ public function materialRequest(Request $request)
 
         $order = MaterialOrder::findOrFail($id);
 
-        $updateData = [
-            'date' => $request->date,
-            'quantity' => $request->quantity,
-            'price' => $request->price,
-            'gst' => $request->gst,
-            'total_amount' => (float)$request->price + (float)($request->gst ?? 0),
-        ];
-
+        $imageUrl = null;
         if ($request->hasFile('attachment')) {
             $path = $request->file('attachment')->store('material_attachments', 'public');
-            $updateData['image_url'] = asset('storage/' . $path);
+            $imageUrl = asset('storage/' . $path);
         }
 
-        $order->update($updateData);
+        if ($request->has('items') && is_array($request->items)) {
+            foreach ($request->items as $itemId => $itemData) {
+                $item = MaterialOrder::find($itemId);
+                if ($item) {
+                    $qty = isset($itemData['quantity']) && $itemData['quantity'] !== '' ? (float)$itemData['quantity'] : (float)$item->quantity;
+                    $rate = isset($itemData['rate']) && $itemData['rate'] !== '' ? (float)$itemData['rate'] : null;
+                    if (isset($itemData['price']) && $itemData['price'] !== '' && (float)$itemData['price'] > 0) {
+                        $price = (float)$itemData['price'];
+                    } elseif ($rate !== null && $qty > 0) {
+                        $price = $qty * $rate;
+                    } else {
+                        $price = (float)$item->price;
+                    }
 
-        if (!empty($order->order_no)) {
-            $sharedUpdates = ['date' => $request->date];
-            if (isset($updateData['image_url'])) {
-                $sharedUpdates['image_url'] = $updateData['image_url'];
+                    if (isset($itemData['gst_amount']) && $itemData['gst_amount'] !== '') {
+                        $gst = (float)$itemData['gst_amount'];
+                    } elseif (isset($itemData['gst_percent']) && $itemData['gst_percent'] !== '') {
+                        $gst = round($price * ((float)$itemData['gst_percent'] / 100), 2);
+                    } elseif (isset($itemData['gst']) && $itemData['gst'] !== '') {
+                        $gst = (float)$itemData['gst'];
+                    } else {
+                        $gst = (float)($item->gst ?? 0);
+                    }
+
+                    $totalAmount = isset($itemData['total_amount']) && (float)$itemData['total_amount'] > 0
+                        ? (float)$itemData['total_amount']
+                        : ($price + $gst);
+
+                    $itemUpdate = [
+                        'date'         => $request->date,
+                        'quantity'     => $qty,
+                        'price'        => $price,
+                        'gst'          => $gst > 0 ? $gst : null,
+                        'total_amount' => $totalAmount,
+                    ];
+                    if ($imageUrl) {
+                        $itemUpdate['image_url'] = $imageUrl;
+                    }
+                    $item->update($itemUpdate);
+                }
             }
-            MaterialOrder::where('order_no', $order->order_no)
-                ->where('id', '!=', $order->id)
-                ->update($sharedUpdates);
+
+            if (!empty($order->order_no)) {
+                $sharedUpdates = ['date' => $request->date];
+                if ($imageUrl) {
+                    $sharedUpdates['image_url'] = $imageUrl;
+                }
+                MaterialOrder::where('order_no', $order->order_no)->update($sharedUpdates);
+            }
+        } else {
+            $qty = (float)($request->quantity ?? $order->quantity);
+            $price = (float)($request->price ?? $order->price);
+            $gst = $request->filled('gst') ? (float)$request->gst : (float)($order->gst ?? 0);
+            $totalAmount = (float)($request->total_amount ?? ($price + $gst));
+
+            $updateData = [
+                'date'         => $request->date,
+                'quantity'     => $qty,
+                'price'        => $price,
+                'gst'          => $gst > 0 ? $gst : null,
+                'total_amount' => $totalAmount,
+            ];
+            if ($imageUrl) {
+                $updateData['image_url'] = $imageUrl;
+            }
+            $order->update($updateData);
+
+            if (!empty($order->order_no)) {
+                $sharedUpdates = ['date' => $request->date];
+                if ($imageUrl) {
+                    $sharedUpdates['image_url'] = $imageUrl;
+                }
+                MaterialOrder::where('order_no', $order->order_no)
+                    ->where('id', '!=', $order->id)
+                    ->update($sharedUpdates);
+            }
         }
 
         if ($order->vendor_id) {

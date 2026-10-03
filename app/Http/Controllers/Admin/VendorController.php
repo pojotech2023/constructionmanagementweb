@@ -86,7 +86,6 @@ class VendorController extends Controller
 
     public function search(Request $request)
     {
-        $vendors = Vendor::where('name', 'LIKE', $request->name . '%')
         $term = trim($request->input('name', ''));
         $vendors = Vendor::where('name', 'LIKE', '%' . $term . '%')
             ->select('id', 'name', 'mobile_no', 'address', 'gst', 'email')
