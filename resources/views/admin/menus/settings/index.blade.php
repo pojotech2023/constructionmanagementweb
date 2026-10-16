@@ -18,7 +18,7 @@
             @endif
 
             <ul class="nav settings-tabs mb-4" id="settingsTabBar" role="tablist">
-                @if ($isAdmin)
+                @if ($isAdmin && ($sharedMenuVisibility['unit_master'] ?? true))
                     <li class="nav-item" role="presentation">
                         <button class="nav-link settings-tab-btn" id="tab-unit-btn" data-tab-target="#tab-unit"
                             data-tab-key="unit" type="button" role="tab" aria-controls="tab-unit">
@@ -27,6 +27,7 @@
                         </button>
                     </li>
                 @endif
+                @if ($sharedMenuVisibility['terms_condition'] ?? true)
                 <li class="nav-item" role="presentation">
                     <button class="nav-link settings-tab-btn" id="tab-terms-btn" data-tab-target="#tab-terms"
                         data-tab-key="terms" type="button" role="tab" aria-controls="tab-terms">
@@ -34,11 +35,12 @@
                         <span>Terms &amp; Conditions</span>
                     </button>
                 </li>
+                @endif
             </ul>
 
             <div class="tab-content" id="settingsTabContent">
 
-                @if ($isAdmin)
+                @if ($isAdmin && ($sharedMenuVisibility['unit_master'] ?? true))
                     {{-- ===================== Unit Master tab ===================== --}}
                     <div class="settings-tab-pane" id="tab-unit" role="tabpanel" aria-labelledby="tab-unit-btn">
                         <div class="card">
@@ -177,6 +179,7 @@
                     </div>
                 @endif
 
+                @if ($sharedMenuVisibility['terms_condition'] ?? true)
                 {{-- ===================== Terms & Conditions tab ===================== --}}
                 <div class="settings-tab-pane" id="tab-terms" role="tabpanel" aria-labelledby="tab-terms-btn">
                     <div class="card">
@@ -333,6 +336,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
             </div>
         </div>

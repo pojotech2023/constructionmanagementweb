@@ -117,15 +117,56 @@
             @enderror
         </div>
 
+        @php
+            $durationVal = '';
+            $durationUnit = 'Months';
+            if (!empty($site->duration)) {
+                if (preg_match('/^([\d\.]+)\s*(.*)$/', trim($site->duration), $m)) {
+                    $durationVal = $m[1];
+                    $durationUnit = !empty($m[2]) ? $m[2] : 'Months';
+                } else {
+                    $durationVal = $site->duration;
+                }
+            }
+
+            $flatAreaVal = '';
+            $flatAreaUnit = 'Sq.ft';
+            if (!empty($site->flat_area)) {
+                if (preg_match('/^([\d\.]+)\s*(.*)$/', trim($site->flat_area), $m)) {
+                    $flatAreaVal = $m[1];
+                    $flatAreaUnit = !empty($m[2]) ? $m[2] : 'Sq.ft';
+                } else {
+                    $flatAreaVal = $site->flat_area;
+                }
+            }
+
+            $builtUpAreaVal = '';
+            $builtUpAreaUnit = 'Sq.ft';
+            if (!empty($site->built_up_area)) {
+                if (preg_match('/^([\d\.]+)\s*(.*)$/', trim($site->built_up_area), $m)) {
+                    $builtUpAreaVal = $m[1];
+                    $builtUpAreaUnit = !empty($m[2]) ? $m[2] : 'Sq.ft';
+                } else {
+                    $builtUpAreaVal = $site->built_up_area;
+                }
+            }
+        @endphp
+
         <div class="col-lg-2">
             <div class="form-group">
-                <label for="duration">Duration</label>
+                <label for="duration_val">Duration</label>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="form-group">
-                <input type="text" name="duration" id="duration" class="form-control"
-                    placeholder="Enter Duration" value="{{ old('duration', $site->duration ?? '') }}">
+                <div class="input-group">
+                    <input type="number" step="1" min="0" name="duration_val" id="duration_val" class="form-control"
+                        placeholder="Enter Duration" value="{{ old('duration_val', $durationVal) }}">
+                    <select name="duration_unit" class="form-select" style="max-width: 120px;">
+                        <option value="Months" {{ old('duration_unit', $durationUnit) == 'Months' ? 'selected' : '' }}>Months</option>
+                        <option value="Years" {{ old('duration_unit', $durationUnit) == 'Years' ? 'selected' : '' }}>Years</option>
+                    </select>
+                </div>
             </div>
             @error('duration')
                 <div class="text-danger">{{ $message }}</div>
@@ -137,13 +178,19 @@
     <div class="row align-items-center">
         <div class="col-lg-2">
             <div class="form-group">
-                <label for="flat_area">Flat Area</label>
+                <label for="flat_area_val">Flat Area</label>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="form-group">
-                <input type="text" name="flat_area" id="flat_area" class="form-control"
-                    placeholder="Enter Flat Area" value="{{ old('flat_area', $site->flat_area ?? '') }}">
+                <div class="input-group">
+                    <input type="number" step="any" min="0" name="flat_area_val" id="flat_area_val" class="form-control"
+                        placeholder="Enter Flat Area" value="{{ old('flat_area_val', $flatAreaVal) }}">
+                    <select name="flat_area_unit" class="form-select" style="max-width: 110px;">
+                        <option value="Sq.ft" {{ old('flat_area_unit', $flatAreaUnit) == 'Sq.ft' ? 'selected' : '' }}>Sq.ft</option>
+                        <option value="Sq.m" {{ old('flat_area_unit', $flatAreaUnit) == 'Sq.m' ? 'selected' : '' }}>Sq.m</option>
+                    </select>
+                </div>
             </div>
             @error('flat_area')
                 <div class="text-danger">{{ $message }}</div>
@@ -152,13 +199,19 @@
 
         <div class="col-lg-2">
             <div class="form-group">
-                <label for="built_up_area">Built-Up Area</label>
+                <label for="built_up_area_val">Built-Up Area</label>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="form-group">
-                <input type="text" name="built_up_area" id="built_up_area" class="form-control"
-                    placeholder="Enter Built-Up Area" value="{{ old('built_up_area', $site->built_up_area ?? '') }}">
+                <div class="input-group">
+                    <input type="number" step="any" min="0" name="built_up_area_val" id="built_up_area_val" class="form-control"
+                        placeholder="Enter Built-Up Area" value="{{ old('built_up_area_val', $builtUpAreaVal) }}">
+                    <select name="built_up_area_unit" class="form-select" style="max-width: 110px;">
+                        <option value="Sq.ft" {{ old('built_up_area_unit', $builtUpAreaUnit) == 'Sq.ft' ? 'selected' : '' }}>Sq.ft</option>
+                        <option value="Sq.m" {{ old('built_up_area_unit', $builtUpAreaUnit) == 'Sq.m' ? 'selected' : '' }}>Sq.m</option>
+                    </select>
+                </div>
             </div>
             @error('built_up_area')
                 <div class="text-danger">{{ $message }}</div>

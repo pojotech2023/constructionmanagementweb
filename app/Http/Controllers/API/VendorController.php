@@ -37,7 +37,7 @@ class VendorController extends Controller
             'mobile_no'     => 'required|numeric|digits:10',
             'email'         => 'required|email|unique:vendors,email',
             'address'       => 'required|string',
-            'gst'           => 'required'
+            'gst'           => 'nullable|string'
         ]);
         if ($validate->fails()) {
             return response()->json([
@@ -73,7 +73,7 @@ class VendorController extends Controller
             'mobile_no' => 'required|numeric|digits:10',
             'email'         => 'required|email',
             'address'  => 'required|string',
-            'gst'           => 'required'
+            'gst'           => 'nullable|string'
         ]);
 
         if ($validate->fails()) {

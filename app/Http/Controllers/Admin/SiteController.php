@@ -110,6 +110,25 @@ public function store(Request $request)
             ->with('error', "You reached maximum allowed sites ({$siteLimit}). Cannot add more.");
     }
 
+    if ($request->has('flat_area_val')) {
+        $flatVal = trim((string)$request->flat_area_val);
+        $request->merge([
+            'flat_area' => $flatVal !== '' ? $flatVal . ' ' . ($request->flat_area_unit ?? 'Sq.ft') : null
+        ]);
+    }
+    if ($request->has('built_up_area_val')) {
+        $builtVal = trim((string)$request->built_up_area_val);
+        $request->merge([
+            'built_up_area' => $builtVal !== '' ? $builtVal . ' ' . ($request->built_up_area_unit ?? 'Sq.ft') : null
+        ]);
+    }
+    if ($request->has('duration_val')) {
+        $durVal = trim((string)$request->duration_val);
+        $request->merge([
+            'duration' => $durVal !== '' ? $durVal . ' ' . ($request->duration_unit ?? 'Months') : null
+        ]);
+    }
+
     $validate = Validator::make($request->all(), [
         'site_name'      => 'required|string',
         'site_img'       => 'nullable|image|mimes:jpg,jpeg,png,webp',
@@ -199,6 +218,25 @@ public function store(Request $request)
 
    public function update(Request $request, $id)
 {
+    if ($request->has('flat_area_val')) {
+        $flatVal = trim((string)$request->flat_area_val);
+        $request->merge([
+            'flat_area' => $flatVal !== '' ? $flatVal . ' ' . ($request->flat_area_unit ?? 'Sq.ft') : null
+        ]);
+    }
+    if ($request->has('built_up_area_val')) {
+        $builtVal = trim((string)$request->built_up_area_val);
+        $request->merge([
+            'built_up_area' => $builtVal !== '' ? $builtVal . ' ' . ($request->built_up_area_unit ?? 'Sq.ft') : null
+        ]);
+    }
+    if ($request->has('duration_val')) {
+        $durVal = trim((string)$request->duration_val);
+        $request->merge([
+            'duration' => $durVal !== '' ? $durVal . ' ' . ($request->duration_unit ?? 'Months') : null
+        ]);
+    }
+
     $validate = Validator::make($request->all(), [
         'site_name'      => 'nullable|string',
         'site_img'       => 'nullable|image|mimes:jpg,jpeg,png,webp',

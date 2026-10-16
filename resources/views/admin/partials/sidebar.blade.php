@@ -152,12 +152,14 @@
                 </li>
                 @endif
 
+                @if (($sharedMenuVisibility['settings'] ?? true) && (($sharedMenuVisibility['unit_master'] ?? true) || ($sharedMenuVisibility['terms_condition'] ?? true)))
                 <li class="nav-item {{ request()->routeIs('settings.*', 'unit.*', 'terms-condition.*') ? 'active' : '' }}">
                     <a href="{{ route('settings.index') }}" class="collapsed" aria-expanded="false">
                         <i class="bi bi-gear-fill"></i>
                         <p>Settings</p>
                     </a>
                 </li>
+                @endif
 
                 @if (session('role_name') == 'Admin')
                 <li class="nav-item {{ request()->routeIs('admin.control.*') ? 'active' : '' }}">

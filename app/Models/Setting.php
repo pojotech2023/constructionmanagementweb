@@ -76,7 +76,9 @@ class Setting extends Model
         'sales_bill' => 'Sales Bill',
         'purchase_bill' => 'Purchase Bill',
         'material_estimation' => 'Material Estimation Request',
+        'settings' => 'Settings',
         'unit_master' => 'Unit Master',
+        'terms_condition' => 'Terms & Conditions',
     ];
 
     // Sub-items nested under a parent menu on the Admin Control screen.
@@ -84,6 +86,9 @@ class Setting extends Model
         'site_management' => [
             'site_detail', 'export', 'attendance', 'materials',
             'subcontractor_detail', 'payment_status', 'checklist', 'tickets', 'drawing', 'sales_bill', 'purchase_bill', 'material_estimation',
+        ],
+        'settings' => [
+            'unit_master', 'terms_condition',
         ],
     ];
 

@@ -122,19 +122,26 @@ public function store(Request $request)
         $whatsappLink = "https://wa.me/91{$quotation->mobile_no}?text=$message";
 
         $mailSent = false;
+        $mailError = null;
         if ($request->filled('email')) {
-            Mail::to($request->email)->send(new QuotationMail($quotation, $pdf->output()));
-            $mailSent = true;
+            try {
+                Mail::to($request->email)->send(new QuotationMail($quotation, $pdf->output()));
+                $mailSent = true;
+            } catch (\Exception $mailEx) {
+                \Illuminate\Support\Facades\Log::error('Quotation email failed: ' . $mailEx->getMessage());
+                $mailError = $mailEx->getMessage();
+            }
         }
 
        return response()->json([
     'status' => true,
-    'message' => 'Quotation created successfully with default + user items',
+    'message' => 'Quotation created successfully with default + user items' . ($mailError ? ' (Email delivery failed: ' . $mailError . ')' : ''),
     'quotation_id' => $quotation->id,
     'pdf_url' => $pdfUrl,
     'whatsapp_url' => $whatsappLink,
     'total_amount' => $totalAmount,
-    'mail_sent' => $mailSent
+    'mail_sent' => $mailSent,
+    'mail_error' => $mailError,
 ], 200);
 
 
@@ -221,19 +228,26 @@ $message = urlencode("Hi {$quotation->name}, your quotation is ready. Download h
 $whatsappLink = "https://wa.me/91{$quotation->mobile_no}?text=$message";
 
 $mailSent = false;
+$mailError = null;
 $email = $request->input('email');
 if (!empty($email)) {
-    Mail::to($email)->send(new QuotationMail($quotation, $pdf->output()));
-    $mailSent = true;
+    try {
+        Mail::to($email)->send(new QuotationMail($quotation, $pdf->output()));
+        $mailSent = true;
+    } catch (\Exception $mailEx) {
+        \Illuminate\Support\Facades\Log::error('Quotation PDF email failed: ' . $mailEx->getMessage());
+        $mailError = $mailEx->getMessage();
+    }
 }
 
 return response()->json([
     'status' => true,
-    'message' => 'PDF generated successfully',
+    'message' => 'PDF generated successfully' . ($mailError ? ' (Email delivery failed: ' . $mailError . ')' : ''),
     'pdf_url' => $pdfUrl,
     'whatsapp_url' => $whatsappLink,
     'total_amount' => $totalAmount,
     'mail_sent' => $mailSent,
+    'mail_error' => $mailError,
 ]);
     }
 

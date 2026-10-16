@@ -42,7 +42,7 @@ class SubContractorController extends Controller
             'mobile_no'     => 'required|numeric|digits:10',
             'email'         => 'required|email|unique:subcontractors,email',
             'address'       => 'required|string',
-            'gst'           => 'required'
+            'gst'           => 'nullable|string'
         ]);
 
          if ($validate->fails()) {
@@ -79,7 +79,7 @@ class SubContractorController extends Controller
             'mobile_no' => 'required|numeric|digits:10',
             'email'         => 'required|email',
             'address'  => 'required|string',
-            'gst'           => 'required'
+            'gst'           => 'nullable|string'
         ]);
 
         if ($validate->fails()) {

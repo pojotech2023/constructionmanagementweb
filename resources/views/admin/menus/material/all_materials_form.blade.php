@@ -593,10 +593,10 @@
                 const isChecked = orderSelectedMaterials.includes(matKey);
                 const chkId = `order_mat_${matKey}`;
                 html += `
-                <div class="custom-chk-item ${isChecked ? 'checked' : ''}" data-material-key="${matKey}">
+                <label class="custom-chk-item ${isChecked ? 'checked' : ''}" data-material-key="${matKey}">
                     <input type="checkbox" class="custom-chk-input mat-type-chk" id="${chkId}" value="${matKey}" ${isChecked ? 'checked' : ''}>
-                    <label class="custom-chk-label" for="${chkId}">${escapeHtml(def.title)}</label>
-                </div>`;
+                    <span class="custom-chk-label">${escapeHtml(def.title)}</span>
+                </label>`;
             });
 
             listEl.html(html);
@@ -651,10 +651,10 @@
                         const isChecked = orderSelectedItems[item] !== undefined;
                         const chkId = `order_subchk_${matKey}_${idx}`;
                         itemsHtml += `
-                        <div class="custom-chk-item ${isChecked ? 'checked' : ''}" data-category="${matKey}" data-item="${escapeHtml(item)}" data-default-unit="${escapeHtml(def.defaultUnit || 'Nos')}">
+                        <label class="custom-chk-item ${isChecked ? 'checked' : ''}" data-category="${matKey}" data-item="${escapeHtml(item)}" data-default-unit="${escapeHtml(def.defaultUnit || 'Nos')}">
                             <input type="checkbox" class="custom-chk-input sub-item-chk" id="${chkId}" value="${escapeHtml(item)}" data-category="${matKey}" data-default-unit="${escapeHtml(def.defaultUnit || 'Nos')}" ${isChecked ? 'checked' : ''}>
-                            <label class="custom-chk-label" for="${chkId}">${escapeHtml(item)}</label>
-                        </div>`;
+                            <span class="custom-chk-label">${escapeHtml(item)}</span>
+                        </label>`;
                     });
 
                     const blockHtml = `
@@ -729,6 +729,12 @@
                     </div>`;
 
                     container.append(blockHtml);
+                } else {
+                    blockEl.find('.custom-chk-item').each(function() {
+                        const item = $(this).data('item');
+                        const isChk = orderSelectedItems[item] !== undefined;
+                        $(this).toggleClass('checked', isChk).find('.custom-chk-input').prop('checked', isChk);
+                    });
                 }
 
                 updateSubtypeTriggerText(matKey);
@@ -778,21 +784,6 @@
                 $('.custom-chk-dropdown-menu').hide();
                 $('.custom-chk-dropdown-wrapper').removeClass('open');
             }
-        });
-
-        // Prevent clicking inside dropdown menu from closing it
-        $(document).on('click', '.custom-chk-dropdown-menu', function(e) {
-            e.stopPropagation();
-        });
-
-        // Click on custom-chk-item row toggles the checkbox
-        $(document).on('click', '.custom-chk-item', function(e) {
-            if ($(e.target).is('input[type="checkbox"], label')) {
-                return;
-            }
-            e.preventDefault();
-            const chk = $(this).find('.custom-chk-input');
-            chk.prop('checked', !chk.prop('checked')).trigger('change');
         });
 
         // Tier 1 Material Type checkbox change
@@ -1372,6 +1363,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            user-select: none;
         }
 
         #order_items_table_wrapper table thead th,

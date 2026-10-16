@@ -79,4 +79,55 @@ class PropertyController extends Controller
       'data' => $property,
     ]);
   }
+
+  public function update(Request $request, $id)
+  {
+    $property = Property::findOrFail($id);
+
+    $validate = Validator::make($request->all(), [
+      'name'     => 'required|string',
+      'location' => 'required|string',
+      'type'     => 'required|string',
+      'amount'   => 'required|numeric|min:0',
+      'remarks'  => 'nullable|string',
+      'image'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048'
+    ]);
+
+    if ($validate->fails()) {
+      return redirect()->back()->withErrors($validate)->withInput();
+    }
+
+    $imagePath = $property->image;
+    if ($request->hasFile('image')) {
+      if ($property->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($property->image)) {
+        \Illuminate\Support\Facades\Storage::disk('public')->delete($property->image);
+      }
+      $imagePath = $request->file('image')->store('properties', 'public');
+    }
+
+    $property->update([
+      'name'       => $request->name,
+      'location'   => $request->location,
+      'type'       => $request->type,
+      'amount'     => $request->amount,
+      'remarks'    => $request->remarks,
+      'image'      => $imagePath,
+      'updated_by' => auth('admin')->id(),
+    ]);
+
+    return redirect()->route('property-list')->with('success', 'Property updated successfully.');
+  }
+
+  public function destroy($id)
+  {
+    $property = Property::findOrFail($id);
+
+    if ($property->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($property->image)) {
+      \Illuminate\Support\Facades\Storage::disk('public')->delete($property->image);
+    }
+
+    $property->delete();
+
+    return redirect()->route('property-list')->with('success', 'Property deleted successfully.');
+  }
 }

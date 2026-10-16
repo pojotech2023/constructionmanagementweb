@@ -97,9 +97,15 @@ class PurchaseBillController extends Controller
             $whatsappLink = "https://wa.me/91{$purchaseBill->mobile_no}?text=$message";
 
             $mailSent = false;
+            $mailError = null;
             if ($request->input('action') === 'mail' && $request->filled('email')) {
-                Mail::to($request->email)->send(new PurchaseBillMail($purchaseBill, $pdf->output()));
-                $mailSent = true;
+                try {
+                    Mail::to($request->email)->send(new PurchaseBillMail($purchaseBill, $pdf->output()));
+                    $mailSent = true;
+                } catch (\Exception $mailEx) {
+                    \Log::error('Purchase Bill Email Error: ' . $mailEx->getMessage());
+                    $mailError = $mailEx->getMessage();
+                }
             }
 
             return response()->json([

@@ -137,20 +137,27 @@ class PurchaseBillController extends Controller
             $whatsappLink = "https://wa.me/91{$purchaseBill->mobile_no}?text=$message";
 
             $mailSent = false;
+            $mailError = null;
             if ($request->filled('email')) {
-                Mail::to($request->email)->send(new PurchaseBillMail($purchaseBill, $pdf->output()));
-                $mailSent = true;
+                try {
+                    Mail::to($request->email)->send(new PurchaseBillMail($purchaseBill, $pdf->output()));
+                    $mailSent = true;
+                } catch (\Exception $mailEx) {
+                    \Illuminate\Support\Facades\Log::error('Purchase bill email sending failed: ' . $mailEx->getMessage());
+                    $mailError = $mailEx->getMessage();
+                }
             }
 
             return response()->json([
                 'status' => true,
-                'message' => 'Purchase bill created successfully.',
+                'message' => 'Purchase bill created successfully.' . ($mailError ? ' (Email delivery failed: ' . $mailError . ')' : ''),
                 'data' => [
                     'purchase_bill_id' => $purchaseBill->id,
                     'pdf_url' => $pdfUrl,
                     'whatsapp_url' => $whatsappLink,
                     'total_amount' => $totalAmount,
                     'mail_sent' => $mailSent,
+                    'mail_error' => $mailError,
                 ],
             ]);
         } catch (\Exception $e) {

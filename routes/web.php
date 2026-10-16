@@ -43,6 +43,41 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
 // ----------------------------------------Web----------------------------------------------
+Route::get('/fix-storage-link', function () {
+    $link = public_path('storage');
+    if (file_exists($link) || is_link($link)) {
+        if (is_link($link)) {
+            @unlink($link);
+        } else {
+            return response()->json([
+                'status' => 'warning',
+                'message' => 'The folder "public/storage" already exists on the server. Please rename or delete "public/storage" in File Manager, then refresh this URL to create the symlink.'
+            ]);
+        }
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('storage:link');
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Storage link successfully recreated! All images and PDFs should now be restored.',
+        'output' => trim(\Illuminate\Support\Facades\Artisan::output())
+    ]);
+});
+
+// Fallback route to serve files from storage/app/public if web server restricts symlink resolution
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    $realPath = realpath($filePath);
+    $basePath = realpath(storage_path('app/public'));
+
+    if (!$realPath || !str_starts_with($realPath, $basePath) || !is_file($realPath)) {
+        abort(404);
+    }
+
+    return response()->file($realPath);
+})->where('path', '.*');
+
 Route::get('/', function () {
     return Auth::guard('admin')->check()
         ? redirect()->route('admin.dashboard')
@@ -298,6 +333,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/property-management', [PropertyController::class, 'index'])->name('property-list');
         Route::get('/property-form', [PropertyController::class, 'getPropertyForm'])->name('property.form');
         Route::post('/property-add', [PropertyController::class, 'store'])->name('property.add');
+        Route::patch('/property-update/{id}', [PropertyController::class, 'update'])->name('property.update');
+        Route::delete('/property-delete/{id}', [PropertyController::class, 'destroy'])->name('property.delete');
 
         //Quotation
         Route::get('/quotation-form', [QuotationController::class, 'getForm'])->name('quotation.form');

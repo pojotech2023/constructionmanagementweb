@@ -120,38 +120,56 @@
 
                                         <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="flat_area">Flat Area</label>
+                                                <label for="flat_area_val">Flat Area</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" class="form-control" name="flat_area" value="{{ old('flat_area') }}">
+                                                <div class="input-group">
+                                                    <input type="number" step="any" min="0" class="form-control" name="flat_area_val" id="flat_area_val" placeholder="Enter Flat Area" value="{{ old('flat_area_val') }}">
+                                                    <select name="flat_area_unit" class="form-select" style="max-width: 110px;">
+                                                        <option value="Sq.ft" {{ old('flat_area_unit', 'Sq.ft') == 'Sq.ft' ? 'selected' : '' }}>Sq.ft</option>
+                                                        <option value="Sq.m" {{ old('flat_area_unit') == 'Sq.m' ? 'selected' : '' }}>Sq.m</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                             @error('flat_area')
                                                 <div class="text-danger">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                           <div class="col-lg-2">
+                                        <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="flat_area">Built-up Area</label>
+                                                <label for="built_up_area_val">Built-up Area</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" class="form-control" name="built_up_area" value="{{ old('built_up_area') }}">
+                                                <div class="input-group">
+                                                    <input type="number" step="any" min="0" class="form-control" name="built_up_area_val" id="built_up_area_val" placeholder="Enter Built-up Area" value="{{ old('built_up_area_val') }}">
+                                                    <select name="built_up_area_unit" class="form-select" style="max-width: 110px;">
+                                                        <option value="Sq.ft" {{ old('built_up_area_unit', 'Sq.ft') == 'Sq.ft' ? 'selected' : '' }}>Sq.ft</option>
+                                                        <option value="Sq.m" {{ old('built_up_area_unit') == 'Sq.m' ? 'selected' : '' }}>Sq.m</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                             @error('built_up_area')
                                                 <div class="text-danger">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                          <div class="col-lg-2">
+                                        <div class="col-lg-2">
                                             <div class="form-group">
-                                                <label for="duration">Duration</label>
+                                                <label for="duration_val">Duration</label>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
                                             <div class="form-group">
-                                                <input type="text" name="duration" id="duration" class="form-control" value="{{ old('duration') }}">
+                                                <div class="input-group">
+                                                    <input type="number" step="1" min="0" name="duration_val" id="duration_val" class="form-control" placeholder="Enter Duration" value="{{ old('duration_val') }}">
+                                                    <select name="duration_unit" class="form-select" style="max-width: 120px;">
+                                                        <option value="Months" {{ old('duration_unit', 'Months') == 'Months' ? 'selected' : '' }}>Months</option>
+                                                        <option value="Years" {{ old('duration_unit') == 'Years' ? 'selected' : '' }}>Years</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                             @error('duration')
                                                 <div class="text-danger">{{ $message }}</div>

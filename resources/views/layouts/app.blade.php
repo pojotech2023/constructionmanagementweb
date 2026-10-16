@@ -192,44 +192,55 @@
     </script> --}}
 
     <style>
-        /* Amount / GST number fields: whole numbers only, no spinner arrows */
-        input[type="number"][name*="amount" i]::-webkit-outer-spin-button,
-        input[type="number"][name*="amount" i]::-webkit-inner-spin-button,
-        input[type="number"][name*="gst" i]::-webkit-outer-spin-button,
-        input[type="number"][name*="gst" i]::-webkit-inner-spin-button {
+        /* All number fields: whole numbers only, no negative values, no spinner arrows */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
 
-        input[type="number"][name*="amount" i],
-        input[type="number"][name*="gst" i] {
+        input[type="number"] {
             -moz-appearance: textfield;
         }
     </style>
     <script>
-        // Amount / GST number fields: block decimal entry (whole numbers only), site-wide
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('input[type="number"]').forEach(function (input) {
-                var name = (input.getAttribute('name') || '').toLowerCase();
-                if (name.indexOf('amount') === -1 && name.indexOf('gst') === -1) {
-                    return;
-                }
-
-                input.setAttribute('step', '1');
-
-                input.addEventListener('keydown', function (e) {
-                    if (e.key === '.' || e.key === ',' || e.key === 'e' || e.key === 'E') {
+        // Global restriction: No negative values and no floating/decimal values across all number inputs
+        (function () {
+            document.addEventListener('keydown', function (e) {
+                if (e.target && e.target.matches && e.target.matches('input[type="number"]')) {
+                    if (e.key === '-' || e.key === 'Minus' || e.key === '+' || e.key === '.' || e.key === ',' || e.key === 'e' || e.key === 'E') {
                         e.preventDefault();
                     }
-                });
+                }
+            }, true);
 
-                input.addEventListener('input', function () {
-                    if (input.value.indexOf('.') !== -1) {
-                        input.value = input.value.split('.')[0];
+            document.addEventListener('input', function (e) {
+                if (e.target && e.target.matches && e.target.matches('input[type="number"]')) {
+                    var input = e.target;
+                    if (!input.hasAttribute('min') || parseFloat(input.getAttribute('min')) < 0) {
+                        input.setAttribute('min', '0');
                     }
-                });
-            });
-        });
+                    input.setAttribute('step', '1');
+                    if (input.value && (input.value.indexOf('.') !== -1 || input.value.indexOf('-') !== -1 || input.value.indexOf('e') !== -1 || input.value.indexOf('E') !== -1)) {
+                        var cleaned = input.value.replace(/[^0-9]/g, '');
+                        input.value = cleaned;
+                    }
+                }
+            }, true);
+
+            document.addEventListener('paste', function (e) {
+                if (e.target && e.target.matches && e.target.matches('input[type="number"]')) {
+                    var pasted = (e.clipboardData || window.clipboardData).getData('text');
+                    if (pasted && /[^0-9]/.test(pasted)) {
+                        e.preventDefault();
+                        var digits = pasted.replace(/[^0-9]/g, '');
+                        if (digits) {
+                            document.execCommand('insertText', false, digits);
+                        }
+                    }
+                }
+            }, true);
+        })();
     </script>
 </body>
 
