@@ -198,7 +198,6 @@ class SupervisorCreationController extends Controller
             'customer_management' => [
                 'label' => 'Customer Management',
                 'actions' => [
-                    'add_customer'    => ['label' => 'Add',    'parent' => null],
                     'edit_customer'   => ['label' => 'Edit',   'parent' => null],
                     'delete_customer' => ['label' => 'Delete', 'parent' => null],
                 ],

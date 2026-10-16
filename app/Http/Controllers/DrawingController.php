@@ -21,7 +21,7 @@ class DrawingController extends Controller
     {
         $request->validate([
             'site_id' => 'required|exists:sites,id',
-          'attachments.*' => 'nullable|mimes:jpg,jpeg,png,pdf,xls,xlsx,dwg|max:2048',
+          'attachments.*' => 'nullable|mimes:jpg,jpeg,png,pdf,xls,xlsx,dwg|max:5120',
 
         ]);
 

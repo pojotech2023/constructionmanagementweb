@@ -113,6 +113,7 @@ class PurchaseBillController extends Controller
                 'whatsapp_url' => $whatsappLink,
                 'pdf_url' => $pdfUrl,
                 'mail_sent' => $mailSent,
+                'mail_error' => $mailError,
             ]);
         } catch (\Exception $e) {
             \Log::error('Purchase Bill Error: ' . $e->getMessage());

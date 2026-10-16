@@ -335,8 +335,17 @@ $(document).ready(function () {
             triggerPdfDownload(response.pdf_url);
         }
 
-        if (action === 'mail' && response.mail_sent) {
-            alert('Sales bill emailed successfully.');
+        if (action === 'mail') {
+            if (response.mail_sent) {
+                alert('Sales bill emailed successfully.');
+            } else {
+                let err = response.mail_error || 'Email could not be sent. Please check your mail server configuration or Gmail daily sending limit.';
+                if (err.includes('Daily user sending limit exceeded')) {
+                    alert('Gmail Daily Sending Limit Exceeded (550-5.4.5):\nGoogle limits free Gmail accounts to a daily quota. Your quota will reset in 24 hours. The bill was saved and PDF generated successfully.');
+                } else {
+                    alert('Email could not be sent:\n' + err);
+                }
+            }
         }
     }
 

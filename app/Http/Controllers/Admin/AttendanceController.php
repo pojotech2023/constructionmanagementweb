@@ -569,6 +569,26 @@ public function editPage($site_id, $date)
         ->where('date', $date)
         ->first();
 
+    if (!$checkOut) {
+        $wageFallback = Wages::where('site_id', $site_id)
+            ->where('date', $date)
+            ->where(function ($q) {
+                $q->whereNotNull('check_in_time')
+                  ->orWhereNotNull('check_in_photo')
+                  ->orWhereNotNull('check_out_time')
+                  ->orWhereNotNull('check_out_photo');
+            })
+            ->first();
+        if ($wageFallback) {
+            $checkOut = (object) [
+                'check_in_time'   => $wageFallback->check_in_time,
+                'check_in_photo'  => $wageFallback->check_in_photo,
+                'check_out_time'  => $wageFallback->check_out_time,
+                'check_out_photo' => $wageFallback->check_out_photo,
+            ];
+        }
+    }
+
     return view('admin.menus.attendance.edit', compact('attendance', 'wages', 'siteId', 'date', 'categories', 'checkOut'));
 }
 
@@ -705,10 +725,16 @@ public function updateWages(Request $request)
 public function updateAttendanceAndWages(Request $request)
 {
     $rules = [
-        'checkin_time'  => 'nullable|date_format:H:i',
-        'checkin_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-        'time'  => 'nullable|date_format:H:i',
-        'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'checkin_time'   => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'check_in_time'  => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'checkin_photo'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'check_in_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'time'           => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'checkout_time'  => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'check_out_time' => 'nullable|date_format:H:i,H:i:s,g:i A,h:i A,g:i:s A,h:i:s A',
+        'photo'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'checkout_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        'check_out_photo'=> 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         'attendance_rows.*.count' => 'nullable|integer|min:0',
         'wage_rows.*.amount'      => 'nullable|numeric|min:0',
     ];
@@ -804,10 +830,7 @@ public function updateAttendanceAndWages(Request $request)
 
     // Check-in / check-out time & photo for this site/date
     $rawCheckinTime = $request->check_in_time ?? $request->checkin_time;
-    $rawCheckoutTime = $request->check_out_time ?? $request->checkout_time;
-    if (empty($rawCheckoutTime) && $request->filled('time') && empty($rawCheckinTime)) {
-        $rawCheckoutTime = $request->time;
-    }
+    $rawCheckoutTime = $request->check_out_time ?? $request->checkout_time ?? $request->time;
 
     $checkinPhotoFile = $request->hasFile('check_in_photo') ? $request->file('check_in_photo') : ($request->hasFile('checkin_photo') ? $request->file('checkin_photo') : null);
     $checkoutPhotoFile = $request->hasFile('check_out_photo') ? $request->file('check_out_photo') : ($request->hasFile('checkout_photo') ? $request->file('checkout_photo') : ($request->hasFile('photo') ? $request->file('photo') : null));

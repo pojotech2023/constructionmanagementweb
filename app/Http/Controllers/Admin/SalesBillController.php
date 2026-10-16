@@ -102,9 +102,15 @@ class SalesBillController extends Controller
             $whatsappLink = "https://wa.me/91{$salesBill->mobile_no}?text=$message";
 
             $mailSent = false;
+            $mailError = null;
             if ($request->input('action') === 'mail' && $request->filled('email')) {
-                Mail::to($request->email)->send(new SalesBillMail($salesBill, $pdf->output()));
-                $mailSent = true;
+                try {
+                    Mail::to($request->email)->send(new SalesBillMail($salesBill, $pdf->output()));
+                    $mailSent = true;
+                } catch (\Exception $mailEx) {
+                    \Log::error('Sales Bill Email Error: ' . $mailEx->getMessage());
+                    $mailError = $mailEx->getMessage();
+                }
             }
 
             return response()->json([
@@ -112,6 +118,7 @@ class SalesBillController extends Controller
                 'whatsapp_url' => $whatsappLink,
                 'pdf_url' => $pdfUrl,
                 'mail_sent' => $mailSent,
+                'mail_error' => $mailError,
             ]);
         } catch (\Exception $e) {
             \Log::error('Sales Bill Error: ' . $e->getMessage());

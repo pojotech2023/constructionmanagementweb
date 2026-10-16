@@ -138,6 +138,7 @@ class QuotationController extends Controller
             'whatsapp_url' => $whatsappLink,
             'pdf_url' => $pdfUrl,
             'mail_sent' => $mailSent,
+            'mail_error' => $mailError,
         ]);
 
     } catch (\Exception $e) {

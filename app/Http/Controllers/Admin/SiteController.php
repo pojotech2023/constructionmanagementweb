@@ -509,10 +509,22 @@ public function store(Request $request)
             'balanceAmount'
         ));
 
-        Mail::to($customer->email)->send(new SitePaymentMail($payment, $pdf->output()));
+        try {
+            Mail::to($customer->email)->send(new SitePaymentMail($payment, $pdf->output()));
 
-        return redirect()->route('site.payment.history', $payment->site_id)
-            ->with('success', 'Payment receipt emailed successfully.');
+            return redirect()->route('site.payment.history', $payment->site_id)
+                ->with('success', 'Payment receipt emailed successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Site Payment Mail Error: ' . $e->getMessage());
+
+            $friendlyMessage = 'Payment receipt PDF created, but email could not be sent: ' . $e->getMessage();
+            if (str_contains($e->getMessage(), 'Daily user sending limit exceeded')) {
+                $friendlyMessage = 'Gmail daily sending limit (550-5.4.5) exceeded. Google resets this limit every 24 hours. The receipt PDF was generated successfully.';
+            }
+
+            return redirect()->route('site.payment.history', $payment->site_id)
+                ->with('warning', $friendlyMessage);
+        }
     }
 
     public function exportPaymentHistory(Request $request, $id)

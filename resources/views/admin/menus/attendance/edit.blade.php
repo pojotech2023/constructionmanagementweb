@@ -58,19 +58,25 @@
     <div class="row mt-2">
         <div class="col-md-4">
             <label for="checkOutTime" class="fw-bold">Time (Check-out)</label>
-            <input type="time" id="checkOutTime" class="form-control" name="time" value="{{ old('time', optional($checkOut)->check_out_time ? \Carbon\Carbon::parse($checkOut->check_out_time)->format('H:i') : '') }}">
+            <input type="time" id="checkOutTime" class="form-control" name="checkout_time" value="{{ old('checkout_time', old('time', optional($checkOut)->check_out_time ? \Carbon\Carbon::parse($checkOut->check_out_time)->format('H:i') : '')) }}">
+            @error('checkout_time')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
             @error('time')
                 <div class="text-danger">{{ $message }}</div>
             @enderror
         </div>
         <div class="col-md-4">
             <label for="checkOutPhoto" class="fw-bold">Upload Photo (Check-out)</label>
-            <input type="file" id="checkOutPhoto" name="photo" class="form-control" accept="image/*">
+            <input type="file" id="checkOutPhoto" name="checkout_photo" class="form-control" accept="image/*">
             @if (optional($checkOut)->check_out_photo)
                 <div class="mt-2">
                     <img src="{{ asset('storage/' . $checkOut->check_out_photo) }}" alt="Check-out photo" style="max-width: 120px; max-height: 90px; object-fit: contain;">
                 </div>
             @endif
+            @error('checkout_photo')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
             @error('photo')
                 <div class="text-danger">{{ $message }}</div>
             @enderror

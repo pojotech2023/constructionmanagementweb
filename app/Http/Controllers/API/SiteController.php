@@ -537,14 +537,25 @@ public function sendPaymentMail($id)
 
     [$pdf, $pdfUrl] = $this->buildPaymentPdf($payment);
 
-    Mail::to($customer->email)->send(new SitePaymentMail($payment, $pdf->output()));
+    $mailSent = false;
+    $mailError = null;
+    try {
+        Mail::to($customer->email)->send(new SitePaymentMail($payment, $pdf->output()));
+        $mailSent = true;
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('API Site Payment Mail Error: ' . $e->getMessage());
+        $mailError = $e->getMessage();
+    }
 
     return response()->json([
         'status' => true,
-        'message' => 'Payment receipt emailed successfully.',
+        'message' => $mailSent
+            ? 'Payment receipt emailed successfully.'
+            : 'Payment receipt generated, but email could not be sent: ' . ($mailError ?: 'Check mail server settings.'),
         'data' => [
             'pdf_url' => $pdfUrl,
-            'mail_sent' => true,
+            'mail_sent' => $mailSent,
+            'mail_error' => $mailError,
         ],
     ]);
 }

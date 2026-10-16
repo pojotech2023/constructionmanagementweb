@@ -79,6 +79,7 @@
                                             </div>
                                         </div>
                                         <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-file-field">+ Add More</button>
+                                        <small class="text-muted d-block mt-1">Allowed: JPG, JPEG, PNG, PDF, XLS, XLSX, DWG (Max 5MB each)</small>
                                     </div>
                                 </div>
 
